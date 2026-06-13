@@ -41,6 +41,7 @@ export type PublicServicePost = {
   category: "Immigration" | "Accounting" | "Business" | "General";
   service_type: string;
   language: string;
+  translation_key: string | null;
   content: string;
   is_published: boolean;
   published_at: string | null;

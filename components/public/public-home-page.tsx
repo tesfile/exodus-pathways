@@ -74,13 +74,33 @@ function postCategoryKey(categoryName: string) {
   return `home.postCategory.${categoryName.toLowerCase()}`;
 }
 
+function postGroupKey(post: PublicServicePost) {
+  return post.translation_key || post.id;
+}
+
 export function PublicHomePage({ posts }: PublicHomePageProps) {
   const { language, t } = useT();
   const [selected, setSelected] = useState<ServiceCategory>(serviceCards[0].categories[0]);
   const visiblePosts = useMemo(() => {
-    const selectedLanguagePosts = posts.filter((post) => post.language === language);
-    const fallbackPosts = posts.filter((post) => post.language === "en");
-    return (selectedLanguagePosts.length > 0 ? selectedLanguagePosts : fallbackPosts).slice(0, 6);
+    if (language === "en") {
+      return posts.filter((post) => post.language === "en").slice(0, 6);
+    }
+
+    const byGroup = new Map<string, PublicServicePost>();
+
+    for (const post of posts) {
+      if (post.language === "en") {
+        byGroup.set(postGroupKey(post), post);
+      }
+    }
+
+    for (const post of posts) {
+      if (post.language === language) {
+        byGroup.set(postGroupKey(post), post);
+      }
+    }
+
+    return Array.from(byGroup.values()).slice(0, 6);
   }, [language, posts]);
 
   return (

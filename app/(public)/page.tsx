@@ -11,7 +11,7 @@ async function getPublishedPosts(): Promise<PublicServicePost[]> {
     const supabase = await createServerSupabaseClient();
     const { data } = await supabase
       .from("public_service_posts")
-      .select("id,title,category,service_type,language,content,is_published,published_at,created_at")
+      .select("id,title,category,service_type,language,translation_key,content,is_published,published_at,created_at")
       .eq("is_published", true)
       .order("published_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })

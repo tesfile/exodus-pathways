@@ -115,7 +115,7 @@ These rules are enforced with Supabase RLS policies across the migration files, 
 
 The main admin workflow is now: open `/admin/clients`, select a client, then manage that client's profile, documents, immigration, personal tax, self-employed records, income, expenses, GST, Workers & Payments, messages, tasks, notes, and reports from the client detail page.
 
-Admins can manage public service explanations at `/admin/public-posts`. Public posts support title, category, service type, language, content, and Published / Draft status. Published posts appear on the homepage under Latest Updates and are filtered by the selected public language with English fallback.
+Admins can manage public service explanations at `/admin/public-posts`. Public posts support title, category, service type, language, translation group key, content, and Published / Draft status. Published posts appear on the homepage under Latest Updates. Admins create separate manual language versions by reusing the same translation group key, and the homepage falls back to English when a selected language version is missing.
 
 ## Employee Dashboard
 
@@ -220,7 +220,7 @@ The app includes a client-side translation provider and language switcher for:
 - French
 - Somali
 
-Translation files live in `lib/i18n/dictionaries.ts`. Shared UI components use translation keys through `useT()` so future copy can be localized without hardcoding text inside components.
+Translation files live in `lib/i18n/dictionaries.ts`. The project does not use automatic machine translation. English is the complete source dictionary; other language dictionaries are manual override dictionaries and intentionally leave missing keys out until a trusted human translation is ready. Shared UI components use translation keys through `useT()`, and missing translations fall back to English.
 
 ## Plain-Language Client Entry
 
@@ -490,6 +490,12 @@ The public service posts category migration also:
 
 - allows the `General` category for public homepage updates
 - keeps Immigration, Accounting, and Business post categories available for multilingual service explanations
+
+The public post translation-key migration also:
+
+- adds `public_service_posts.translation_key`
+- lets admins connect separate manually written language versions of one post
+- lets the homepage show the selected language version when available and the English version when missing
 
 ## File Uploads
 

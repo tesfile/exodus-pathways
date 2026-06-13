@@ -13,6 +13,7 @@ type AdminPublicPost = {
   category: PublicPostCategory;
   service_type: string;
   language: string;
+  translation_key: string | null;
   content: string;
   is_published: boolean;
   published_at: string | null;
@@ -33,6 +34,7 @@ function readPostPayload(formData: FormData, existingPublishedAt?: string | null
     category: readCategory(formData.get("category")),
     service_type: String(formData.get("serviceType") ?? "").trim() || "General",
     language: String(formData.get("language") ?? "en"),
+    translation_key: String(formData.get("translationKey") ?? "").trim() || null,
     content: String(formData.get("content") ?? "").trim(),
     is_published: isPublished,
     published_at: isPublished ? existingPublishedAt || new Date().toISOString() : null,
@@ -101,7 +103,7 @@ async function getPosts() {
   const supabase = await createServerSupabaseClient();
   const { data } = await supabase
     .from("public_service_posts")
-    .select("id,title,category,service_type,language,content,is_published,published_at,created_at,updated_at")
+    .select("id,title,category,service_type,language,translation_key,content,is_published,published_at,created_at,updated_at")
     .order("created_at", { ascending: false });
 
   return (data ?? []) as AdminPublicPost[];
@@ -146,6 +148,7 @@ export default async function PublicPostsPage() {
                 <span className="rounded-md bg-exodus-light px-3 py-1 text-xs font-black text-exodus-navy">{post.category}</span>
                 <span className="rounded-md bg-exodus-light px-3 py-1 text-xs font-black text-exodus-navy">{post.service_type}</span>
                 <span className="rounded-md bg-exodus-light px-3 py-1 text-xs font-black text-exodus-navy">{post.language.toUpperCase()}</span>
+                {post.translation_key ? <span className="rounded-md bg-exodus-light px-3 py-1 text-xs font-black text-exodus-navy">Key: {post.translation_key}</span> : null}
                 <span className={post.is_published ? "rounded-md bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700" : "rounded-md bg-amber-50 px-3 py-1 text-xs font-black text-amber-700"}>
                   {post.is_published ? "Published" : "Draft"}
                 </span>
@@ -195,6 +198,13 @@ function PostFields({ post }: { post?: AdminPublicPost }) {
           <input name="serviceType" required className="field" defaultValue={post?.service_type ?? ""} placeholder="Study Permit, Personal Tax, GST" />
         </label>
       </div>
+      <label className="grid gap-2">
+        <span className="label">Translation group key</span>
+        <input name="translationKey" className="field" defaultValue={post?.translation_key ?? ""} placeholder="study-permit-basics" />
+        <span className="text-xs font-semibold text-exodus-slate">
+          Use the same key for each manual language version of one post. If a language version is missing, the homepage shows the English version.
+        </span>
+      </label>
       <div className="grid gap-4 lg:grid-cols-3">
         <label className="grid gap-2">
           <span className="label">Category</span>
