@@ -31,8 +31,6 @@ export const brand = {
 export const publicNav = [
   { labelKey: "nav.home", href: "/" },
   { labelKey: "nav.accountingTax", href: "/accounting-tax" },
-  { labelKey: "nav.bookkeeping", href: "/bookkeeping" },
-  { labelKey: "nav.payroll", href: "/payroll" },
   { labelKey: "nav.immigration", href: "/immigration-services" },
   { labelKey: "nav.business", href: "/business-services" },
   { labelKey: "nav.about", href: "/about" },
@@ -183,16 +181,27 @@ export const services: Record<
 };
 
 export const clientDashboardItems: DashboardItem[] = [
-  { title: "Immigration", titleKey: "nav.immigration", description: "Start or check your immigration file.", href: "/portal/immigration-files", metric: "Open" },
-  { title: "Personal Tax", titleKey: "nav.personalTax", description: "Upload slips for your tax return.", href: "/portal/personal-tax", metric: "Upload" },
-  { title: "Self-Employed", titleKey: "nav.selfEmployed", description: "Track self-employed income and costs.", href: "/portal/self-employed", metric: "Year" },
-  { title: "Business / Corporation", titleKey: "nav.businessCorporation", description: "Business and corporation records.", href: "/portal/business-corporation", metric: "Records" },
-  { title: "Income", titleKey: "nav.income", description: "Add money customers paid you.", href: "/portal/income", metric: "Add" },
-  { title: "Expenses", titleKey: "nav.expenses", description: "Add what you paid for.", href: "/portal/expenses", metric: "Add" },
-  { title: "GST", titleKey: "nav.gst", description: "See GST collected and paid.", href: "/portal/gst", metric: "Summary" },
-  { title: "Workers & Payments", titleKey: "nav.workersPayments", description: "Tell us who you paid.", href: "/portal/workers-payments", metric: "Add" },
-  { title: "Documents", titleKey: "nav.documents", description: "Upload files or take a picture.", href: "/portal/documents", metric: "Upload" },
-  { title: "Messages", titleKey: "nav.messages", description: "Send a secure message.", href: "/portal/messages", metric: "Ask" }
+  { title: "Immigration", description: "Sponsorship, visas, permits, PR, and citizenship.", href: "/portal?section=immigration", metric: "Choose" },
+  { title: "Accounting", description: "Income, purchases, workers, documents, and messages.", href: "/portal?section=accounting", metric: "Choose" }
+];
+
+export const clientImmigrationItems: DashboardItem[] = [
+  { title: "Sponsorship", description: "Family or refugee sponsorship help.", href: "/portal/immigration-files", metric: "Start" },
+  { title: "Visitor Visa", description: "Visitor visa documents and questions.", href: "/portal/immigration-files", metric: "Start" },
+  { title: "Work Permit", description: "Work permit documents and status.", href: "/portal/immigration-files", metric: "Start" },
+  { title: "Study Permit", description: "School and study permit documents.", href: "/portal/immigration-files", metric: "Start" },
+  { title: "Express Entry", description: "Express Entry and skilled worker files.", href: "/portal/immigration-files", metric: "Start" },
+  { title: "PR / Citizenship", description: "Permanent residence or citizenship help.", href: "/portal/immigration-files", metric: "Start" },
+  { title: "Upload Immigration Documents", description: "Upload files or take a picture.", href: "/portal/immigration-files", metric: "Upload" },
+  { title: "Messages", description: "Ask an immigration question.", href: "/portal/messages", metric: "Ask" }
+];
+
+export const clientAccountingItems: DashboardItem[] = [
+  { title: "Add Income", description: "Money someone paid you.", href: "/portal/income", metric: "Add" },
+  { title: "Add Expense / Purchase", description: "Something you bought for work.", href: "/portal/expenses", metric: "Add" },
+  { title: "Workers / Employees", description: "People you paid.", href: "/portal/workers-payments", metric: "Add" },
+  { title: "Upload Documents", description: "Receipts, invoices, or other files.", href: "/portal/documents", metric: "Upload" },
+  { title: "Messages", description: "Ask an accounting question.", href: "/portal/messages", metric: "Ask" }
 ];
 
 export const adminDashboardItems: DashboardItem[] = [
@@ -227,18 +236,11 @@ export const employeeDashboardItems: DashboardItem[] = [
 export const clientNav = [
   { labelKey: "nav.home", href: "/portal", icon: FolderKanban },
   { labelKey: "nav.immigration", href: "/portal/immigration-files", icon: Plane },
-  { labelKey: "nav.personalTax", href: "/portal/personal-tax", icon: FileText },
-  { labelKey: "nav.selfEmployed", href: "/portal/self-employed", icon: WalletCards },
-  { labelKey: "nav.businessCorporation", href: "/portal/business-corporation", icon: Building2 },
   { labelKey: "nav.income", href: "/portal/income", icon: BadgeDollarSign },
   { labelKey: "nav.expenses", href: "/portal/expenses", icon: ReceiptText },
-  { labelKey: "nav.gst", href: "/portal/gst", icon: Landmark },
-  { labelKey: "nav.documents", href: "/portal/documents", icon: FileText },
-  { labelKey: "nav.t4", href: "/portal/t4", icon: FileText },
   { labelKey: "nav.workersPayments", href: "/portal/workers-payments", icon: UsersRound },
-  { labelKey: "nav.assets", href: "/portal/assets", icon: Building2 },
+  { labelKey: "nav.documents", href: "/portal/documents", icon: FileText },
   { labelKey: "nav.messages", href: "/portal/messages", icon: MessageSquareText },
-  { labelKey: "nav.appointments", href: "/portal/appointments", icon: CalendarClock },
   { labelKey: "nav.profile", href: "/portal/profile", icon: UserRound }
 ];
 

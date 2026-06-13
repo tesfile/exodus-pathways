@@ -19,6 +19,24 @@ const portalSteps = [
   { icon: MessageSquareText, label: "Message securely", copy: "Clients and staff keep questions tied to each client record." }
 ];
 
+const explanationSections = [
+  {
+    title: "Immigration Services",
+    copy: "Get help organizing sponsorship, visitor visa, work permit, study permit, Express Entry, PR, citizenship, and related document requests.",
+    items: ["Clear document lists", "Secure upload", "Messages and follow-up requests"]
+  },
+  {
+    title: "Accounting & Tax Services",
+    copy: "Send income, purchases, receipts, worker payments, and tax documents from your phone so year-end and GST review is easier.",
+    items: ["Income and expense entry", "Receipt and document upload", "GST calculated from records"]
+  },
+  {
+    title: "Business Support",
+    copy: "Support for small business owners and corporations that need help with records, filings, payroll review, and growth decisions.",
+    items: ["Corporation records", "Worker and subcontractor review", "Year-end support"]
+  }
+];
+
 export default function HomePage() {
   const serviceCards = Object.entries(services);
 
@@ -67,6 +85,33 @@ export default function HomePage() {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      <section className="bg-white py-16">
+        <div className="section-shell">
+          <div className="max-w-3xl">
+            <p className="eyebrow">How we help</p>
+            <h2 className="mt-3 text-3xl font-black text-exodus-navy sm:text-4xl">
+              Simple support for immigration, accounting, and business records.
+            </h2>
+          </div>
+          <div className="mt-8 grid gap-4 lg:grid-cols-3">
+            {explanationSections.map((section) => (
+              <article key={section.title} className="rounded-md border border-slate-200 bg-exodus-light p-6">
+                <h3 className="text-2xl font-black text-exodus-navy">{section.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-exodus-slate">{section.copy}</p>
+                <ul className="mt-5 grid gap-2">
+                  {section.items.map((item) => (
+                    <li key={item} className="flex items-center gap-2 text-sm font-bold text-exodus-navy">
+                      <FileCheck2 className="h-4 w-4 text-exodus-gold" aria-hidden="true" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 

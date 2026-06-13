@@ -44,6 +44,8 @@ type ExpenseRow = {
   status: string;
   notes: string | null;
   tax_year: number;
+  admin_expense_classification?: string | null;
+  admin_expense_classification_notes?: string | null;
 };
 
 type ReceiptRow = {
@@ -289,7 +291,7 @@ export async function getAccountingData(client: ClientOption, taxYear: number): 
       .order("entry_date", { ascending: false }),
     supabase
       .from("expense_entries")
-      .select("id,expense_date,category,vendor,description,amount,gst_hst_amount,status,notes,tax_year")
+      .select("id,expense_date,category,vendor,description,amount,gst_hst_amount,status,notes,tax_year,admin_expense_classification,admin_expense_classification_notes")
       .eq("client_id", client.id)
       .eq("tax_year", taxYear)
       .order("expense_date", { ascending: false }),
@@ -455,6 +457,7 @@ export function expenseTableRows(data: AccountingData): DemoRow[] {
     type: row.category,
     amount: formatMoney(row.amount),
     gst: formatMoney(row.gst_hst_amount),
+    classification: row.admin_expense_classification ?? "Regular expense",
     status: row.status
   }));
 }
@@ -480,13 +483,25 @@ export function bankStatementTableRows(data: AccountingData): DemoRow[] {
 }
 
 export function assetTableRows(data: AccountingData): DemoRow[] {
-  return data.assets.map((row) => ({
+  const savedAssets = data.assets.map((row) => ({
     date: formatDate(row.purchase_date),
     description: row.description,
     class: row.asset_class ?? "-",
     cost: formatMoney(row.cost),
     status: row.status
   }));
+
+  const assetExpenses = data.expenses
+    .filter((row) => isAssetExpenseClassification(row.admin_expense_classification))
+    .map((row) => ({
+      date: formatDate(row.expense_date),
+      description: `${row.vendor ?? "Seller"} - ${row.description ?? "Purchase"}`,
+      class: row.admin_expense_classification ?? "Asset / equipment",
+      cost: formatMoney(row.amount),
+      status: row.admin_expense_classification_notes ? `Expense review: ${row.admin_expense_classification_notes}` : "Expense classified for CCA review"
+    }));
+
+  return [...savedAssets, ...assetExpenses];
 }
 
 export function payrollTableRows(data: AccountingData): DemoRow[] {
@@ -582,6 +597,7 @@ export function payrollSummaryRows(data: AccountingData): DemoRow[] {
 
 export function reportRows(data: AccountingData): DemoRow[] {
   const ledgerRows = generalLedgerRows(data);
+  const assetRows = assetTableRows(data);
   const trialBalanceDebits = data.totals.expenses + data.totals.assets + data.totals.expenseGst + data.totals.payrollGross;
   const trialBalanceCredits = data.totals.income + data.totals.incomeGst;
 
@@ -621,12 +637,16 @@ export function reportRows(data: AccountingData): DemoRow[] {
     {
       report: "T2 Working Papers",
       period: String(data.taxYear),
-      records: `${data.income.length + data.expenses.length + data.assets.length} accounting record(s)`,
+      records: `${data.income.length + data.expenses.length + assetRows.length} accounting record(s)`,
       total: formatMoney(data.totals.income - data.totals.expenses),
       status: data.accountingYear?.year_end_package_status ?? "not_started",
       href: `/admin/year-end-package?clientId=${data.client.id}&year=${data.taxYear}`
     }
   ];
+}
+
+function isAssetExpenseClassification(value: string | null | undefined) {
+  return Boolean(value && value !== "Regular expense" && value !== "Expense Only");
 }
 
 export function missingItemRows(data: AccountingData): DemoRow[] {

@@ -1,19 +1,9 @@
+import Link from "next/link";
 import { DashboardGrid } from "@/components/portal/dashboard-grid";
-import { FutureReady } from "@/components/portal/future-ready";
 import { GuidedOnboarding } from "@/components/portal/guided-onboarding";
 import { InlineNotice } from "@/components/portal/inline-notice";
-import { MissingItems } from "@/components/portal/missing-items";
-import { PersonalizedDashboardActions } from "@/components/portal/personalized-dashboard-actions";
 import { PortalHero } from "@/components/portal/portal-hero";
-import { QuickActions } from "@/components/portal/quick-actions";
-import {
-  AccountingModuleLinks,
-  AccountingSummary,
-  ClientAccountingFilter,
-  YearEndPackagePanel
-} from "@/components/portal/accounting-records";
-import { clientDashboardItems } from "@/lib/constants";
-import { getClientAccountingData, missingItemRows, parseYear } from "@/lib/accounting/data";
+import { clientAccountingItems, clientDashboardItems, clientImmigrationItems } from "@/lib/constants";
 import { getClientServiceProfile } from "@/lib/onboarding";
 import { getCurrentUserRecord } from "@/lib/supabase/server";
 
@@ -23,12 +13,27 @@ type PageProps = {
 
 export default async function ClientDashboardPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const taxYear = parseYear(params?.year);
-  const [user, accounting] = await Promise.all([
-    getCurrentUserRecord(),
-    getClientAccountingData(taxYear)
-  ]);
+  const selectedSection = Array.isArray(params?.section) ? params?.section[0] : params?.section;
+  const user = await getCurrentUserRecord();
   const profile = await getClientServiceProfile(user.id);
+  const sectionItems =
+    selectedSection === "immigration"
+      ? clientImmigrationItems
+      : selectedSection === "accounting"
+        ? clientAccountingItems
+        : clientDashboardItems;
+  const sectionTitle =
+    selectedSection === "immigration"
+      ? "Immigration"
+      : selectedSection === "accounting"
+        ? "Accounting"
+        : "What do you need help with?";
+  const sectionHelp =
+    selectedSection === "immigration"
+      ? "Choose the immigration help you need."
+      : selectedSection === "accounting"
+        ? "Choose what you want to enter."
+        : "Pick one. The next screen will show simple choices.";
 
   return (
     <div className="grid gap-6">
@@ -42,23 +47,21 @@ export default async function ClientDashboardPage({ searchParams }: PageProps) {
       <InlineNotice messageKey="common.disclaimer" />
       {!profile.onboarding_completed ? (
         <GuidedOnboarding userId={user.id} profile={profile} />
-      ) : (
-        <PersonalizedDashboardActions profile={profile} />
-      )}
+      ) : null}
       <section className="grid gap-3">
-        <div>
-          <h2 className="text-2xl font-black text-exodus-navy">What do you want to do?</h2>
-          <p className="mt-1 text-sm leading-6 text-exodus-slate">Choose one simple step. You can come back here anytime.</p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-2xl font-black text-exodus-navy">{sectionTitle}</h2>
+            <p className="mt-1 text-sm leading-6 text-exodus-slate">{sectionHelp}</p>
+          </div>
+          {selectedSection ? (
+            <Link href="/portal" className="focus-ring inline-flex min-h-12 items-center justify-center rounded-md border border-slate-200 bg-white px-4 text-sm font-black text-exodus-navy shadow-sm">
+              Back
+            </Link>
+          ) : null}
         </div>
-        <DashboardGrid items={clientDashboardItems} />
+        <DashboardGrid items={sectionItems} />
       </section>
-      <ClientAccountingFilter selectedYear={taxYear} action="/portal" />
-      <AccountingSummary data={accounting} />
-      <QuickActions />
-      <MissingItems items={missingItemRows(accounting)} />
-      <YearEndPackagePanel data={accounting} />
-      <AccountingModuleLinks basePath="portal" year={taxYear} />
-      <FutureReady />
     </div>
   );
 }

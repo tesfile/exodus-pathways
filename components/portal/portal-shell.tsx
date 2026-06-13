@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BadgeDollarSign, FileText, FolderKanban, LogOut, Menu, MoreHorizontal, ReceiptText } from "lucide-react";
+import { BadgeDollarSign, FolderKanban, LogOut, Menu, MoreHorizontal, ReceiptText, UsersRound } from "lucide-react";
 import { useState } from "react";
 import { adminNav, brand, clientNav, employeeNav } from "@/lib/constants";
 import type { PortalUser } from "@/lib/types";
@@ -139,9 +139,9 @@ export function PortalShell({ user, children }: PortalShellProps) {
 function ClientBottomNav({ pathname, onMore }: { pathname: string; onMore: () => void }) {
   const items = [
     { label: "Home", href: "/portal", icon: FolderKanban },
-    { label: "Documents", href: "/portal/documents", icon: FileText },
     { label: "Income", href: "/portal/income", icon: BadgeDollarSign },
-    { label: "Expenses", href: "/portal/expenses", icon: ReceiptText }
+    { label: "Expense", href: "/portal/expenses", icon: ReceiptText },
+    { label: "Workers", href: "/portal/workers-payments", icon: UsersRound }
   ];
 
   return (

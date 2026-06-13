@@ -22,7 +22,7 @@ const en: Dictionary = {
 
   "nav.home": "Home",
   "nav.dashboard": "Dashboard",
-  "nav.accountingTax": "Accounting & Tax",
+  "nav.accountingTax": "Accounting",
   "nav.bookkeeping": "Bookkeeping",
   "nav.payroll": "Payroll",
   "nav.immigration": "Immigration",

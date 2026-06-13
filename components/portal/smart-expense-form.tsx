@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Camera, ReceiptText, Save, UploadCloud } from "lucide-react";
-import { defaultExpenseTypes, paidToDefaults } from "@/lib/constants";
+import { paidToDefaults } from "@/lib/constants";
 import { useT } from "@/lib/i18n/provider";
 import {
   createBrowserSupabaseClient,
@@ -29,11 +29,7 @@ export function SmartExpenseForm({ taxYear }: { taxYear: number }) {
   const searchParams = useSearchParams();
   const quickType = searchParams.get("type") ?? "";
   const [paidToOptions, setPaidToOptions] = useState<string[]>(paidToDefaults);
-  const [typeOptions, setTypeOptions] = useState<string[]>(defaultExpenseTypes.map((type) => type.value));
   const [paidTo, setPaidTo] = useState("");
-  const [newPaidTo, setNewPaidTo] = useState("");
-  const [expenseType, setExpenseType] = useState(quickType || "Materials");
-  const [newType, setNewType] = useState("");
   const [status, setStatus] = useState("");
   const configured = useMemo(() => isBrowserSupabaseConfigured(), []);
 
@@ -51,67 +47,45 @@ export function SmartExpenseForm({ taxYear }: { taxYear: number }) {
         return;
       }
 
-      const [{ data: paidToRows }, { data: typeRows }] = await Promise.all([
-        supabase.from("paid_to_directory").select("name").eq("client_id", user.id).order("name"),
-        supabase
-          .from("expense_types")
-          .select("name")
-          .or(`client_id.eq.${user.id},client_id.is.null`)
-          .order("name")
-      ]);
+      const { data: paidToRows } = await supabase.from("paid_to_directory").select("name").eq("client_id", user.id).order("name");
 
       setPaidToOptions((current) => unique([...current, ...(paidToRows?.map((row) => row.name as string) ?? [])]));
-      setTypeOptions((current) => unique([...current, ...(typeRows?.map((row) => row.name as string) ?? [])]));
     }
 
     void loadDirectories();
   }, [configured]);
 
-  async function saveDirectoryValues(clientId: string, paidToName: string, typeName: string) {
+  async function saveDirectoryValues(clientId: string, paidToName: string) {
     const supabase = createBrowserSupabaseClient();
-    const [paidToResult, typeResult] = await Promise.all([
-      supabase
-        .from("paid_to_directory")
-        .upsert(
-          {
-            client_id: clientId,
-            name: paidToName,
-            normalized_name: normalizeName(paidToName),
-            use_count: 1,
-            last_used_at: new Date().toISOString()
-          },
-          { onConflict: "client_id,normalized_name" }
-        ),
-      supabase
-        .from("expense_types")
-        .upsert(
-          {
-            client_id: clientId,
-            name: typeName,
-            normalized_name: normalizeName(typeName)
-          },
-          { onConflict: "client_id,normalized_name" }
-        )
-    ]);
+    const { error } = await supabase
+      .from("paid_to_directory")
+      .upsert(
+        {
+          client_id: clientId,
+          name: paidToName,
+          normalized_name: normalizeName(paidToName),
+          use_count: 1,
+          last_used_at: new Date().toISOString()
+        },
+        { onConflict: "client_id,normalized_name" }
+      );
 
-    if (paidToResult.error || typeResult.error) {
-      throw new Error(paidToResult.error?.message ?? typeResult.error?.message ?? "Directory save failed.");
+    if (error) {
+      throw new Error(error.message);
     }
   }
 
-  function updateDirectoryOptions(paidToName: string, typeName: string) {
+  function updateDirectoryOptions(paidToName: string) {
     const nextPaidTo = unique([...paidToOptions, paidToName]);
-    const nextTypes = unique([...typeOptions, typeName]);
     setPaidToOptions(nextPaidTo);
-    setTypeOptions(nextTypes);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
-    const finalPaidTo = paidTo === "__new__" ? newPaidTo : paidTo;
-    const finalType = expenseType === "__new__" ? newType : expenseType;
+    const finalPaidTo = paidTo.trim();
+    const finalType = quickType || "Other";
     const transactionDate = String(form.get("transactionDate") ?? "");
     const transactionYear = Number(transactionDate.slice(0, 4)) || taxYear;
     const what = String(form.get("what") ?? "");
@@ -120,8 +94,8 @@ export function SmartExpenseForm({ taxYear }: { taxYear: number }) {
     const notes = String(form.get("notes") ?? "");
     const receipt = (form.get("receipt") || form.get("cameraReceipt")) as File | null;
 
-    if (!transactionDate || !finalPaidTo || !finalType || !what || amount <= 0) {
-      setStatus("Please complete Expense Date, Paid To, What, Type, and Amount.");
+    if (!transactionDate || !finalPaidTo || !what || amount <= 0) {
+      setStatus("Please complete Date, Seller, What did you buy, and Amount.");
       return;
     }
 
@@ -142,7 +116,7 @@ export function SmartExpenseForm({ taxYear }: { taxYear: number }) {
 
     let directoryWarning = "";
     try {
-      await saveDirectoryValues(user.id, finalPaidTo, finalType);
+      await saveDirectoryValues(user.id, finalPaidTo);
     } catch (error) {
       directoryWarning = error instanceof Error ? error.message : "Saved names could not be updated.";
     }
@@ -178,12 +152,10 @@ export function SmartExpenseForm({ taxYear }: { taxYear: number }) {
       });
 
       if (uploadError) {
-        updateDirectoryOptions(finalPaidTo, finalType);
+        updateDirectoryOptions(finalPaidTo);
         setStatus(`Expense saved, but receipt upload failed: ${uploadError.message}`);
         formElement.reset();
         setPaidTo("");
-        setNewPaidTo("");
-        setNewType("");
         return;
       }
 
@@ -201,12 +173,10 @@ export function SmartExpenseForm({ taxYear }: { taxYear: number }) {
       });
 
       if (receiptError) {
-        updateDirectoryOptions(finalPaidTo, finalType);
+        updateDirectoryOptions(finalPaidTo);
         setStatus(`Expense saved, but receipt record failed: ${receiptError.message}`);
         formElement.reset();
         setPaidTo("");
-        setNewPaidTo("");
-        setNewType("");
         return;
       }
 
@@ -225,22 +195,18 @@ export function SmartExpenseForm({ taxYear }: { taxYear: number }) {
       });
 
       if (documentError) {
-        updateDirectoryOptions(finalPaidTo, finalType);
+        updateDirectoryOptions(finalPaidTo);
         setStatus(`Expense saved, but document record failed: ${documentError.message}`);
         formElement.reset();
         setPaidTo("");
-        setNewPaidTo("");
-        setNewType("");
         return;
       }
     }
 
-    updateDirectoryOptions(finalPaidTo, finalType);
+    updateDirectoryOptions(finalPaidTo);
     setStatus(directoryWarning ? `${t("expense.form.saved")} Saved list update failed: ${directoryWarning}` : t("expense.form.saved"));
     formElement.reset();
     setPaidTo("");
-    setNewPaidTo("");
-    setNewType("");
   }
 
   return (
@@ -248,63 +214,40 @@ export function SmartExpenseForm({ taxYear }: { taxYear: number }) {
       <div className="flex items-center gap-3">
         <ReceiptText className="h-6 w-6 text-exodus-gold" aria-hidden="true" />
         <div>
-          <h2 className="text-xl font-black text-exodus-navy">Add what you paid</h2>
+          <h2 className="text-xl font-black text-exodus-navy">Add Expense / Purchase</h2>
           <p className="mt-1 text-sm leading-6 text-exodus-slate">Take a picture or upload a receipt if you have one.</p>
         </div>
       </div>
 
       <div className="mt-5 grid gap-5">
         <section className="grid gap-4 rounded-md bg-exodus-light p-4 lg:grid-cols-2">
-          <h3 className="text-base font-black text-exodus-navy lg:col-span-2">1. What did you buy?</h3>
+          <h3 className="text-base font-black text-exodus-navy lg:col-span-2">1. Purchase details</h3>
         <div>
           <label htmlFor="expense-date" className="label">
-            Expense Date
+            Date
           </label>
           <input id="expense-date" name="transactionDate" type="date" className="field mt-2" defaultValue={todayInputDate()} required />
         </div>
 
         <div>
           <label htmlFor="paid-to" className="label">
-            {t("expense.form.paidTo")}
+            Seller
           </label>
-          <select id="paid-to" className="field mt-2" value={paidTo} onChange={(event) => setPaidTo(event.target.value)} required>
-            <option value="">{t("expense.form.placeholderPaidTo")}</option>
+          <input id="paid-to" name="paidTo" className="field mt-2" list="paid-to-options" value={paidTo} onChange={(event) => setPaidTo(event.target.value)} placeholder="Home Depot, Shell, Costco" required />
+          <datalist id="paid-to-options">
             {paidToOptions.map((option) => (
               <option key={option} value={option}>
                 {option}
               </option>
             ))}
-            <option value="__new__">{t("common.addNew")}</option>
-          </select>
-          {paidTo === "__new__" ? (
-            <input className="field mt-2" value={newPaidTo} onChange={(event) => setNewPaidTo(event.target.value)} placeholder="ABC Roofing Supply" />
-          ) : null}
+          </datalist>
         </div>
 
-        <div>
+        <div className="lg:col-span-2">
           <label htmlFor="what" className="label">
-            {t("expense.form.what")}
+            What did you buy?
           </label>
           <input id="what" name="what" className="field mt-2" placeholder={t("expense.form.placeholderWhat")} required />
-        </div>
-
-        <div>
-          <label htmlFor="type" className="label">
-            {t("expense.form.type")}
-          </label>
-          <select id="type" className="field mt-2" value={expenseType} onChange={(event) => setExpenseType(event.target.value)} required>
-            {typeOptions.map((option) => (
-              <option key={option} value={option}>
-                {defaultExpenseTypes.find((type) => type.value === option)?.labelKey
-                  ? t(defaultExpenseTypes.find((type) => type.value === option)!.labelKey)
-                  : option}
-              </option>
-            ))}
-            <option value="__new__">{t("common.addNew")}</option>
-          </select>
-          {expenseType === "__new__" ? (
-            <input className="field mt-2" value={newType} onChange={(event) => setNewType(event.target.value)} placeholder={t("type.other")} />
-          ) : null}
         </div>
         </section>
 

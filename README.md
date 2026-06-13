@@ -316,12 +316,13 @@ Only expose `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to br
 15. Run `supabase/migrations/0014_worker_slip_payroll_preparation.sql`.
 16. Run `supabase/migrations/0015_paystub_pdf_fields.sql`.
 17. Run `supabase/migrations/0016_client_type_display_name.sql`.
-18. Enable email/password authentication and email verification.
-19. Add redirect URLs for `/verify-email` and `/reset-password`.
-20. Create Auth users for admins, employees, and clients.
-21. Update `supabase/seed.sql` with matching Auth user UUIDs.
-22. Run `supabase/seed.sql` only when you want optional demo data.
-23. Confirm the private Storage buckets exist:
+18. Run `supabase/migrations/0017_client_simplification_service_posts_expense_classification.sql`.
+19. Enable email/password authentication and email verification.
+20. Add redirect URLs for `/verify-email` and `/reset-password`.
+21. Create Auth users for admins, employees, and clients.
+22. Update `supabase/seed.sql` with matching Auth user UUIDs.
+23. Run `supabase/seed.sql` only when you want optional demo data.
+24. Confirm the private Storage buckets exist:
     - `receipts`
     - `invoices`
     - `bank-statements`
@@ -466,6 +467,12 @@ The client type and display name migration also:
 - defaults existing client users to `client_type = 'individual'` and `display_name = full_name`
 - updates the Auth signup trigger to save individual or business registration metadata
 - adds `public.save_client_registration_profile` for guided onboarding and Profile updates
+
+The client simplification and public service posts migration also:
+
+- adds admin expense classification fields for asset, equipment, vehicle, tools, furniture, computer, leasehold improvement, and CCA review
+- lets admin-classified expense purchases appear in admin asset/CCA review surfaces without removing existing asset records
+- creates `public_service_posts` for future public explanations by title, category, service type, language, content, and publish status
 
 ## File Uploads
 
