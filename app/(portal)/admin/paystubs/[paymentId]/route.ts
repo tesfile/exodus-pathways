@@ -74,6 +74,10 @@ export async function GET(_request: Request, { params }: RouteContext) {
     return new Response("Paystub payment not found.", { status: 404 });
   }
 
+  if (!payment.pay_period_start || !payment.pay_period_end || !payment.pay_frequency) {
+    return new Response("Save payroll review first.", { status: 409 });
+  }
+
   const [{ data: workerData }, { data: userData }, { data: profileData }, { data: companyData }] = await Promise.all([
     supabase.from("workers").select("worker_name,address").eq("id", payment.worker_id).maybeSingle(),
     supabase.from("users").select("full_name").eq("id", payment.client_id).maybeSingle(),
@@ -96,7 +100,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
   const vacationPay = amountWithFallback(payment.t4_vacation_pay, payment.vacation_pay);
   const netPay = amountWithFallback(payment.t4_net_pay, payment.net_pay) || Math.max(grossPay - cpp - ei - tax, 0);
 
-  const pdf = createPaystubPdf([
+  const pdf = createPaystubPdf(employerName, [
     {
       title: "Employer",
       rows: [
@@ -118,7 +122,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
         { label: "Pay period start", value: formatDate(payment.pay_period_start) },
         { label: "Pay period end", value: formatDate(payment.pay_period_end) },
         { label: "Pay date", value: formatDate(payDate) },
-        { label: "Pay frequency", value: payment.pay_frequency ?? payment.payroll_calculator_pay_frequency ?? "-" }
+        { label: "Pay frequency", value: payment.pay_frequency }
       ]
     },
     {

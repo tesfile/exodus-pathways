@@ -3,11 +3,11 @@ type PaystubSection = {
   rows: Array<{ label: string; value: string }>;
 };
 
-export function createPaystubPdf(sections: PaystubSection[]) {
+export function createPaystubPdf(title: string, sections: PaystubSection[]) {
   const commands: string[] = [];
   let y = 742;
 
-  addText(commands, 54, y, "Exodus Pathways Paystub", 18, "F2");
+  addText(commands, 54, y, `${title} Paystub`, 18, "F2");
   y -= 26;
   addText(commands, 54, y, "Prepared payroll information for review and recordkeeping.", 10, "F1");
   y -= 34;

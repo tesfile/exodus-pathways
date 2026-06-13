@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { AccountingTable } from "@/components/portal/accounting-records";
+import { PayrollCalculator } from "@/components/portal/payroll-calculator";
 import { formatDate, formatMoney, toNumber } from "@/lib/accounting/data";
 import { createServerSupabaseClient, requireRole } from "@/lib/supabase/server";
 import { adminClassificationOptions } from "@/lib/workers-options";
@@ -774,6 +775,7 @@ function T4PreparationPanel({ payment }: { payment: WorkerPaymentRecord }) {
   const netPay = amountDefault(payment.t4_net_pay, payment.net_pay);
   const calculatorGrossPay = amountDefault(payment.payroll_calculator_gross_pay, payment.amount_paid);
   const payFrequency = payment.pay_frequency ?? payment.payroll_calculator_pay_frequency ?? "biweekly";
+  const canDownloadPaystub = Boolean(payment.pay_period_start && payment.pay_period_end && payment.pay_frequency);
 
   return (
     <div className="mt-5 grid gap-5 rounded-md border border-exodus-gold/35 bg-exodus-light p-4">
@@ -818,66 +820,42 @@ function T4PreparationPanel({ payment }: { payment: WorkerPaymentRecord }) {
           </select>
         </label>
       </div>
-      <a
-        href={`/admin/paystubs/${payment.id}`}
-        target="_blank"
-        className="focus-ring inline-flex min-h-11 w-fit items-center rounded-md bg-exodus-gold px-4 text-sm font-black text-exodus-navy"
-      >
-        Download Paystub PDF
-      </a>
-      <div className="rounded-md border border-slate-200 bg-white p-4">
-        <h4 className="text-base font-black text-exodus-navy">Payroll Calculator</h4>
-        <p className="mt-1 text-sm font-bold text-red-700">Verify payroll deductions with CRA PDOC before filing or remitting.</p>
-        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          <label className="grid gap-2">
-            <span className="label">Province</span>
-            <select name="calculatorProvince" className="field" defaultValue={payment.payroll_calculator_province ?? "Alberta"}>
-              {provinces.map((province) => (
-                <option key={province} value={province}>
-                  {province}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="grid gap-2">
-            <span className="label">Pay date</span>
-            <input name="calculatorPayDate" type="date" className="field" defaultValue={payment.payroll_calculator_pay_date ?? payment.payment_date} />
-          </label>
-          <MoneyInput name="calculatorGrossPay" label="Gross pay" value={calculatorGrossPay} />
-          <MoneyInput name="calculatorTd1FederalAmount" label="TD1 federal amount" value={payment.payroll_calculator_td1_federal_amount} />
-          <MoneyInput name="calculatorTd1ProvincialAmount" label="TD1 provincial amount" value={payment.payroll_calculator_td1_provincial_amount} />
-          <label className="grid gap-2">
-            <span className="label">CPP exempt yes/no</span>
-            <select name="calculatorCppExempt" className="field" defaultValue={payment.payroll_calculator_cpp_exempt ? "Yes" : "No"}>
-              <option>No</option>
-              <option>Yes</option>
-            </select>
-          </label>
-          <label className="grid gap-2">
-            <span className="label">EI exempt yes/no</span>
-            <select name="calculatorEiExempt" className="field" defaultValue={payment.payroll_calculator_ei_exempt ? "Yes" : "No"}>
-              <option>No</option>
-              <option>Yes</option>
-            </select>
-          </label>
+      {canDownloadPaystub ? (
+        <a
+          href={`/admin/paystubs/${payment.id}`}
+          target="_blank"
+          className="focus-ring inline-flex min-h-11 w-fit items-center rounded-md bg-exodus-gold px-4 text-sm font-black text-exodus-navy"
+        >
+          Download Paystub PDF
+        </a>
+      ) : (
+        <div className="grid w-fit gap-2">
+          <button
+            type="button"
+            disabled
+            className="min-h-11 cursor-not-allowed rounded-md border border-slate-200 bg-slate-100 px-4 text-sm font-black text-slate-600"
+          >
+            Download Paystub PDF
+          </button>
+          <p className="text-sm font-semibold text-exodus-slate">Save payroll review first.</p>
         </div>
-        <div className="mt-4 rounded-md bg-exodus-light p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h5 className="text-sm font-black uppercase tracking-[0.12em] text-exodus-slate">Calculate placeholder</h5>
-            <button type="button" disabled className="min-h-10 cursor-not-allowed rounded-md border border-slate-200 bg-slate-100 px-4 text-sm font-black text-slate-600">
-              Calculate - Coming soon
-            </button>
-          </div>
-          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            <MoneyInput name="t4Box16" label="CPP box 16" value={box16} />
-            <MoneyInput name="t4Box18" label="EI box 18" value={box18} />
-            <MoneyInput name="t4Box22" label="Income tax deducted box 22" value={box22} />
-            <MoneyInput name="t4NetPay" label="Net pay" value={netPay} />
-            <MoneyInput name="calculatorEmployerCpp" label="Employer CPP" value={payment.payroll_calculator_employer_cpp} />
-            <MoneyInput name="calculatorEmployerEi" label="Employer EI" value={payment.payroll_calculator_employer_ei} />
-          </div>
-        </div>
-      </div>
+      )}
+      <PayrollCalculator
+        provinces={provinces}
+        defaultProvince={payment.payroll_calculator_province ?? "Alberta"}
+        defaultPayDate={payment.payroll_calculator_pay_date ?? payment.payment_date}
+        defaultGrossPay={calculatorGrossPay}
+        defaultTd1FederalAmount={payment.payroll_calculator_td1_federal_amount}
+        defaultTd1ProvincialAmount={payment.payroll_calculator_td1_provincial_amount}
+        defaultCppExempt={payment.payroll_calculator_cpp_exempt}
+        defaultEiExempt={payment.payroll_calculator_ei_exempt}
+        defaultCpp={box16}
+        defaultEi={box18}
+        defaultIncomeTax={box22}
+        defaultNetPay={netPay}
+        defaultEmployerCpp={payment.payroll_calculator_employer_cpp}
+        defaultEmployerEi={payment.payroll_calculator_employer_ei}
+      />
     </div>
   );
 }
