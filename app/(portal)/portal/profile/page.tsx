@@ -28,9 +28,9 @@ export default async function ProfilePage() {
           <div className="mt-5 grid gap-4">
             <div>
               <label htmlFor="full-name" className="label">
-                Full name
+                Display name
               </label>
-              <input id="full-name" className="field mt-2" defaultValue={user.full_name} />
+              <input id="full-name" className="field mt-2" defaultValue={user.display_name} />
             </div>
             <div>
               <label htmlFor="email" className="label">
@@ -42,7 +42,7 @@ export default async function ProfilePage() {
               <label htmlFor="phone" className="label">
                 Phone
               </label>
-              <input id="phone" className="field mt-2" placeholder="+1 (000) 000-0000" />
+              <input id="phone" className="field mt-2" defaultValue={serviceProfile.phone ?? ""} placeholder="+1 (000) 000-0000" />
             </div>
           </div>
         </section>
@@ -55,15 +55,15 @@ export default async function ProfilePage() {
           <div className="mt-5 grid gap-4">
             <div>
               <label htmlFor="company" className="label">
-                Company name
+                Business / Corporation name
               </label>
-              <input id="company" className="field mt-2" placeholder="Company legal name" />
+              <input id="company" className="field mt-2" defaultValue={serviceProfile.legal_business_name ?? ""} placeholder="Company legal name" />
             </div>
             <div>
               <label htmlFor="business-number" className="label">
                 CRA business number
               </label>
-              <input id="business-number" className="field mt-2" placeholder="Optional" />
+              <input id="business-number" className="field mt-2" defaultValue={serviceProfile.business_number ?? ""} placeholder="Optional" />
             </div>
             <div>
               <label htmlFor="services" className="label">

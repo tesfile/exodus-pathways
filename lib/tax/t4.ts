@@ -43,6 +43,7 @@ type UserRow = {
   id: string;
   email: string;
   full_name: string | null;
+  display_name: string | null;
 };
 
 function moneyOrDash(value: number | string | null | undefined) {
@@ -71,7 +72,7 @@ export async function getT4SlipRecords(clientId?: string): Promise<T4SlipRecord[
   let documents: DocumentRow[] = [];
 
   if (clientIds.length > 0) {
-    const { data } = await supabase.from("users").select("id,email,full_name").in("id", clientIds);
+    const { data } = await supabase.from("users").select("id,email,full_name,display_name").in("id", clientIds);
     users = (data ?? []) as UserRow[];
   }
 
@@ -83,7 +84,7 @@ export async function getT4SlipRecords(clientId?: string): Promise<T4SlipRecord[
     documents = (data ?? []) as DocumentRow[];
   }
 
-  const clientsById = new Map(users.map((user) => [user.id, user.full_name || user.email]));
+  const clientsById = new Map(users.map((user) => [user.id, user.display_name || user.full_name || user.email]));
   const documentsById = new Map(documents.map((document) => [document.id, document]));
 
   return Promise.all(

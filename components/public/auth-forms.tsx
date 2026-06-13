@@ -13,6 +13,7 @@ function siteUrl() {
 
 export function SignUpForm() {
   const { t } = useT();
+  const [clientType, setClientType] = useState<"individual" | "business">("individual");
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -22,6 +23,9 @@ export function SignUpForm() {
     const email = String(form.get("email") ?? "");
     const password = String(form.get("password") ?? "");
     const fullName = String(form.get("fullName") ?? "");
+    const legalBusinessName = String(form.get("legalBusinessName") ?? "");
+    const contactPerson = String(form.get("contactPerson") ?? "");
+    const displayName = clientType === "business" ? legalBusinessName : fullName;
 
     setLoading(true);
     try {
@@ -30,7 +34,11 @@ export function SignUpForm() {
         password,
         options: {
           emailRedirectTo: `${siteUrl()}/verify-email`,
-          data: { full_name: fullName }
+          data: {
+            client_type: clientType,
+            display_name: displayName,
+            full_name: clientType === "business" ? contactPerson : fullName
+          }
         }
       });
       setStatus(error?.message ?? t("auth.signup.success"));
@@ -44,9 +52,25 @@ export function SignUpForm() {
   return (
     <AuthCard titleKey="auth.signup.title" subtitleKey="auth.signup.subtitle">
       <form onSubmit={submit} className="grid gap-4">
-        <Field name="fullName" label={t("auth.fullName")} autoComplete="name" />
-        <Field name="email" label={t("auth.email")} type="email" autoComplete="email" />
-        <Field name="password" label={t("auth.password")} type="password" autoComplete="new-password" />
+        <fieldset className="grid gap-2">
+          <legend className="label">Client Type:</legend>
+          <div className="grid grid-cols-2 gap-2">
+            <TypeButton label="Individual" selected={clientType === "individual"} onClick={() => setClientType("individual")} />
+            <TypeButton label="Business / Corporation" selected={clientType === "business"} onClick={() => setClientType("business")} />
+          </div>
+        </fieldset>
+        {clientType === "individual" ? (
+          <>
+            <Field name="fullName" label="Full name" autoComplete="name" />
+          </>
+        ) : (
+          <>
+            <Field name="legalBusinessName" label="Legal Business Name" autoComplete="organization" />
+            <Field name="contactPerson" label="Contact Person" autoComplete="name" />
+          </>
+        )}
+        <Field name="email" label="Email address" type="email" autoComplete="email" />
+        <Field name="password" label="Password" type="password" autoComplete="new-password" />
         <SubmitButton loading={loading}>{t("auth.signup.button")}</SubmitButton>
         {status ? <p className="text-sm font-semibold text-exodus-navy">{status}</p> : null}
         <Link href="/login" className="text-sm font-black text-exodus-blue">
@@ -205,7 +229,8 @@ function Field({
   type = "text",
   autoComplete,
   value,
-  onChange
+  onChange,
+  required = true
 }: {
   name: string;
   label: string;
@@ -213,6 +238,7 @@ function Field({
   autoComplete?: string;
   value?: string;
   onChange?: (value: string) => void;
+  required?: boolean;
 }) {
   return (
     <div>
@@ -225,7 +251,7 @@ function Field({
           id={name}
           name={name}
           type={type}
-          required
+          required={required}
           value={value}
           onChange={onChange ? (event) => onChange(event.target.value) : undefined}
           autoComplete={autoComplete}
@@ -233,6 +259,20 @@ function Field({
         />
       </div>
     </div>
+  );
+}
+
+function TypeButton({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`focus-ring min-h-11 rounded-md border px-3 text-sm font-black ${
+        selected ? "border-exodus-gold bg-exodus-navy text-white" : "border-slate-200 bg-exodus-light text-exodus-navy"
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 

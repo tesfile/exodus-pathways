@@ -69,7 +69,7 @@ export async function getCurrentUserRecord(): Promise<PortalUser> {
 
   const { data: userRecord, error } = await supabase
     .from("users")
-    .select("id,email,full_name,role")
+    .select("id,email,full_name,display_name,client_type,phone,role")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -77,7 +77,12 @@ export async function getCurrentUserRecord(): Promise<PortalUser> {
     redirect("/login?error=user_record_required");
   }
 
-  return userRecord as PortalUser;
+  const record = userRecord as PortalUser;
+  return {
+    ...record,
+    display_name: record.display_name || record.full_name,
+    client_type: record.client_type ?? "individual"
+  };
 }
 
 export function dashboardForRole(role: PortalRole) {

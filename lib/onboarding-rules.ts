@@ -1,5 +1,18 @@
 export type ClientServiceProfile = {
   onboarding_completed: boolean;
+  client_type: "individual" | "business";
+  display_name: string | null;
+  full_name: string | null;
+  email: string | null;
+  phone: string | null;
+  sin_number: string | null;
+  address: string | null;
+  legal_business_name: string | null;
+  operating_name: string | null;
+  business_number: string | null;
+  corporation_number: string | null;
+  contact_person: string | null;
+  business_address: string | null;
   service_selection: string | null;
   immigration_service: string | null;
   tax_accounting_type: string | null;
@@ -43,6 +56,19 @@ export const selfEmployedSubtypeOptions = [
 export function emptyClientServiceProfile(): ClientServiceProfile {
   return {
     onboarding_completed: false,
+    client_type: "individual",
+    display_name: null,
+    full_name: null,
+    email: null,
+    phone: null,
+    sin_number: null,
+    address: null,
+    legal_business_name: null,
+    operating_name: null,
+    business_number: null,
+    corporation_number: null,
+    contact_person: null,
+    business_address: null,
     service_selection: null,
     immigration_service: null,
     tax_accounting_type: null,

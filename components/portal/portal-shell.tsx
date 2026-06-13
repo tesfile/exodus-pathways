@@ -78,7 +78,7 @@ export function PortalShell({ user, children }: PortalShellProps) {
           <LanguageSwitcher />
         </div>
         <div className="rounded-md bg-white/10 p-3">
-          <p className="truncate text-sm font-black">{user.full_name}</p>
+          <p className="truncate text-sm font-black">{user.display_name}</p>
           <p className="truncate text-xs font-medium text-blue-100">{user.email}</p>
         </div>
         <button

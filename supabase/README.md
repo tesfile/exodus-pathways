@@ -16,12 +16,13 @@
 14. Run `supabase/migrations/0013_restore_portal_worker_fields.sql`.
 15. Run `supabase/migrations/0014_worker_slip_payroll_preparation.sql`.
 16. Run `supabase/migrations/0015_paystub_pdf_fields.sql`.
-17. In Authentication, enable email/password sign-in and email verification.
-18. Add redirect URLs for `/verify-email` and `/reset-password`.
-19. Create admin, employee, and client Auth users.
-20. Update the UUIDs in `supabase/seed.sql` to match those Auth users, then run the seed only when you want optional demo data.
-21. In `public.users`, set trusted staff roles to `admin` or `employee`. New signups default to `client`.
-22. Store uploaded files under paths that start with the client UUID, for example:
+17. Run `supabase/migrations/0016_client_type_display_name.sql`.
+18. In Authentication, enable email/password sign-in and email verification.
+19. Add redirect URLs for `/verify-email` and `/reset-password`.
+20. Create admin, employee, and client Auth users.
+21. Update the UUIDs in `supabase/seed.sql` to match those Auth users, then run the seed only when you want optional demo data.
+22. In `public.users`, set trusted staff roles to `admin` or `employee`. New signups default to `client`.
+23. Store uploaded files under paths that start with the client UUID, for example:
    - `receipts/<client_uuid>/fuel-receipt.jpg`
    - `bank-statements/<client_uuid>/may-2026.pdf`
    - `immigration-documents/<client_uuid>/passport-scan.pdf`
@@ -48,6 +49,7 @@ The RLS policy model is:
 - `0013_restore_portal_worker_fields.sql` adds `worker_payments.net_pay` for admin-only payroll review.
 - `0014_worker_slip_payroll_preparation.sql` adds T4 preparation boxes, T4 ready status, and admin-only payroll calculator placeholder fields to worker payments.
 - `0015_paystub_pdf_fields.sql` adds pay period fields used by protected admin paystub PDF downloads.
+- `0016_client_type_display_name.sql` adds Individual vs Business / Corporation registration support, saves `client_type` and `display_name`, defaults existing clients to individual/full name, extends business company profile fields, and updates the Auth signup/onboarding profile save flow.
 - Worker payment records are grouped by client, company, and tax year. Employee access is still limited through `client_profiles.assigned_employee_id`.
 - Documents are private. Use signed URLs for download links.
 

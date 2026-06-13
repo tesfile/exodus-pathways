@@ -56,6 +56,7 @@ type ClientProfileRow = {
 
 type UserRow = {
   full_name: string;
+  display_name: string | null;
 };
 
 export async function GET(_request: Request, { params }: RouteContext) {
@@ -80,7 +81,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
 
   const [{ data: workerData }, { data: userData }, { data: profileData }, { data: companyData }] = await Promise.all([
     supabase.from("workers").select("worker_name,address").eq("id", payment.worker_id).maybeSingle(),
-    supabase.from("users").select("full_name").eq("id", payment.client_id).maybeSingle(),
+    supabase.from("users").select("full_name,display_name").eq("id", payment.client_id).maybeSingle(),
     supabase.from("client_profiles").select("address,province,postal_code").eq("user_id", payment.client_id).maybeSingle(),
     getCompanyForPayment(payment)
   ]);
@@ -89,7 +90,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
   const user = userData as UserRow | null;
   const profile = profileData as ClientProfileRow | null;
   const company = companyData as CompanyRow | null;
-  const employerName = company?.trade_name || company?.legal_name || user?.full_name || "Employer";
+  const employerName = user?.display_name || company?.legal_name || company?.trade_name || user?.full_name || "Employer";
   const companyAddress = company?.address || [profile?.address, profile?.province, profile?.postal_code].filter(Boolean).join(", ");
   const payDate = payment.payroll_calculator_pay_date || payment.payment_date;
   const grossPay = amountWithFallback(payment.t4_box14_employment_income, payment.gross_pay, payment.amount_paid);

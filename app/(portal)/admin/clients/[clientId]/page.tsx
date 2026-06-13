@@ -176,8 +176,9 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
       <section id="profile" className={tabSectionClass(activeTab, "profile", "scroll-mt-24 rounded-md border border-slate-200 bg-white p-5 shadow-sm")}>
         <h2 className="text-xl font-black text-exodus-navy">Profile</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <ProfileItem label="Client" value={client.name} />
+          <ProfileItem label="Client" value={client.companyName} />
           <ProfileItem label="Email" value={client.email} />
+          <ProfileItem label="Contact" value={client.name} />
           <ProfileItem label="Company" value={company?.legal_name ?? client.companyName} />
           <ProfileItem label="Business Number" value={company?.business_number ?? "-"} />
         </div>

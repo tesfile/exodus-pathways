@@ -5,6 +5,8 @@ export type ClientOption = {
   id: string;
   name: string;
   email: string;
+  clientType: string;
+  displayName: string;
   companyName: string;
 };
 
@@ -14,6 +16,9 @@ type CompanyRow = {
   legal_name: string;
   trade_name: string | null;
   business_number: string | null;
+  corporation_number?: string | null;
+  contact_person?: string | null;
+  address?: string | null;
 };
 
 type IncomeRow = {
@@ -213,8 +218,8 @@ export function toNumber(value: number | string | null | undefined) {
 export async function getClientOptions() {
   const supabase = await createServerSupabaseClient();
   const [{ data: users }, { data: companies }] = await Promise.all([
-    supabase.from("users").select("id,email,full_name,role").eq("role", "client").order("full_name"),
-    supabase.from("companies").select("id,client_id,legal_name,trade_name,business_number").order("legal_name")
+    supabase.from("users").select("id,email,full_name,display_name,client_type,phone,role").eq("role", "client").order("display_name"),
+    supabase.from("companies").select("id,client_id,legal_name,trade_name,business_number,corporation_number,contact_person,address").order("legal_name")
   ]);
 
   const companyByClient = new Map(
@@ -223,11 +228,14 @@ export async function getClientOptions() {
 
   return ((users ?? []) as PortalUser[]).map((user) => {
     const company = companyByClient.get(user.id);
+    const displayName = user.display_name || company?.legal_name || user.full_name;
     return {
       id: user.id,
       name: user.full_name,
       email: user.email,
-      companyName: company?.trade_name || company?.legal_name || user.full_name
+      clientType: user.client_type ?? "individual",
+      displayName,
+      companyName: displayName
     };
   });
 }
@@ -237,7 +245,7 @@ export async function getClientOptionForCurrentUser() {
   const supabase = await createServerSupabaseClient();
   const { data: company } = await supabase
     .from("companies")
-    .select("id,client_id,legal_name,trade_name,business_number")
+    .select("id,client_id,legal_name,trade_name,business_number,corporation_number,contact_person,address")
     .eq("client_id", user.id)
     .order("created_at", { ascending: true })
     .limit(1)
@@ -248,7 +256,9 @@ export async function getClientOptionForCurrentUser() {
     id: user.id,
     name: user.full_name,
     email: user.email,
-    companyName: companyRow?.trade_name || companyRow?.legal_name || user.full_name
+    clientType: user.client_type ?? "individual",
+    displayName: user.display_name || companyRow?.legal_name || user.full_name,
+    companyName: user.display_name || companyRow?.legal_name || user.full_name
   };
 }
 

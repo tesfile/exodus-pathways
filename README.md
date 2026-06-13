@@ -56,6 +56,8 @@ Signup flow:
 4. Create Case
 5. Upload Documents
 
+Signup and guided onboarding now ask whether the client is registering as an Individual or a Business / Corporation. Individual clients save their personal display name, optional SIN, phone, email, and address. Business clients save legal business name, optional operating name, optional BN, optional corporation number, contact person, phone, email, and business address. The app stores `client_type` and `display_name`, and client-facing/admin lists use `display_name` for client names.
+
 Clients must verify their email before protected portal access when Supabase is configured. Admins can create client accounts manually in Supabase Auth. Future 2FA support is prepared with `two_factor_enabled`.
 
 ## Portal Roles
@@ -137,7 +139,7 @@ Self-employed routes:
 
 - First login route: `/portal`
 - New clients see the guided onboarding welcome card, but portal sections remain visible.
-- Selections are saved to `client_profiles`.
+- Registration type, display name, contact details, and service selections are saved through `public.save_client_registration_profile`.
 - Supported choices include Immigration, Tax & Accounting, or both.
 - Immigration service choices include Refugee Sponsorship, Family Sponsorship, Visitor Visa, Study Permit, Work Permit, Express Entry, Citizenship, and Other.
 - Tax choices include Personal Tax, Self-Employed, Corporation, GST Only, and Bookkeeping & Payroll.
@@ -313,12 +315,13 @@ Only expose `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to br
 14. Run `supabase/migrations/0013_restore_portal_worker_fields.sql`.
 15. Run `supabase/migrations/0014_worker_slip_payroll_preparation.sql`.
 16. Run `supabase/migrations/0015_paystub_pdf_fields.sql`.
-17. Enable email/password authentication and email verification.
-18. Add redirect URLs for `/verify-email` and `/reset-password`.
-19. Create Auth users for admins, employees, and clients.
-20. Update `supabase/seed.sql` with matching Auth user UUIDs.
-21. Run `supabase/seed.sql` only when you want optional demo data.
-22. Confirm the private Storage buckets exist:
+17. Run `supabase/migrations/0016_client_type_display_name.sql`.
+18. Enable email/password authentication and email verification.
+19. Add redirect URLs for `/verify-email` and `/reset-password`.
+20. Create Auth users for admins, employees, and clients.
+21. Update `supabase/seed.sql` with matching Auth user UUIDs.
+22. Run `supabase/seed.sql` only when you want optional demo data.
+23. Confirm the private Storage buckets exist:
     - `receipts`
     - `invoices`
     - `bank-statements`
@@ -454,6 +457,15 @@ The paystub PDF fields migration also:
 
 - adds pay period start, pay period end, and pay frequency fields to `worker_payments`
 - supports protected admin paystub PDF downloads for reviewed T4 employee payments
+
+The client type and display name migration also:
+
+- adds `users.client_type`, `users.display_name`, and `users.sin_number`
+- adds `client_profiles.sin_number`
+- adds `companies.corporation_number` and `companies.contact_person`
+- defaults existing client users to `client_type = 'individual'` and `display_name = full_name`
+- updates the Auth signup trigger to save individual or business registration metadata
+- adds `public.save_client_registration_profile` for guided onboarding and Profile updates
 
 ## File Uploads
 

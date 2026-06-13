@@ -1,9 +1,13 @@
 export type PortalRole = "admin" | "employee" | "client";
+export type ClientType = "individual" | "business";
 
 export type PortalUser = {
   id: string;
   email: string;
   full_name: string;
+  display_name: string;
+  client_type: ClientType;
+  phone?: string | null;
   role: PortalRole;
 };
 

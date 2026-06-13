@@ -2,7 +2,7 @@ import { createServerSupabaseClient, getCurrentUserRecord } from "@/lib/supabase
 import { formatDate } from "@/lib/accounting/data";
 import type { DemoRow, PortalUser } from "@/lib/types";
 
-type UserLite = Pick<PortalUser, "id" | "email" | "full_name" | "role">;
+type UserLite = Pick<PortalUser, "id" | "email" | "full_name" | "display_name" | "role">;
 
 type MessageRecord = {
   id: string;
@@ -114,14 +114,14 @@ function titleFromSlug(value: string) {
 
 async function getUserMap() {
   const supabase = await createServerSupabaseClient();
-  const { data } = await supabase.from("users").select("id,email,full_name,role");
+  const { data } = await supabase.from("users").select("id,email,full_name,display_name,role");
   return new Map(((data ?? []) as UserLite[]).map((user) => [user.id, user]));
 }
 
 async function getClientNameMap() {
   const supabase = await createServerSupabaseClient();
-  const { data } = await supabase.from("users").select("id,email,full_name,role").eq("role", "client");
-  return new Map(((data ?? []) as UserLite[]).map((user) => [user.id, user.full_name || user.email]));
+  const { data } = await supabase.from("users").select("id,email,full_name,display_name,role").eq("role", "client");
+  return new Map(((data ?? []) as UserLite[]).map((user) => [user.id, displayNameForUser(user)]));
 }
 
 export async function getMessageRows(clientId?: string): Promise<DemoRow[]> {
@@ -143,7 +143,7 @@ export async function getMessageRows(clientId?: string): Promise<DemoRow[]> {
 
   return ((messages ?? []) as MessageRecord[]).map((message) => {
     const sender = userMap.get(message.sender_id);
-    const senderName = message.sender_id === user.id ? "You" : sender?.full_name ?? "Exodus Pathways";
+    const senderName = message.sender_id === user.id ? "You" : sender ? displayNameForUser(sender) : "Exodus Pathways";
 
     return {
       subject: message.subject,
@@ -185,7 +185,7 @@ export async function getMessageThread(messageId: string): Promise<MessageThread
       const sender = userMap.get(row.sender_id);
       return {
         ...row,
-        sender_name: sender?.full_name ?? "Exodus Pathways",
+        sender_name: sender ? displayNameForUser(sender) : "Exodus Pathways",
         sender_email: sender?.email ?? ""
       };
     })
@@ -206,7 +206,7 @@ export async function getTaskRows(): Promise<DemoRow[]> {
   return ((tasks ?? []) as TaskRecord[]).map((task) => ({
     task: task.title,
     client: clientMap.get(task.client_id) ?? "Client",
-    owner: task.assigned_to ? userMap.get(task.assigned_to)?.full_name ?? "Assigned staff" : "-",
+    owner: task.assigned_to ? displayNameForUser(userMap.get(task.assigned_to)) : "-",
     due: formatDate(task.due_date),
     status: task.status
   }));
@@ -296,7 +296,7 @@ export async function getAuditLogRows(): Promise<DemoRow[]> {
 
   return ((logs ?? []) as AuditLogRecord[]).map((log) => ({
     date: formatDateTime(log.created_at),
-    actor: log.actor_id ? userMap.get(log.actor_id)?.full_name ?? "User" : "System",
+    actor: log.actor_id ? displayNameForUser(userMap.get(log.actor_id)) : "System",
     action: log.action,
     area: log.area,
     status: "Logged"
@@ -306,7 +306,7 @@ export async function getAuditLogRows(): Promise<DemoRow[]> {
 export async function getEmployeeRows(): Promise<DemoRow[]> {
   const supabase = await createServerSupabaseClient();
   const [{ data: users }, { data: profiles }] = await Promise.all([
-    supabase.from("users").select("id,email,full_name,role").in("role", ["admin", "employee"]).order("full_name"),
+    supabase.from("users").select("id,email,full_name,display_name,role").in("role", ["admin", "employee"]).order("full_name"),
     supabase.from("client_profiles").select("assigned_employee_id")
   ]);
 
@@ -319,7 +319,7 @@ export async function getEmployeeRows(): Promise<DemoRow[]> {
   });
 
   return ((users ?? []) as UserLite[]).map((user) => ({
-    name: user.full_name,
+    name: displayNameForUser(user),
     email: user.email,
     role: user.role,
     assigned: user.role === "admin" ? "All clients" : `${assignedCounts.get(user.id) ?? 0} client(s)`,
@@ -342,9 +342,13 @@ export async function getFollowUpRows(): Promise<DemoRow[]> {
     client: clientMap.get(reminder.client_id) ?? "Client",
     item: reminder.plain_language_title || reminder.title,
     follow: formatDate(reminder.due_date),
-    staff: reminder.created_by ? userMap.get(reminder.created_by)?.full_name ?? "Staff" : "-",
+    staff: reminder.created_by ? displayNameForUser(userMap.get(reminder.created_by)) : "-",
     status: reminder.status
   }));
+}
+
+function displayNameForUser(user: UserLite | undefined) {
+  return user?.display_name || user?.full_name || user?.email || "User";
 }
 
 export async function getIrccRequestRows(): Promise<DemoRow[]> {

@@ -37,7 +37,7 @@ export default async function ClientDashboardPage({ searchParams }: PageProps) {
         titleKey="portal.client.welcome"
         subtitleKey="portal.client.subtitle"
         badgeKey="common.yourRecordsOnly"
-        name={user.full_name}
+        name={user.display_name}
       />
       <InlineNotice messageKey="common.disclaimer" />
       {!profile.onboarding_completed ? (
