@@ -144,7 +144,7 @@ export function AccountingModuleLinks({
           ["Receipts", `/admin/receipts${query}`],
           ["Bank Statements", `/admin/bank-statements${query}`],
           ["GST", `/admin/gst${query}`],
-          ["Payroll", `/admin/payroll${query}`],
+          ["Workers & Payments", `/admin/workers-payroll-review${query}`],
           ["Assets", `/admin/assets${query}`],
           ["General Ledger", `/admin/general-ledger${query}`],
           ["Year-End Package", `/admin/year-end-package${query}`]
@@ -155,7 +155,7 @@ export function AccountingModuleLinks({
           ["Receipts", `/portal/receipts${query}`],
           ["Bank Statements", `/portal/bank-statements${query}`],
           ["GST", `/portal/gst${query}`],
-          ["Payroll", `/portal/payroll${query}`],
+          ["Workers & Payments", `/portal/workers-payments${query}`],
           ["Assets", `/portal/assets${query}`]
         ];
 

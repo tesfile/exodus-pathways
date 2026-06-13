@@ -7,9 +7,11 @@ import {
   AccountingTable,
   GeneralLedgerTable,
   GstSummaryTable,
-  PayrollSummaryTable,
   YearEndPackagePanel
 } from "@/components/portal/accounting-records";
+import {
+  WorkerReviewWorkspace
+} from "@/components/portal/workers-admin-review";
 import {
   assetTableRows,
   expenseTableRows,
@@ -20,17 +22,43 @@ import {
   getClientOptionById,
   incomeTableRows,
   parseYear,
-  payrollTableRows,
+  reportRows,
   receiptTableRows,
   bankStatementTableRows
 } from "@/lib/accounting/data";
 import { createServerSupabaseClient, requireRole } from "@/lib/supabase/server";
+import {
+  getPersonalTaxSlips,
+  getSelfEmployedData,
+  personalTaxSlipRows,
+  selfEmployedRecordRows,
+  selfEmployedSummaryRows
+} from "@/lib/tax/personal-tax";
 import type { DemoRow } from "@/lib/types";
+import { getWorkersPaymentsData } from "@/lib/workers-payments";
 
 type PageProps = {
   params: Promise<{ clientId: string }>;
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
+
+const clientDetailTabs = [
+  { key: "profile", label: "Profile" },
+  { key: "documents", label: "Documents" },
+  { key: "immigration", label: "Immigration" },
+  { key: "personal-tax", label: "Personal Tax" },
+  { key: "self-employed", label: "Self-Employed" },
+  { key: "income", label: "Income" },
+  { key: "expenses", label: "Expenses" },
+  { key: "gst", label: "GST" },
+  { key: "workers-payments", label: "Workers & Payments" },
+  { key: "messages", label: "Messages" },
+  { key: "tasks", label: "Tasks" },
+  { key: "notes", label: "Notes" },
+  { key: "reports", label: "Reports" }
+] as const;
+
+type ClientDetailTab = (typeof clientDetailTabs)[number]["key"];
 
 async function reviewDocumentAction(formData: FormData) {
   "use server";
@@ -86,16 +114,22 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
   const { clientId } = await params;
   const query = await searchParams;
   const taxYear = parseYear(query?.year);
+  const activeTab = parseClientDetailTab(query?.tab);
+  const selectedWorkerId = firstParam(query?.workerId);
+  const selectedWorkerTab = firstParam(query?.workerTab);
   const client = await getClientOptionById(clientId);
 
   if (!client) {
     notFound();
   }
 
-  const [accounting, documents, related] = await Promise.all([
+  const [accounting, documents, related, personalTaxSlips, selfEmployed, workersPayments] = await Promise.all([
     getAccountingData(client, taxYear),
     getClientDocuments(client.id),
-    getRelatedClientRows(client.id)
+    getRelatedClientRows(client.id),
+    getPersonalTaxSlips(client.id, taxYear),
+    getSelfEmployedData(client, taxYear),
+    getWorkersPaymentsData(client, taxYear)
   ]);
 
   const company = accounting.companies[0];
@@ -126,25 +160,20 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
       </AccountingHeader>
 
       <nav className="flex flex-wrap gap-2 rounded-md border border-slate-200 bg-white p-3 shadow-sm" aria-label="Client detail tabs">
-        {[
-          ["Profile", "#profile"],
-          ["Documents", "#documents"],
-          ["Income", "#income"],
-          ["Expenses", "#expenses"],
-          ["GST", "#gst"],
-          ["Payroll", "#payroll"],
-          ["Immigration Cases", "#immigration"],
-          ["Messages", "#messages"],
-          ["Tasks", "#tasks"],
-          ["Notes", "#notes"]
-        ].map(([label, href]) => (
-          <Link key={href} href={href} className="focus-ring rounded-md bg-exodus-light px-3 py-2 text-xs font-black text-exodus-navy">
-            {label}
+        {clientDetailTabs.map((tab) => (
+          <Link
+            key={tab.key}
+            href={`/admin/clients/${client.id}?year=${taxYear}&tab=${tab.key}`}
+            className={`focus-ring rounded-md px-3 py-2 text-xs font-black ${
+              activeTab === tab.key ? "bg-exodus-navy text-white" : "bg-exodus-light text-exodus-navy"
+            }`}
+          >
+            {tab.label}
           </Link>
         ))}
       </nav>
 
-      <section id="profile" className="scroll-mt-24 rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+      <section id="profile" className={tabSectionClass(activeTab, "profile", "scroll-mt-24 rounded-md border border-slate-200 bg-white p-5 shadow-sm")}>
         <h2 className="text-xl font-black text-exodus-navy">Profile</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <ProfileItem label="Client" value={client.name} />
@@ -154,10 +183,14 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
         </div>
       </section>
 
-      <YearEndPackagePanel data={accounting} adminHref={`/admin/year-end-package?clientId=${client.id}&year=${taxYear}`} />
-      <AccountingSummary data={accounting} />
+      {activeTab === "profile" ? (
+        <>
+          <YearEndPackagePanel data={accounting} adminHref={`/admin/year-end-package?clientId=${client.id}&year=${taxYear}`} />
+          <AccountingSummary data={accounting} />
+        </>
+      ) : null}
 
-      <section id="documents" className="scroll-mt-24 grid gap-4">
+      <section id="documents" className={tabSectionClass(activeTab, "documents", "scroll-mt-24 grid gap-4")}>
         <h2 className="text-xl font-black text-exodus-navy">Documents</h2>
         {documents.length > 0 ? (
           <div className="grid gap-4">
@@ -209,7 +242,62 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
         )}
       </section>
 
-      <section id="income" className="scroll-mt-24">
+      <section id="immigration" className={tabSectionClass(activeTab, "immigration", "scroll-mt-24")}>
+        <AccountingTable
+          title="Immigration"
+          columns={[
+            { key: "case", label: "Case" },
+            { key: "applicant", label: "Applicant" },
+            { key: "status", label: "Status" },
+            { key: "due", label: "Due" }
+          ]}
+          rows={related.immigrationCases}
+        />
+      </section>
+
+      <section id="personal-tax" className={tabSectionClass(activeTab, "personal-tax", "scroll-mt-24")}>
+        <AccountingTable
+          title="Personal Tax"
+          columns={[
+            { key: "file", label: "Tax Slip" },
+            { key: "type", label: "Slip Type" },
+            { key: "payer", label: "Employer / Payer" },
+            { key: "documentDate", label: "Document Date" },
+            { key: "uploadedDate", label: "Uploaded Date" },
+            { key: "status", label: "Status" },
+            { key: "notes", label: "Notes" }
+          ]}
+          rows={personalTaxSlipRows(personalTaxSlips)}
+        />
+      </section>
+
+      <section id="self-employed" className={tabSectionClass(activeTab, "self-employed", "scroll-mt-24 grid gap-6")}>
+        <AccountingTable
+          title="Self-Employed Year Summary"
+          columns={[
+            { key: "item", label: "Item" },
+            { key: "value", label: "Value" },
+            { key: "detail", label: "Detail" }
+          ]}
+          rows={selfEmployedSummaryRows(selfEmployed)}
+        />
+        <AccountingTable
+          title="Self-Employed Records"
+          columns={[
+            { key: "date", label: "Date" },
+            { key: "business", label: "Business Type" },
+            { key: "expenseType", label: "Expense Type" },
+            { key: "income", label: "Income" },
+            { key: "expenses", label: "Expenses" },
+            { key: "gstCollected", label: "GST Collected" },
+            { key: "gstPaid", label: "GST Paid" },
+            { key: "status", label: "Status" }
+          ]}
+          rows={selfEmployedRecordRows(selfEmployed)}
+        />
+      </section>
+
+      <section id="income" className={tabSectionClass(activeTab, "income", "scroll-mt-24")}>
         <AccountingTable
           title="Income"
           columns={[
@@ -223,7 +311,7 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
         />
       </section>
 
-      <section id="expenses" className="scroll-mt-24">
+      <section id="expenses" className={tabSectionClass(activeTab, "expenses", "scroll-mt-24")}>
         <AccountingTable
           title="Expenses"
           columns={[
@@ -238,28 +326,62 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
         />
       </section>
 
-      <section id="gst" className="scroll-mt-24">
+      <section id="gst" className={tabSectionClass(activeTab, "gst", "scroll-mt-24")}>
         <GstSummaryTable data={accounting} />
       </section>
 
-      <section id="payroll" className="scroll-mt-24">
-        <AccountingTable
-          title="Payroll"
-          columns={[
-            { key: "period", label: "Period" },
-            { key: "employees", label: "Employees" },
-            { key: "gross", label: "Gross payroll" },
-            { key: "deductions", label: "Deductions" },
-            { key: "status", label: "Status" }
-          ]}
-          rows={payrollTableRows(accounting)}
+      <section id="workers-payments" className={tabSectionClass(activeTab, "workers-payments", "scroll-mt-24 grid gap-6")}>
+        <WorkerReviewWorkspace
+          data={workersPayments}
+          clientId={client.id}
+          taxYear={taxYear}
+          baseHref={`/admin/clients/${client.id}?year=${taxYear}&tab=workers-payments`}
+          selectedWorkerId={selectedWorkerId}
+          selectedTab={selectedWorkerTab}
         />
-        <div className="mt-6">
-          <PayrollSummaryTable data={accounting} />
-        </div>
       </section>
 
-      <section className="grid gap-6">
+      <section id="messages" className={tabSectionClass(activeTab, "messages", "scroll-mt-24")}>
+        <AccountingTable
+          title="Messages"
+          columns={[
+            { key: "subject", label: "Subject" },
+            { key: "date", label: "Date" },
+            { key: "status", label: "Status" }
+          ]}
+          rows={related.messages}
+        />
+      </section>
+
+      <section id="tasks" className={tabSectionClass(activeTab, "tasks", "scroll-mt-24")}>
+        <AccountingTable
+          title="Tasks"
+          columns={[
+            { key: "task", label: "Task" },
+            { key: "due", label: "Due Date" },
+            { key: "status", label: "Status" }
+          ]}
+          rows={related.tasks}
+        />
+      </section>
+
+      <section id="notes" className={tabSectionClass(activeTab, "notes", "scroll-mt-24 rounded-md border border-slate-200 bg-white p-5 shadow-sm")}>
+        <h2 className="text-xl font-black text-exodus-navy">Notes</h2>
+        <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-exodus-slate">{related.notes || "No notes saved for this client."}</p>
+      </section>
+
+      <section id="reports" className={tabSectionClass(activeTab, "reports", "scroll-mt-24 grid gap-6")}>
+        <AccountingTable
+          title="Reports"
+          columns={[
+            { key: "report", label: "Report" },
+            { key: "period", label: "Period" },
+            { key: "records", label: "Records" },
+            { key: "total", label: "Total" },
+            { key: "status", label: "Status" }
+          ]}
+          rows={reportRows(accounting)}
+        />
         <AccountingTable
           title="Receipts"
           columns={[
@@ -295,50 +417,21 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
         />
         <GeneralLedgerTable data={accounting} />
       </section>
-
-      <section id="immigration" className="scroll-mt-24">
-        <AccountingTable
-          title="Immigration Cases"
-          columns={[
-            { key: "case", label: "Case" },
-            { key: "applicant", label: "Applicant" },
-            { key: "status", label: "Status" },
-            { key: "due", label: "Due" }
-          ]}
-          rows={related.immigrationCases}
-        />
-      </section>
-
-      <section id="messages" className="scroll-mt-24">
-        <AccountingTable
-          title="Messages"
-          columns={[
-            { key: "subject", label: "Subject" },
-            { key: "date", label: "Date" },
-            { key: "status", label: "Status" }
-          ]}
-          rows={related.messages}
-        />
-      </section>
-
-      <section id="tasks" className="scroll-mt-24">
-        <AccountingTable
-          title="Tasks"
-          columns={[
-            { key: "task", label: "Task" },
-            { key: "due", label: "Due Date" },
-            { key: "status", label: "Status" }
-          ]}
-          rows={related.tasks}
-        />
-      </section>
-
-      <section id="notes" className="scroll-mt-24 rounded-md border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-xl font-black text-exodus-navy">Notes</h2>
-        <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-exodus-slate">{related.notes || "No notes saved for this client."}</p>
-      </section>
     </div>
   );
+}
+
+function parseClientDetailTab(value: string | string[] | undefined): ClientDetailTab {
+  const tab = Array.isArray(value) ? value[0] : value;
+  return clientDetailTabs.some((item) => item.key === tab) ? (tab as ClientDetailTab) : "profile";
+}
+
+function firstParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function tabSectionClass(activeTab: ClientDetailTab, tab: ClientDetailTab, className: string) {
+  return activeTab === tab ? className : `${className} hidden`;
 }
 
 function ProfileItem({ label, value }: { label: string; value: string }) {

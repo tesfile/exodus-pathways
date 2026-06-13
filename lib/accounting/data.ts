@@ -605,8 +605,8 @@ export function reportRows(data: AccountingData): DemoRow[] {
       period: String(data.taxYear),
       records: `${data.payroll.length} payroll record(s)`,
       total: formatMoney(data.totals.payrollGross),
-      status: "Generated from payroll records",
-      href: `/admin/payroll?clientId=${data.client.id}&year=${data.taxYear}`
+      status: "Review payroll inside Workers & Payments",
+      href: `/admin/clients/${data.client.id}?year=${data.taxYear}#workers-payments`
     },
     {
       report: "T2 Working Papers",

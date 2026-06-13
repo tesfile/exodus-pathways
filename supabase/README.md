@@ -10,16 +10,23 @@
 8. Run `supabase/migrations/0007_accounting_document_dates.sql`.
 9. Run `supabase/migrations/0008_t4_slip_workflow.sql`.
 10. Run `supabase/migrations/0009_personal_tax_and_self_employed.sql`.
-11. In Authentication, enable email/password sign-in and email verification.
-12. Add redirect URLs for `/verify-email` and `/reset-password`.
-13. Create admin, employee, and client Auth users.
-14. Update the UUIDs in `supabase/seed.sql` to match those Auth users, then run the seed only when you want optional demo data.
-15. In `public.users`, set trusted staff roles to `admin` or `employee`. New signups default to `client`.
-16. Store uploaded files under paths that start with the client UUID, for example:
+11. Run `supabase/migrations/0010_guided_onboarding_workers_payments.sql`.
+12. Run `supabase/migrations/0011_client_friendly_worker_payments.sql`.
+13. Run `supabase/migrations/0012_simplify_payroll_workers_workflow.sql`.
+14. Run `supabase/migrations/0013_restore_portal_worker_fields.sql`.
+15. Run `supabase/migrations/0014_worker_slip_payroll_preparation.sql`.
+16. Run `supabase/migrations/0015_paystub_pdf_fields.sql`.
+17. In Authentication, enable email/password sign-in and email verification.
+18. Add redirect URLs for `/verify-email` and `/reset-password`.
+19. Create admin, employee, and client Auth users.
+20. Update the UUIDs in `supabase/seed.sql` to match those Auth users, then run the seed only when you want optional demo data.
+21. In `public.users`, set trusted staff roles to `admin` or `employee`. New signups default to `client`.
+22. Store uploaded files under paths that start with the client UUID, for example:
    - `receipts/<client_uuid>/fuel-receipt.jpg`
    - `bank-statements/<client_uuid>/may-2026.pdf`
    - `immigration-documents/<client_uuid>/passport-scan.pdf`
    - `tax-slips/<client_uuid>/2026/t4.pdf`
+   - `invoices/<client_uuid>/workers/2026/subcontractor-invoice.pdf`
 
 The RLS policy model is:
 
@@ -35,6 +42,13 @@ The RLS policy model is:
 - `0007_accounting_document_dates.sql` adds optional document effective dates while keeping uploaded timestamps in `created_at`.
 - `0008_t4_slip_workflow.sql` creates `t4_slips` for boxes 14, 16, 18, and 22 extraction, client confirmation, and admin review.
 - `0009_personal_tax_and_self_employed.sql` creates `personal_tax_slips`, `tax_slip_extractions`, `self_employed_records`, and the private `tax-slips` bucket.
+- `0010_guided_onboarding_workers_payments.sql` adds guided onboarding fields, allows clients to update service preferences, and creates `workers` and `worker_payments`.
+- `0011_client_friendly_worker_payments.sql` makes address optional, adds payment method and slip-needed classification, and keeps payroll deduction review on the admin side.
+- `0012_simplify_payroll_workers_workflow.sql` keeps older simple worker records compatible, records whether an invoice was provided, and adds admin classification for Workers & Payments review.
+- `0013_restore_portal_worker_fields.sql` adds `worker_payments.net_pay` for admin-only payroll review.
+- `0014_worker_slip_payroll_preparation.sql` adds T4 preparation boxes, T4 ready status, and admin-only payroll calculator placeholder fields to worker payments.
+- `0015_paystub_pdf_fields.sql` adds pay period fields used by protected admin paystub PDF downloads.
+- Worker payment records are grouped by client, company, and tax year. Employee access is still limited through `client_profiles.assigned_employee_id`.
 - Documents are private. Use signed URLs for download links.
 
 Never request or store online banking usernames, online banking passwords, credit card numbers, or bank login credentials.

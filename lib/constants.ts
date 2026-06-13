@@ -11,6 +11,7 @@ import {
   MessageSquareText,
   Plane,
   ReceiptText,
+  Settings,
   ShieldCheck,
   SquareCheckBig,
   UserRound,
@@ -182,16 +183,17 @@ export const services: Record<
 };
 
 export const clientDashboardItems: DashboardItem[] = [
-  { title: "Income", titleKey: "nav.income", description: "Money customers paid you.", descriptionKey: "module.income.description", href: "/portal/income", metric: "Add income" },
-  { title: "Expenses", titleKey: "nav.expenses", description: "What you paid for.", descriptionKey: "module.expenses.description", href: "/portal/expenses", metric: "Add expense" },
-  { title: "Documents", titleKey: "nav.documents", description: "Files Exodus Pathways needs.", descriptionKey: "module.documents.description", href: "/portal/documents", metric: "Upload" },
-  { title: "T4 Slips", titleKey: "nav.t4", description: "Upload T4s and confirm extracted boxes.", descriptionKey: "module.t4.description", href: "/portal/t4", metric: "Confirm" },
+  { title: "Immigration", titleKey: "nav.immigration", description: "Immigration files and next steps.", descriptionKey: "module.immigration.description", href: "/portal/immigration-files", metric: "Active" },
   { title: "Personal Tax", titleKey: "nav.personalTax", description: "Upload personal tax slips by year.", descriptionKey: "module.personalTax.description", href: "/portal/personal-tax", metric: "Tax slips" },
   { title: "Self-Employed", titleKey: "nav.selfEmployed", description: "Income, expenses, and GST for self-employed work.", descriptionKey: "module.selfEmployed.description", href: "/portal/self-employed", metric: "Year summary" },
+  { title: "Business / Corporation", titleKey: "nav.businessCorporation", description: "Company, corporation, assets, and business records.", descriptionKey: "module.businessCorporation.description", href: "/portal/business-corporation", metric: "Business" },
+  { title: "Income", titleKey: "nav.income", description: "Money customers paid you.", descriptionKey: "module.income.description", href: "/portal/income", metric: "Add income" },
+  { title: "Expenses", titleKey: "nav.expenses", description: "What you paid for.", descriptionKey: "module.expenses.description", href: "/portal/expenses", metric: "Add expense" },
   { title: "GST", titleKey: "nav.gst", description: "GST collected and paid.", descriptionKey: "module.gst.description", href: "/portal/gst", metric: "Summary" },
-  { title: "Payroll", titleKey: "nav.payroll", description: "Wages, hours, and payroll notes.", descriptionKey: "module.payroll.description", href: "/portal/payroll", metric: "Records" },
+  { title: "Documents", titleKey: "nav.documents", description: "Files Exodus Pathways needs.", descriptionKey: "module.documents.description", href: "/portal/documents", metric: "Upload" },
+  { title: "T4 Slips", titleKey: "nav.t4", description: "Upload T4s and confirm extracted boxes.", descriptionKey: "module.t4.description", href: "/portal/t4", metric: "Confirm" },
+  { title: "Workers & Payments", titleKey: "nav.workersPayments", description: "Workers, contractors, payments, and slip review.", descriptionKey: "module.workersPayments.description", href: "/portal/workers-payments", metric: "Workers" },
   { title: "Assets", titleKey: "nav.assets", description: "Equipment, vehicle, tool, and asset purchases.", href: "/portal/assets", metric: "Purchases" },
-  { title: "Immigration", titleKey: "nav.immigration", description: "Immigration files and next steps.", descriptionKey: "module.immigration.description", href: "/portal/immigration-files", metric: "Active" },
   { title: "Messages", titleKey: "nav.messages", description: "Ask a question securely.", descriptionKey: "module.messages.description", href: "/portal/messages", metric: "Open" },
   { title: "Appointments", titleKey: "nav.appointments", description: "Book or review appointments.", descriptionKey: "module.appointments.description", href: "/portal/appointments", metric: "Book" },
   { title: "Profile", titleKey: "nav.profile", description: "Your contact and business details.", descriptionKey: "module.profile.description", href: "/portal/profile", metric: "Update" }
@@ -205,6 +207,7 @@ export const adminDashboardItems: DashboardItem[] = [
   { title: "Tax Files", titleKey: "nav.taxFiles", description: "T4 slips and tax document review.", href: "/admin/tax-files", metric: "Review" },
   { title: "Personal Tax", titleKey: "nav.personalTax", description: "Personal slips, extraction review, and tax-prep readiness.", href: "/admin/personal-tax", metric: "Slips" },
   { title: "Self-Employed", titleKey: "nav.selfEmployed", description: "Self-employed income, expenses, GST, and receipts.", href: "/admin/self-employed", metric: "Summary" },
+  { title: "Workers & Payments", titleKey: "nav.workersPayments", description: "Worker payments, payroll review, and slip preparation reports.", href: "/admin/workers-payroll-review", metric: "Review" },
   { title: "Documents", titleKey: "nav.documents", description: "Receipts, bank statements, tax, and immigration files.", href: "/admin/documents", metric: "Files" },
   { title: "Messages", titleKey: "nav.messages", description: "Client and employee messages.", href: "/admin/messages", metric: "Open" },
   { title: "Tasks", titleKey: "nav.tasks", description: "Assigned staff work.", href: "/admin/tasks", metric: "Tasks" },
@@ -212,7 +215,8 @@ export const adminDashboardItems: DashboardItem[] = [
   { title: "IRCC Requests", titleKey: "nav.irccRequests", description: "IRCC request tracker.", href: "/admin/ircc-requests", metric: "Requests" },
   { title: "Reports", titleKey: "nav.reports", description: "Export reports and working papers.", href: "/admin/reports", metric: "Exports" },
   { title: "Employees", titleKey: "nav.employees", description: "Staff access and assignments.", href: "/admin/employees", metric: "Staff" },
-  { title: "Audit Logs", titleKey: "nav.auditLogs", description: "Security and case history.", href: "/admin/audit-logs", metric: "Live" }
+  { title: "Audit Logs", titleKey: "nav.auditLogs", description: "Security and case history.", href: "/admin/audit-logs", metric: "Live" },
+  { title: "Settings", titleKey: "nav.settings", description: "Portal settings and future workflow controls.", href: "/admin/settings", metric: "Setup" }
 ];
 
 export const employeeDashboardItems: DashboardItem[] = [
@@ -226,23 +230,24 @@ export const employeeDashboardItems: DashboardItem[] = [
 
 export const clientNav = [
   { labelKey: "nav.home", href: "/portal", icon: FolderKanban },
-  { labelKey: "nav.income", href: "/portal/income", icon: BadgeDollarSign },
-  { labelKey: "nav.expenses", href: "/portal/expenses", icon: ReceiptText },
-  { labelKey: "nav.documents", href: "/portal/documents", icon: FileText },
-  { labelKey: "nav.t4", href: "/portal/t4", icon: FileText },
+  { labelKey: "nav.immigration", href: "/portal/immigration-files", icon: Plane },
   { labelKey: "nav.personalTax", href: "/portal/personal-tax", icon: FileText },
   { labelKey: "nav.selfEmployed", href: "/portal/self-employed", icon: WalletCards },
+  { labelKey: "nav.businessCorporation", href: "/portal/business-corporation", icon: Building2 },
+  { labelKey: "nav.income", href: "/portal/income", icon: BadgeDollarSign },
+  { labelKey: "nav.expenses", href: "/portal/expenses", icon: ReceiptText },
   { labelKey: "nav.gst", href: "/portal/gst", icon: Landmark },
-  { labelKey: "nav.payroll", href: "/portal/payroll", icon: WalletCards },
+  { labelKey: "nav.documents", href: "/portal/documents", icon: FileText },
+  { labelKey: "nav.t4", href: "/portal/t4", icon: FileText },
+  { labelKey: "nav.workersPayments", href: "/portal/workers-payments", icon: UsersRound },
   { labelKey: "nav.assets", href: "/portal/assets", icon: Building2 },
-  { labelKey: "nav.immigration", href: "/portal/immigration-files", icon: Plane },
   { labelKey: "nav.messages", href: "/portal/messages", icon: MessageSquareText },
   { labelKey: "nav.appointments", href: "/portal/appointments", icon: CalendarClock },
   { labelKey: "nav.profile", href: "/portal/profile", icon: UserRound }
 ];
 
 export const adminNav = [
-  { labelKey: "nav.home", href: "/admin", icon: ShieldCheck },
+  { labelKey: "nav.dashboard", href: "/admin", icon: ShieldCheck },
   { labelKey: "nav.clients", href: "/admin/clients", icon: UsersRound },
   { labelKey: "nav.immigrationCases", href: "/admin/immigration", icon: Plane },
   { labelKey: "nav.accountingClients", href: "/admin/accounting-clients", icon: BadgeDollarSign },
@@ -250,6 +255,7 @@ export const adminNav = [
   { labelKey: "nav.taxFiles", href: "/admin/tax-files", icon: FileText },
   { labelKey: "nav.personalTax", href: "/admin/personal-tax", icon: FileText },
   { labelKey: "nav.selfEmployed", href: "/admin/self-employed", icon: WalletCards },
+  { labelKey: "nav.workersPayments", href: "/admin/workers-payroll-review", icon: UsersRound },
   { labelKey: "nav.documents", href: "/admin/documents", icon: FileText },
   { labelKey: "nav.messages", href: "/admin/messages", icon: MessageSquareText },
   { labelKey: "nav.tasks", href: "/admin/tasks", icon: SquareCheckBig },
@@ -257,7 +263,8 @@ export const adminNav = [
   { labelKey: "nav.irccRequests", href: "/admin/ircc-requests", icon: ClipboardList },
   { labelKey: "nav.reports", href: "/admin/reports", icon: Banknote },
   { labelKey: "nav.employees", href: "/admin/employees", icon: UsersRound },
-  { labelKey: "nav.auditLogs", href: "/admin/audit-logs", icon: ShieldCheck }
+  { labelKey: "nav.auditLogs", href: "/admin/audit-logs", icon: ShieldCheck },
+  { labelKey: "nav.settings", href: "/admin/settings", icon: Settings }
 ];
 
 export const employeeNav = [

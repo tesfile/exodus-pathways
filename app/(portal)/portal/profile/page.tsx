@@ -1,9 +1,12 @@
 import { Building2, UserRound } from "lucide-react";
+import { ServicePreferencesForm } from "@/components/portal/guided-onboarding";
 import { ProfileActions } from "@/components/portal/profile-actions";
+import { getClientServiceProfile } from "@/lib/onboarding";
 import { getCurrentUserRecord } from "@/lib/supabase/server";
 
 export default async function ProfilePage() {
   const user = await getCurrentUserRecord();
+  const serviceProfile = await getClientServiceProfile(user.id);
 
   return (
     <div className="grid gap-6">
@@ -73,6 +76,7 @@ export default async function ProfilePage() {
 
         <ProfileActions />
       </form>
+      <ServicePreferencesForm userId={user.id} profile={serviceProfile} mode="profile" />
     </div>
   );
 }

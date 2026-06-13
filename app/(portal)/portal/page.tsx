@@ -1,7 +1,9 @@
 import { DashboardGrid } from "@/components/portal/dashboard-grid";
 import { FutureReady } from "@/components/portal/future-ready";
+import { GuidedOnboarding } from "@/components/portal/guided-onboarding";
 import { InlineNotice } from "@/components/portal/inline-notice";
 import { MissingItems } from "@/components/portal/missing-items";
+import { PersonalizedDashboardActions } from "@/components/portal/personalized-dashboard-actions";
 import { PortalHero } from "@/components/portal/portal-hero";
 import { QuickActions } from "@/components/portal/quick-actions";
 import {
@@ -12,6 +14,7 @@ import {
 } from "@/components/portal/accounting-records";
 import { clientDashboardItems } from "@/lib/constants";
 import { getClientAccountingData, missingItemRows, parseYear } from "@/lib/accounting/data";
+import { getClientServiceProfile } from "@/lib/onboarding";
 import { getCurrentUserRecord } from "@/lib/supabase/server";
 
 type PageProps = {
@@ -25,6 +28,7 @@ export default async function ClientDashboardPage({ searchParams }: PageProps) {
     getCurrentUserRecord(),
     getClientAccountingData(taxYear)
   ]);
+  const profile = await getClientServiceProfile(user.id);
 
   return (
     <div className="grid gap-6">
@@ -36,6 +40,11 @@ export default async function ClientDashboardPage({ searchParams }: PageProps) {
         name={user.full_name}
       />
       <InlineNotice messageKey="common.disclaimer" />
+      {!profile.onboarding_completed ? (
+        <GuidedOnboarding userId={user.id} profile={profile} />
+      ) : (
+        <PersonalizedDashboardActions profile={profile} />
+      )}
       <ClientAccountingFilter selectedYear={taxYear} action="/portal" />
       <YearEndPackagePanel data={accounting} />
       <AccountingSummary data={accounting} />

@@ -68,16 +68,16 @@ These rules are enforced with Supabase RLS policies across the migration files, 
 
 ## Client Dashboard
 
-- Home
-- Income
-- Expenses
-- Documents
-- T4 Slips
+- Immigration
 - Personal Tax
 - Self-Employed
+- Business / Corporation
+- Income
+- Expenses
 - GST
-- Payroll
-- Immigration
+- Documents
+- T4 Slips
+- Workers & Payments
 - Messages
 - Appointments
 - Profile
@@ -91,6 +91,7 @@ These rules are enforced with Supabase RLS policies across the migration files, 
 - Tax Files
 - Personal Tax
 - Self-Employed
+- Workers & Payments
 - Documents
 - Messages
 - Tasks
@@ -99,6 +100,9 @@ These rules are enforced with Supabase RLS policies across the migration files, 
 - Reports
 - Employees
 - Audit Logs
+- Settings
+
+The main admin workflow is now: open `/admin/clients`, select a client, then manage that client's profile, documents, immigration, personal tax, self-employed records, income, expenses, GST, Workers & Payments, messages, tasks, notes, and reports from the client detail page.
 
 ## Employee Dashboard
 
@@ -128,6 +132,34 @@ Self-employed routes:
 - Admin route: `/admin/self-employed`
 - Clients record tax year, business type, income, expenses, GST collected, GST paid, and self-employed expense type.
 - Admins can view self-employed income, expenses, GST summary, receipts, and year-end summary by client and year.
+
+## Guided First Login
+
+- First login route: `/portal`
+- New clients see the guided onboarding welcome card, but portal sections remain visible.
+- Selections are saved to `client_profiles`.
+- Supported choices include Immigration, Tax & Accounting, or both.
+- Immigration service choices include Refugee Sponsorship, Family Sponsorship, Visitor Visa, Study Permit, Work Permit, Express Entry, Citizenship, and Other.
+- Tax choices include Personal Tax, Self-Employed, Corporation, GST Only, and Bookkeeping & Payroll.
+- Clients can change service choices later from `/portal/profile`.
+- Guided onboarding saves preferences only; it does not remove immigration, tax, business, accounting, document, message, or profile sections.
+
+## Workers & Payments
+
+- Client route: `/portal/workers-payments`
+- Admin workflow: `/admin/clients` -> open a client -> `Workers & Payments`.
+- Legacy admin review route: `/admin/workers-payroll-review`.
+- Client payroll route `/portal/payroll` redirects to `/portal/workers-payments`.
+- Clients enter Full Name, SIN or Business Number, Address, optional Phone, optional Email, Date Paid, Amount Paid, Payment Method, Invoice Yes/No/Not sure, invoice/receipt upload, Notes, and Client Selected Type.
+- Client selected types are T4 Employee, T4A Contractor, T5018 Subcontractor, Cash worker, Owner / Shareholder, Family member paid, and Not sure.
+- Admin-only review fields include CPP, EI, Income Tax Deducted, Benefits, Vacation Pay, and Net Pay.
+- Admin classification options are T4 Employee, T4A Contractor, T5018 Subcontractor, Cash Review, Shareholder, Expense Only, and Review Needed.
+- T4 Employee records show an admin-only Payroll/T4 preparation panel with Box 14, 16, 18, 22, 24, 26, Benefits, Vacation Pay, Net Pay, and T4 Ready status.
+- Admin can enter pay period start/end and generate a protected paystub PDF from `/admin/paystubs/[paymentId]`.
+- The admin-only payroll calculator placeholder stores province, pay frequency, pay date, gross pay, TD1 federal and provincial amounts, CPP/EI exemption flags, employer CPP, and employer EI.
+- Payroll calculator values are manually editable and include the disclaimer: "Verify payroll deductions with CRA PDOC before filing or remitting."
+- Admin sees yearly T4 totals, T4 preparation table, T4A preparation table, T5018 support table, payment list, worker list, and export placeholders for CSV, T4, T4A, and T5018 support.
+- No CRA connection is enabled; reports are export-ready placeholders only.
 
 ## Immigration Case Management
 
@@ -237,7 +269,7 @@ Client reminders are supported by `client_reminders` and shown on the client hom
 - Missing Bank Statement
 - Missing Receipt
 - Missing GST Information
-- Missing Payroll Information
+- Missing Workers & Payments Information
 
 ## Local Development
 
@@ -275,12 +307,18 @@ Only expose `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to br
 8. Run `supabase/migrations/0007_accounting_document_dates.sql`.
 9. Run `supabase/migrations/0008_t4_slip_workflow.sql`.
 10. Run `supabase/migrations/0009_personal_tax_and_self_employed.sql`.
-11. Enable email/password authentication and email verification.
-12. Add redirect URLs for `/verify-email` and `/reset-password`.
-13. Create Auth users for admins, employees, and clients.
-14. Update `supabase/seed.sql` with matching Auth user UUIDs.
-15. Run `supabase/seed.sql` only when you want optional demo data.
-16. Confirm the private Storage buckets exist:
+11. Run `supabase/migrations/0010_guided_onboarding_workers_payments.sql`.
+12. Run `supabase/migrations/0011_client_friendly_worker_payments.sql`.
+13. Run `supabase/migrations/0012_simplify_payroll_workers_workflow.sql`.
+14. Run `supabase/migrations/0013_restore_portal_worker_fields.sql`.
+15. Run `supabase/migrations/0014_worker_slip_payroll_preparation.sql`.
+16. Run `supabase/migrations/0015_paystub_pdf_fields.sql`.
+17. Enable email/password authentication and email verification.
+18. Add redirect URLs for `/verify-email` and `/reset-password`.
+19. Create Auth users for admins, employees, and clients.
+20. Update `supabase/seed.sql` with matching Auth user UUIDs.
+21. Run `supabase/seed.sql` only when you want optional demo data.
+22. Confirm the private Storage buckets exist:
     - `receipts`
     - `invoices`
     - `bank-statements`
@@ -296,6 +334,7 @@ receipts/<client_uuid>/fuel-receipt.jpg
 bank-statements/<client_uuid>/may-2026.pdf
 immigration-documents/<client_uuid>/passport.pdf
 tax-slips/<client_uuid>/2026/t4.pdf
+invoices/<client_uuid>/workers/2026/subcontractor-invoice.pdf
 ```
 
 ## Database Tables
@@ -378,6 +417,43 @@ The personal tax and self-employed migration also creates:
 - `self_employed_records`
 - private `tax-slips` storage bucket and RLS policies
 - tax-year indexes for personal tax and self-employed records
+
+The guided onboarding and workers/payments migration also creates or extends:
+
+- guided onboarding fields on `client_profiles`
+- client self-update policy for service preferences
+- `workers`
+- `worker_payments`
+- worker/payment RLS policies using `can_access_client`
+- client/company/tax-year indexes for worker payment review
+
+The client-friendly worker payment migration also:
+
+- makes worker address optional
+- adds `payment_method`, `client_worker_type`, `slip_needed`, and admin review fields to `worker_payments`
+- moves payroll deduction handling to admin review only
+
+The simplified payroll/workers migration also:
+
+- keeps older simple worker records compatible
+- adds `worker_payments.invoice_provided`
+- adds `worker_payments.admin_classification`
+- indexes admin classification by client and tax year
+
+The restored portal worker-fields migration also:
+
+- adds `worker_payments.net_pay` for admin-only payroll review
+
+The worker slip and payroll preparation migration also:
+
+- adds T4 Box 14, 16, 18, 22, 24, and 26 fields to `worker_payments`
+- adds T4 Benefits, Vacation Pay, Net Pay, and T4 Ready status
+- adds admin-only payroll calculator placeholder fields for province, pay frequency, pay date, TD1 amounts, exemption flags, employer CPP, and employer EI
+
+The paystub PDF fields migration also:
+
+- adds pay period start, pay period end, and pay frequency fields to `worker_payments`
+- supports protected admin paystub PDF downloads for reviewed T4 employee payments
 
 ## File Uploads
 

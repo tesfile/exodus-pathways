@@ -10,9 +10,11 @@ import { cn } from "@/lib/utils";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { useT } from "@/lib/i18n/provider";
+import type { ClientServiceProfile } from "@/lib/onboarding-rules";
 
 type PortalShellProps = {
   user: PortalUser;
+  clientProfile?: ClientServiceProfile;
   children: React.ReactNode;
 };
 
@@ -20,7 +22,11 @@ export function PortalShell({ user, children }: PortalShellProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const { t } = useT();
-  const nav = user.role === "admin" ? adminNav : user.role === "employee" ? employeeNav : clientNav;
+  const nav = user.role === "admin"
+    ? adminNav
+    : user.role === "employee"
+      ? employeeNav
+      : clientNav;
 
   async function signOut() {
     try {

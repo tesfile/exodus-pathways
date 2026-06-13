@@ -1,9 +1,11 @@
 import { PortalShell } from "@/components/portal/portal-shell";
+import { getClientServiceProfile } from "@/lib/onboarding";
 import { getCurrentUserRecord } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUserRecord();
-  return <PortalShell user={user}>{children}</PortalShell>;
+  const clientProfile = user.role === "client" ? await getClientServiceProfile(user.id) : undefined;
+  return <PortalShell user={user} clientProfile={clientProfile}>{children}</PortalShell>;
 }
