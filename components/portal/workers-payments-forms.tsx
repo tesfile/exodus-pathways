@@ -2,7 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { Save, UploadCloud, UserRound } from "lucide-react";
-import { invoiceProvidedOptions, paymentMethodOptions, workerTypeOptions } from "@/lib/workers-options";
+import { invoiceProvidedOptions, paymentMethodOptions } from "@/lib/workers-options";
 import {
   createBrowserSupabaseClient,
   isBrowserSupabaseConfigured
@@ -45,13 +45,13 @@ export function WorkersPaymentsForms({
     const address = String(form.get("address") ?? "").trim();
     const phone = String(form.get("phone") ?? "").trim();
     const email = String(form.get("email") ?? "").trim();
-    const clientWorkerType = String(form.get("workerType") ?? "Not sure");
+    const clientWorkerType = "Not sure";
     const amountPaid = Number(form.get("amountPaid") ?? 0);
     const datePaid = String(form.get("datePaid") ?? "");
     const selectedCompanyId = companies[0]?.id ?? null;
 
-    if (!workerName || !sinOrBusinessNumber || !address || !clientWorkerType || !datePaid || amountPaid <= 0) {
-      setStatus("Complete Full Name, SIN or Business Number, Address, Date Paid, Amount Paid, and Client Selected Type.");
+    if (!workerName || !sinOrBusinessNumber || !address || !datePaid || amountPaid <= 0) {
+      setStatus("Complete who you paid, SIN or Business Number, Address, Date Paid, and Amount Paid.");
       return;
     }
 
@@ -194,35 +194,27 @@ export function WorkersPaymentsForms({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+    <form onSubmit={handleSubmit} className="mobile-panel">
       <div className="flex items-start gap-3">
         <UserRound className="mt-1 h-5 w-5 text-exodus-gold" aria-hidden="true" />
         <div>
-          <h2 className="text-xl font-black text-exodus-navy">Add Worker Payment</h2>
+          <h2 className="text-xl font-black text-exodus-navy">Add a payment</h2>
           <p className="mt-1 text-sm leading-6 text-exodus-slate">
-            Do not worry if you are not sure. Exodus Pathways will review and classify it correctly.
+            Tell us who you paid. Exodus Pathways will review if it is payroll, subcontractor, or something else.
           </p>
         </div>
       </div>
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-2">
+      <div className="mt-5 grid gap-5">
+        <section className="grid gap-4 rounded-md bg-exodus-light p-4 lg:grid-cols-2">
+          <h3 className="text-base font-black text-exodus-navy lg:col-span-2">1. Who did you pay?</h3>
         <label className="grid gap-2 lg:col-span-2">
-          <span className="label">Full Name</span>
+          <span className="label">Who did you pay?</span>
           <input name="workerName" className="field" required />
         </label>
         <label className="grid gap-2">
           <span className="label">SIN or Business Number</span>
           <input name="sinOrBusinessNumber" className="field" required />
-        </label>
-        <label className="grid gap-2">
-          <span className="label">Client Selected Type</span>
-          <select name="workerType" className="field" required defaultValue="Not sure">
-            {workerTypeOptions.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
         </label>
         <label className="grid gap-2 lg:col-span-2">
           <span className="label">Address</span>
@@ -236,6 +228,10 @@ export function WorkersPaymentsForms({
           <span className="label">Email optional</span>
           <input name="email" type="email" className="field" />
         </label>
+        </section>
+
+        <section className="grid gap-4 rounded-md bg-exodus-light p-4 lg:grid-cols-2">
+          <h3 className="text-base font-black text-exodus-navy lg:col-span-2">2. Payment details</h3>
         <label className="grid gap-2">
           <span className="label">Date Paid</span>
           <input name="datePaid" type="date" className="field" defaultValue={todayInputDate()} required />
@@ -264,9 +260,13 @@ export function WorkersPaymentsForms({
             ))}
           </select>
         </label>
+        </section>
+
+        <section className="grid gap-4 rounded-md bg-exodus-light p-4">
+          <h3 className="text-base font-black text-exodus-navy">3. Receipt or notes</h3>
         <label className="flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-4 text-sm font-black text-exodus-navy shadow-sm lg:col-span-2">
           <UploadCloud className="h-4 w-4 text-exodus-gold" aria-hidden="true" />
-          {file ? file.name : "Upload invoice or receipt"}
+          {file ? file.name : "Upload receipt/invoice"}
           <input
             className="sr-only"
             type="file"
@@ -279,11 +279,12 @@ export function WorkersPaymentsForms({
           <span className="label">Notes</span>
           <textarea name="notes" className="field min-h-24" />
         </label>
+        </section>
       </div>
 
-      <button type="submit" className="focus-ring mt-5 inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-exodus-navy px-5 text-sm font-black text-white transition hover:bg-exodus-blue">
+      <button type="submit" className="mobile-action mt-5">
         <Save className="h-4 w-4" aria-hidden="true" />
-        Save Payment
+        Save
       </button>
       {status ? <p className="mt-3 text-sm font-bold text-exodus-navy">{status}</p> : null}
     </form>

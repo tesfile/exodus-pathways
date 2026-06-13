@@ -15,7 +15,9 @@ export default async function IncomePage({ searchParams }: PageProps) {
     <div className="grid gap-6">
       <AccountingHeader
         title="Income"
-        description="Record money that came into the business using simple words."
+        description="Add money customers paid you. Saved income appears below."
+        eyebrow="Client portal"
+        showExports={false}
       >
         <ClientAccountingFilter selectedYear={taxYear} action="/portal/income" />
       </AccountingHeader>

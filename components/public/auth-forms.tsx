@@ -54,7 +54,7 @@ export function SignUpForm() {
       <form onSubmit={submit} className="grid gap-4">
         <fieldset className="grid gap-2">
           <legend className="label">Client Type:</legend>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid gap-2 sm:grid-cols-2">
             <TypeButton label="Individual" selected={clientType === "individual"} onClick={() => setClientType("individual")} />
             <TypeButton label="Business / Corporation" selected={clientType === "business"} onClick={() => setClientType("business")} />
           </div>
@@ -204,11 +204,11 @@ function AuthCard({
   const { t } = useT();
 
   return (
-    <section className="bg-exodus-light py-16">
+    <section className="bg-exodus-light py-8 sm:py-12 lg:py-16">
       <div className="section-shell grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
         <div>
           <p className="eyebrow">{t("common.securePortal")}</p>
-          <h1 className="mt-4 text-4xl font-black leading-tight text-exodus-navy sm:text-5xl">
+          <h1 className="mt-4 text-3xl font-black leading-tight text-exodus-navy sm:text-5xl">
             {t(titleKey)}
           </h1>
           <p className="mt-5 text-base leading-7 text-exodus-slate">{t(subtitleKey)}</p>
@@ -217,7 +217,7 @@ function AuthCard({
             {t("common.disclaimer")}
           </div>
         </div>
-        <div className="rounded-md border border-slate-200 bg-white p-6 shadow-soft">{children}</div>
+        <div className="rounded-md border border-slate-200 bg-white p-5 shadow-soft sm:p-6">{children}</div>
       </div>
     </section>
   );
@@ -267,7 +267,7 @@ function TypeButton({ label, selected, onClick }: { label: string; selected: boo
     <button
       type="button"
       onClick={onClick}
-      className={`focus-ring min-h-11 rounded-md border px-3 text-sm font-black ${
+      className={`focus-ring min-h-14 rounded-md border px-3 text-base font-black sm:text-sm ${
         selected ? "border-exodus-gold bg-exodus-navy text-white" : "border-slate-200 bg-exodus-light text-exodus-navy"
       }`}
     >
@@ -281,7 +281,7 @@ function SubmitButton({ loading, children }: { loading: boolean; children: React
     <button
       type="submit"
       disabled={loading}
-      className="focus-ring min-h-11 rounded-md bg-exodus-navy px-4 py-2.5 text-sm font-bold text-white transition hover:bg-exodus-blue disabled:cursor-not-allowed disabled:opacity-70"
+      className="focus-ring min-h-14 rounded-md bg-exodus-navy px-4 py-3 text-base font-black text-white transition hover:bg-exodus-blue disabled:cursor-not-allowed disabled:opacity-70 sm:min-h-11 sm:py-2.5 sm:text-sm"
     >
       {children}
     </button>

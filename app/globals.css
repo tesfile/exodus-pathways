@@ -51,7 +51,7 @@ textarea {
   }
 
   .field {
-    @apply w-full rounded-md border border-slate-200 bg-white px-3 py-2.5 text-sm text-exodus-ink shadow-sm outline-none transition focus:border-exodus-blue focus:ring-4 focus:ring-exodus-light;
+    @apply min-h-12 w-full rounded-md border border-slate-200 bg-white px-4 py-3 text-base text-exodus-ink shadow-sm outline-none transition focus:border-exodus-blue focus:ring-4 focus:ring-exodus-light md:min-h-11 md:px-3 md:py-2.5 md:text-sm;
   }
 
   .label {
@@ -60,5 +60,13 @@ textarea {
 
   .eyebrow {
     @apply text-xs font-bold uppercase tracking-[0.18em] text-exodus-gold;
+  }
+
+  .mobile-panel {
+    @apply rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-5;
+  }
+
+  .mobile-action {
+    @apply focus-ring inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-md bg-exodus-navy px-5 text-base font-black text-white transition hover:bg-exodus-blue sm:w-auto;
   }
 }

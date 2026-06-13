@@ -34,13 +34,15 @@ export default async function MessagesPage() {
     <div className="grid gap-6">
       <AccountingHeader
         title="Messages"
-        description="Secure messages between you and Exodus Pathways."
+        description="Send Exodus Pathways a secure question or update."
+        eyebrow="Client portal"
+        showExports={false}
       />
-      <form action={sendClientMessageAction} className="grid gap-3 rounded-md border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-base font-black text-exodus-navy">New message</h2>
+      <form action={sendClientMessageAction} className="mobile-panel grid gap-3">
+        <h2 className="text-xl font-black text-exodus-navy">New message</h2>
         <input name="subject" className="field" placeholder="Subject" required />
         <textarea name="body" className="field min-h-28" placeholder="Write a secure message." required />
-        <button type="submit" className="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-exodus-navy px-4 py-2.5 text-sm font-bold text-white transition hover:bg-exodus-blue sm:w-max">
+        <button type="submit" className="mobile-action">
           <Send className="h-4 w-4" aria-hidden="true" />
           Send message
         </button>

@@ -183,20 +183,16 @@ export const services: Record<
 };
 
 export const clientDashboardItems: DashboardItem[] = [
-  { title: "Immigration", titleKey: "nav.immigration", description: "Immigration files and next steps.", descriptionKey: "module.immigration.description", href: "/portal/immigration-files", metric: "Active" },
-  { title: "Personal Tax", titleKey: "nav.personalTax", description: "Upload personal tax slips by year.", descriptionKey: "module.personalTax.description", href: "/portal/personal-tax", metric: "Tax slips" },
-  { title: "Self-Employed", titleKey: "nav.selfEmployed", description: "Income, expenses, and GST for self-employed work.", descriptionKey: "module.selfEmployed.description", href: "/portal/self-employed", metric: "Year summary" },
-  { title: "Business / Corporation", titleKey: "nav.businessCorporation", description: "Company, corporation, assets, and business records.", descriptionKey: "module.businessCorporation.description", href: "/portal/business-corporation", metric: "Business" },
-  { title: "Income", titleKey: "nav.income", description: "Money customers paid you.", descriptionKey: "module.income.description", href: "/portal/income", metric: "Add income" },
-  { title: "Expenses", titleKey: "nav.expenses", description: "What you paid for.", descriptionKey: "module.expenses.description", href: "/portal/expenses", metric: "Add expense" },
-  { title: "GST", titleKey: "nav.gst", description: "GST collected and paid.", descriptionKey: "module.gst.description", href: "/portal/gst", metric: "Summary" },
-  { title: "Documents", titleKey: "nav.documents", description: "Files Exodus Pathways needs.", descriptionKey: "module.documents.description", href: "/portal/documents", metric: "Upload" },
-  { title: "T4 Slips", titleKey: "nav.t4", description: "Upload T4s and confirm extracted boxes.", descriptionKey: "module.t4.description", href: "/portal/t4", metric: "Confirm" },
-  { title: "Workers & Payments", titleKey: "nav.workersPayments", description: "Workers, contractors, payments, and slip review.", descriptionKey: "module.workersPayments.description", href: "/portal/workers-payments", metric: "Workers" },
-  { title: "Assets", titleKey: "nav.assets", description: "Equipment, vehicle, tool, and asset purchases.", href: "/portal/assets", metric: "Purchases" },
-  { title: "Messages", titleKey: "nav.messages", description: "Ask a question securely.", descriptionKey: "module.messages.description", href: "/portal/messages", metric: "Open" },
-  { title: "Appointments", titleKey: "nav.appointments", description: "Book or review appointments.", descriptionKey: "module.appointments.description", href: "/portal/appointments", metric: "Book" },
-  { title: "Profile", titleKey: "nav.profile", description: "Your contact and business details.", descriptionKey: "module.profile.description", href: "/portal/profile", metric: "Update" }
+  { title: "Immigration", titleKey: "nav.immigration", description: "Start or check your immigration file.", href: "/portal/immigration-files", metric: "Open" },
+  { title: "Personal Tax", titleKey: "nav.personalTax", description: "Upload slips for your tax return.", href: "/portal/personal-tax", metric: "Upload" },
+  { title: "Self-Employed", titleKey: "nav.selfEmployed", description: "Track self-employed income and costs.", href: "/portal/self-employed", metric: "Year" },
+  { title: "Business / Corporation", titleKey: "nav.businessCorporation", description: "Business and corporation records.", href: "/portal/business-corporation", metric: "Records" },
+  { title: "Income", titleKey: "nav.income", description: "Add money customers paid you.", href: "/portal/income", metric: "Add" },
+  { title: "Expenses", titleKey: "nav.expenses", description: "Add what you paid for.", href: "/portal/expenses", metric: "Add" },
+  { title: "GST", titleKey: "nav.gst", description: "See GST collected and paid.", href: "/portal/gst", metric: "Summary" },
+  { title: "Workers & Payments", titleKey: "nav.workersPayments", description: "Tell us who you paid.", href: "/portal/workers-payments", metric: "Add" },
+  { title: "Documents", titleKey: "nav.documents", description: "Upload files or take a picture.", href: "/portal/documents", metric: "Upload" },
+  { title: "Messages", titleKey: "nav.messages", description: "Send a secure message.", href: "/portal/messages", metric: "Ask" }
 ];
 
 export const adminDashboardItems: DashboardItem[] = [

@@ -62,7 +62,7 @@ export default async function ImmigrationFilesPage() {
         rows={rows}
         createAction={createClientImmigrationCaseAction}
       />
-      <UploadCard bucket="immigration-documents" documentType="immigration_document" title="Upload immigration document" />
+      <UploadCard bucket="immigration-documents" documentType="immigration_document" title="Upload immigration document" submitLabel="Save" />
     </div>
   );
 }

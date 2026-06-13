@@ -244,13 +244,18 @@ export function SmartExpenseForm({ taxYear }: { taxYear: number }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+    <form onSubmit={handleSubmit} className="mobile-panel">
       <div className="flex items-center gap-3">
         <ReceiptText className="h-6 w-6 text-exodus-gold" aria-hidden="true" />
-        <h2 className="text-xl font-black text-exodus-navy">{t("expense.form.title")}</h2>
+        <div>
+          <h2 className="text-xl font-black text-exodus-navy">Add what you paid</h2>
+          <p className="mt-1 text-sm leading-6 text-exodus-slate">Take a picture or upload a receipt if you have one.</p>
+        </div>
       </div>
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-2">
+      <div className="mt-5 grid gap-5">
+        <section className="grid gap-4 rounded-md bg-exodus-light p-4 lg:grid-cols-2">
+          <h3 className="text-base font-black text-exodus-navy lg:col-span-2">1. What did you buy?</h3>
         <div>
           <label htmlFor="expense-date" className="label">
             Expense Date
@@ -301,7 +306,10 @@ export function SmartExpenseForm({ taxYear }: { taxYear: number }) {
             <input className="field mt-2" value={newType} onChange={(event) => setNewType(event.target.value)} placeholder={t("type.other")} />
           ) : null}
         </div>
+        </section>
 
+        <section className="grid gap-4 rounded-md bg-exodus-light p-4 lg:grid-cols-2">
+          <h3 className="text-base font-black text-exodus-navy lg:col-span-2">2. Amount and receipt</h3>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label htmlFor="amount" className="label">
@@ -336,17 +344,18 @@ export function SmartExpenseForm({ taxYear }: { taxYear: number }) {
             <input name="cameraReceipt" type="file" accept="image/*" capture="environment" className="sr-only" />
           </label>
         </div>
+        </section>
 
-        <div className="lg:col-span-2">
+        <section className="grid gap-4 rounded-md bg-exodus-light p-4">
           <label htmlFor="notes" className="label">
-            {t("expense.form.notes")}
+            3. Notes
           </label>
           <textarea id="notes" name="notes" className="field mt-2 min-h-24" placeholder={t("expense.form.placeholderNotes")} />
-        </div>
+        </section>
       </div>
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <button type="submit" className="focus-ring inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-exodus-navy px-5 text-sm font-black text-white transition hover:bg-exodus-blue">
+        <button type="submit" className="mobile-action">
           <Save className="h-4 w-4" aria-hidden="true" />
           {t("expense.form.save")}
         </button>

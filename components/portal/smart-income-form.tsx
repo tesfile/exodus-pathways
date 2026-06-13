@@ -109,13 +109,18 @@ export function SmartIncomeForm({ taxYear }: { taxYear: number }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+    <form onSubmit={handleSubmit} className="mobile-panel">
       <div className="flex items-center gap-3">
         <Banknote className="h-6 w-6 text-exodus-gold" aria-hidden="true" />
-        <h2 className="text-xl font-black text-exodus-navy">{t("income.form.title")}</h2>
+        <div>
+          <h2 className="text-xl font-black text-exodus-navy">Add money you received</h2>
+          <p className="mt-1 text-sm leading-6 text-exodus-slate">Enter the basics now. Exodus Pathways can review the details later.</p>
+        </div>
       </div>
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-2">
+      <div className="mt-5 grid gap-5">
+        <section className="grid gap-4 rounded-md bg-exodus-light p-4 lg:grid-cols-2">
+          <h3 className="text-base font-black text-exodus-navy lg:col-span-2">1. Who paid you?</h3>
         <div>
           <label htmlFor="income-date" className="label">
             Income Date
@@ -135,6 +140,10 @@ export function SmartIncomeForm({ taxYear }: { taxYear: number }) {
           </label>
           <input id="workDone" name="workDone" className="field mt-2" placeholder="Roof repair, delivery, sale" required />
         </div>
+        </section>
+
+        <section className="grid gap-4 rounded-md bg-exodus-light p-4 lg:grid-cols-2">
+          <h3 className="text-base font-black text-exodus-navy lg:col-span-2">2. Amount and invoice</h3>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label htmlFor="incomeAmount" className="label">
@@ -159,16 +168,18 @@ export function SmartIncomeForm({ taxYear }: { taxYear: number }) {
             <input id="invoice" name="invoice" type="file" accept="image/*,.pdf" className="sr-only" />
           </label>
         </div>
-        <div className="lg:col-span-2">
+        </section>
+
+        <section className="grid gap-4 rounded-md bg-exodus-light p-4">
           <label htmlFor="incomeNotes" className="label">
-            {t("income.form.notes")}
+            3. Notes
           </label>
           <textarea id="incomeNotes" name="notes" className="field mt-2 min-h-24" placeholder="Extra details" />
-        </div>
+        </section>
       </div>
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <button type="submit" className="focus-ring inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-exodus-navy px-5 text-sm font-black text-white transition hover:bg-exodus-blue">
+        <button type="submit" className="mobile-action">
           <Save className="h-4 w-4" aria-hidden="true" />
           {t("income.form.save")}
         </button>

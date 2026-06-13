@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut, Menu } from "lucide-react";
+import { BadgeDollarSign, FileText, FolderKanban, LogOut, Menu, MoreHorizontal, ReceiptText } from "lucide-react";
 import { useState } from "react";
 import { adminNav, brand, clientNav, employeeNav } from "@/lib/constants";
 import type { PortalUser } from "@/lib/types";
@@ -127,8 +127,52 @@ export function PortalShell({ user, children }: PortalShellProps) {
           </div>
         ) : null}
 
-        <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</main>
+        <main className={cn("mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8 lg:py-8", user.role === "client" && "pb-28 lg:pb-8")}>{children}</main>
+        {user.role === "client" ? (
+          <ClientBottomNav pathname={pathname} onMore={() => setOpen(true)} />
+        ) : null}
       </div>
     </div>
+  );
+}
+
+function ClientBottomNav({ pathname, onMore }: { pathname: string; onMore: () => void }) {
+  const items = [
+    { label: "Home", href: "/portal", icon: FolderKanban },
+    { label: "Documents", href: "/portal/documents", icon: FileText },
+    { label: "Income", href: "/portal/income", icon: BadgeDollarSign },
+    { label: "Expenses", href: "/portal/expenses", icon: ReceiptText }
+  ];
+
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 shadow-[0_-12px_30px_rgba(15,61,115,0.12)] backdrop-blur lg:hidden" aria-label="Quick client navigation">
+      <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
+        {items.map((item) => {
+          const Icon = item.icon;
+          const active = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "focus-ring flex min-h-14 flex-col items-center justify-center gap-1 rounded-md px-1 text-[0.72rem] font-black text-exodus-slate",
+                active && "bg-exodus-light text-exodus-navy"
+              )}
+            >
+              <Icon className={cn("h-5 w-5", active ? "text-exodus-gold" : "text-exodus-blue")} aria-hidden="true" />
+              {item.label}
+            </Link>
+          );
+        })}
+        <button
+          type="button"
+          onClick={onMore}
+          className="focus-ring flex min-h-14 flex-col items-center justify-center gap-1 rounded-md px-1 text-[0.72rem] font-black text-exodus-slate"
+        >
+          <MoreHorizontal className="h-5 w-5 text-exodus-blue" aria-hidden="true" />
+          More
+        </button>
+      </div>
+    </nav>
   );
 }

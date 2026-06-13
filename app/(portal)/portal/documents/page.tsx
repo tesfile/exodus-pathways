@@ -11,9 +11,17 @@ export default async function DocumentsPage() {
     <div className="grid gap-6">
       <AccountingHeader
         title="Documents"
-        description="Upload and review shared client documents including invoices, tax slips, CRA notices, corporate records, and immigration files."
+        description="Upload a file or take a picture. Choose the closest document type."
+        eyebrow="Client portal"
+        showExports={false}
       />
-      <UploadCard bucket="client-documents" documentType="client_document" title="Upload client document" />
+      <UploadCard
+        bucket="client-documents"
+        documentType="client_document"
+        title="Upload document"
+        allowDocumentTypeChoice
+        submitLabel="Save"
+      />
       <AccountingTable
         title="Uploaded Documents"
         columns={[

@@ -45,13 +45,19 @@ export default async function ClientDashboardPage({ searchParams }: PageProps) {
       ) : (
         <PersonalizedDashboardActions profile={profile} />
       )}
+      <section className="grid gap-3">
+        <div>
+          <h2 className="text-2xl font-black text-exodus-navy">What do you want to do?</h2>
+          <p className="mt-1 text-sm leading-6 text-exodus-slate">Choose one simple step. You can come back here anytime.</p>
+        </div>
+        <DashboardGrid items={clientDashboardItems} />
+      </section>
       <ClientAccountingFilter selectedYear={taxYear} action="/portal" />
-      <YearEndPackagePanel data={accounting} />
       <AccountingSummary data={accounting} />
       <QuickActions />
-      <AccountingModuleLinks basePath="portal" year={taxYear} />
       <MissingItems items={missingItemRows(accounting)} />
-      <DashboardGrid items={clientDashboardItems} />
+      <YearEndPackagePanel data={accounting} />
+      <AccountingModuleLinks basePath="portal" year={taxYear} />
       <FutureReady />
     </div>
   );

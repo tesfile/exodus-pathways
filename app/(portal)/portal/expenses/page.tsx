@@ -15,7 +15,12 @@ export default async function ExpensesPage({ searchParams }: PageProps) {
 
   return (
     <div className="grid gap-6">
-      <AccountingHeader title="Expenses" description="Add what you paid for and upload the receipt.">
+      <AccountingHeader
+        title="Expenses"
+        description="Add what you paid for. Saved expenses appear below."
+        eyebrow="Client portal"
+        showExports={false}
+      >
         <ClientAccountingFilter selectedYear={taxYear} action="/portal/expenses" />
       </AccountingHeader>
       <Suspense fallback={<div className="rounded-md bg-white p-5 shadow-sm">Loading expense form...</div>}>

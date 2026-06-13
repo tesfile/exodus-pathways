@@ -20,7 +20,9 @@ export default async function WorkersPaymentsPage({ searchParams }: PageProps) {
     <div className="grid gap-6">
       <AccountingHeader
         title="Workers & Payments"
-        description="Tell us who you paid, how much, when, and whether there is an invoice. Exodus Pathways will review the payroll or slip classification."
+        description="Tell us who you paid. Exodus Pathways will review what type of payment it is."
+        eyebrow="Client portal"
+        showExports={false}
       >
         <ClientAccountingFilter selectedYear={taxYear} action="/portal/workers-payments" />
       </AccountingHeader>

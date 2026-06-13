@@ -35,13 +35,15 @@ export function ImmigrationCaseManager({ mode, clients = [], cases, rows, create
           isAdmin
             ? "Create, review, and update real immigration cases from Supabase."
             : isClient
-              ? "Start a case, upload immigration documents, and follow your file status."
+              ? "Start a case, upload documents, and check your status."
               : "Review immigration cases assigned to you."
         }
+        eyebrow={isClient ? "Client portal" : "Immigration"}
+        showExports={!isClient}
       />
 
       {createAction ? (
-        <form action={createAction} className="grid gap-4 rounded-md border border-slate-200 bg-white p-5 shadow-sm md:grid-cols-2">
+        <form action={createAction} className="mobile-panel grid gap-4 md:grid-cols-2">
           <div className="flex items-center gap-3 md:col-span-2">
             <Plane className="h-5 w-5 text-exodus-gold" aria-hidden="true" />
             <h2 className="text-lg font-black text-exodus-navy">{isAdmin ? "Create client case" : "Start new immigration case"}</h2>
@@ -81,7 +83,7 @@ export function ImmigrationCaseManager({ mode, clients = [], cases, rows, create
             <span className="label">Notes</span>
             <textarea name="notes" className="field min-h-24" />
           </label>
-          <button type="submit" className="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-exodus-navy px-4 py-2.5 text-sm font-bold text-white transition hover:bg-exodus-blue sm:w-max">
+          <button type="submit" className={isClient ? "mobile-action" : "focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-exodus-navy px-4 py-2.5 text-sm font-bold text-white transition hover:bg-exodus-blue sm:w-max"}>
             <Save className="h-4 w-4" aria-hidden="true" />
             {isAdmin ? "Create case" : "Start case"}
           </button>

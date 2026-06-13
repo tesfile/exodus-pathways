@@ -66,7 +66,7 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={submit} className="grid gap-4 rounded-md border border-slate-200 bg-white p-6 shadow-soft">
+    <form onSubmit={submit} className="grid gap-4 rounded-md border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
       <div>
         <label htmlFor="email" className="label">
           {t("auth.email")}
@@ -90,7 +90,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={loading}
-        className="focus-ring min-h-11 rounded-md bg-exodus-navy px-4 py-2.5 text-sm font-bold text-white transition hover:bg-exodus-blue disabled:cursor-not-allowed disabled:opacity-70"
+        className="focus-ring min-h-14 rounded-md bg-exodus-navy px-4 py-3 text-base font-black text-white transition hover:bg-exodus-blue disabled:cursor-not-allowed disabled:opacity-70 sm:min-h-11 sm:py-2.5 sm:text-sm"
       >
         {loading ? t("common.loading") : t("auth.login.button")}
       </button>

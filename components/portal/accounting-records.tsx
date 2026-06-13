@@ -16,18 +16,20 @@ type AccountingHeaderProps = {
   title: string;
   description: string;
   children?: React.ReactNode;
+  showExports?: boolean;
+  eyebrow?: string;
 };
 
-export function AccountingHeader({ title, description, children }: AccountingHeaderProps) {
+export function AccountingHeader({ title, description, children, showExports = true, eyebrow = "Accounting records" }: AccountingHeaderProps) {
   return (
     <div className="grid gap-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="eyebrow">Accounting records</p>
+          <p className="eyebrow">{eyebrow}</p>
           <h1 className="mt-2 text-3xl font-black text-exodus-navy">{title}</h1>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-exodus-slate">{description}</p>
         </div>
-        <ExportButtons />
+        {showExports ? <ExportButtons /> : null}
       </div>
       {children}
     </div>
@@ -73,13 +75,13 @@ export function AdminAccountingFilter({
 
 export function ClientAccountingFilter({ selectedYear, action }: { selectedYear: number; action: string }) {
   return (
-    <form action={action} className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+    <form action={action} className="mobile-panel">
       <div className="grid gap-4 sm:grid-cols-[220px_auto] sm:items-end">
         <label className="grid gap-2">
           <span className="label">Year</span>
           <YearSelect selectedYear={selectedYear} />
         </label>
-        <button type="submit" className="focus-ring min-h-11 rounded-md bg-exodus-navy px-4 text-sm font-black text-white">
+        <button type="submit" className="mobile-action">
           View Year
         </button>
       </div>
@@ -162,7 +164,7 @@ export function AccountingModuleLinks({
   return (
     <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {links.map(([label, href]) => (
-        <Link key={href} href={href} className="focus-ring rounded-md bg-exodus-light p-4 text-sm font-black text-exodus-navy">
+        <Link key={href} href={href} className="focus-ring flex min-h-14 items-center rounded-md bg-exodus-light p-4 text-base font-black text-exodus-navy sm:text-sm">
           {label}
         </Link>
       ))}
@@ -191,7 +193,7 @@ export function AccountingTable({
         <DataTable columns={columns} rows={rows} />
       ) : (
         <div className="rounded-md border border-dashed border-slate-300 bg-white p-6 text-sm font-semibold text-exodus-slate">
-          No records found for this client and year.
+          Nothing saved yet.
         </div>
       )}
     </section>

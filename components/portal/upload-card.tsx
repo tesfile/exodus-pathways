@@ -13,7 +13,19 @@ type UploadCardProps = {
   documentType: string;
   title?: string;
   taxYear?: number;
+  allowDocumentTypeChoice?: boolean;
+  submitLabel?: string;
 };
+
+const clientDocumentTypes = [
+  { value: "client_document", label: "General document" },
+  { value: "receipt", label: "Receipt" },
+  { value: "invoice", label: "Invoice" },
+  { value: "bank_statement", label: "Bank statement" },
+  { value: "tax_document", label: "Tax document" },
+  { value: "immigration_document", label: "Immigration document" },
+  { value: "payroll_document", label: "Payroll document" }
+];
 
 function documentDateLabel(documentType: string) {
   if (documentType.includes("bank_statement")) {
@@ -39,7 +51,14 @@ function documentDateLabel(documentType: string) {
   return "Document Date";
 }
 
-export function UploadCard({ bucket, documentType, title = "Upload files", taxYear }: UploadCardProps) {
+export function UploadCard({
+  bucket,
+  documentType,
+  title = "Upload files",
+  taxYear,
+  allowDocumentTypeChoice = false,
+  submitLabel
+}: UploadCardProps) {
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<string>("");
   const configured = useMemo(() => isBrowserSupabaseConfigured(), []);
@@ -60,6 +79,9 @@ export function UploadCard({ bucket, documentType, title = "Upload files", taxYe
     try {
       setStatus("Uploading...");
       const formData = new FormData(form);
+      const selectedDocumentType = allowDocumentTypeChoice
+        ? String(formData.get("documentType") ?? documentType)
+        : documentType;
       const rawDocumentDate = String(formData.get("documentDate") ?? "").trim();
       const documentDate = rawDocumentDate || null;
       const documentYear = documentDate ? Number(documentDate.slice(0, 4)) : undefined;
@@ -92,7 +114,7 @@ export function UploadCard({ bucket, documentType, title = "Upload files", taxYe
         uploaded_by: user.id,
         bucket,
         storage_path: path,
-        document_type: documentType,
+        document_type: selectedDocumentType,
         file_name: file.name,
         mime_type: file.type || "application/octet-stream",
         size_bytes: file.size,
@@ -149,25 +171,37 @@ export function UploadCard({ bucket, documentType, title = "Upload files", taxYe
   }
 
   return (
-    <form onSubmit={handleUpload} className="rounded-md border border-dashed border-exodus-blue/35 bg-white p-5 shadow-sm">
+    <form onSubmit={handleUpload} className="mobile-panel border-dashed border-exodus-blue/35">
       <div className="flex items-start gap-3">
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-exodus-light text-exodus-blue">
           <UploadCloud className="h-5 w-5" aria-hidden="true" />
         </span>
         <div className="min-w-0">
-          <h2 className="text-base font-black text-exodus-navy">{title}</h2>
+          <h2 className="text-xl font-black text-exodus-navy">{title}</h2>
           <p className="mt-1 text-sm leading-6 text-exodus-slate">
             {t("common.noBankLogin")}
           </p>
         </div>
       </div>
 
-      <div className="mt-5 grid gap-3 lg:grid-cols-[220px_1fr_1fr_auto]">
+      <div className="mt-5 grid gap-4 lg:grid-cols-[220px_220px_1fr_1fr_auto]">
+        {allowDocumentTypeChoice ? (
+          <label className="grid gap-2">
+            <span className="label">Choose document type</span>
+            <select name="documentType" className="field" defaultValue={documentType}>
+              {clientDocumentTypes.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
         <label className="grid gap-2">
           <span className="label">{documentDateLabel(documentType)}</span>
           <input name="documentDate" type="date" className="field" />
         </label>
-        <label className="flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md border border-slate-200 bg-exodus-light px-4 text-sm font-black text-exodus-navy">
+        <label className="flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-md border border-slate-200 bg-exodus-light px-4 text-base font-black text-exodus-navy lg:min-h-11 lg:text-sm">
           <UploadCloud className="h-4 w-4 text-exodus-gold" aria-hidden="true" />
           {t("common.chooseFile")}
           <input
@@ -177,7 +211,7 @@ export function UploadCard({ bucket, documentType, title = "Upload files", taxYe
             aria-label={t("common.chooseFile")}
           />
         </label>
-        <label className="flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-4 text-sm font-black text-exodus-navy shadow-sm">
+        <label className="flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-4 text-base font-black text-exodus-navy shadow-sm lg:min-h-11 lg:text-sm">
           <Camera className="h-4 w-4 text-exodus-gold" aria-hidden="true" />
           {t("common.takePicture")}
           <input
@@ -191,9 +225,9 @@ export function UploadCard({ bucket, documentType, title = "Upload files", taxYe
         </label>
         <button
           type="submit"
-          className="focus-ring min-h-11 rounded-md bg-exodus-navy px-4 py-2.5 text-sm font-bold text-white transition hover:bg-exodus-blue"
+          className="mobile-action"
         >
-          {t("common.upload")}
+          {submitLabel ?? t("common.upload")}
         </button>
       </div>
       {status ? <p className="mt-3 text-sm font-semibold text-exodus-navy">{status}</p> : null}
