@@ -30,8 +30,8 @@ export const brand = {
 
 export const publicNav = [
   { labelKey: "nav.home", href: "/" },
-  { labelKey: "nav.accountingTax", href: "/accounting-tax" },
   { labelKey: "nav.immigration", href: "/immigration-services" },
+  { labelKey: "nav.accountingTax", href: "/accounting-tax" },
   { labelKey: "nav.business", href: "/business-services" },
   { labelKey: "nav.about", href: "/about" },
   { labelKey: "nav.contact", href: "/contact" }
@@ -219,6 +219,7 @@ export const adminDashboardItems: DashboardItem[] = [
   { title: "Follow-Ups", titleKey: "nav.followUps", description: "Client follow-up dates.", href: "/admin/follow-ups", metric: "Follow up" },
   { title: "IRCC Requests", titleKey: "nav.irccRequests", description: "IRCC request tracker.", href: "/admin/ircc-requests", metric: "Requests" },
   { title: "Reports", titleKey: "nav.reports", description: "Export reports and working papers.", href: "/admin/reports", metric: "Exports" },
+  { title: "Public Posts", titleKey: "nav.publicPosts", description: "Published service explanations for the public homepage.", href: "/admin/public-posts", metric: "Publish" },
   { title: "Employees", titleKey: "nav.employees", description: "Staff access and assignments.", href: "/admin/employees", metric: "Staff" },
   { title: "Audit Logs", titleKey: "nav.auditLogs", description: "Security and case history.", href: "/admin/audit-logs", metric: "Live" },
   { title: "Settings", titleKey: "nav.settings", description: "Portal settings and future workflow controls.", href: "/admin/settings", metric: "Setup" }
@@ -260,6 +261,7 @@ export const adminNav = [
   { labelKey: "nav.followUps", href: "/admin/follow-ups", icon: CalendarClock },
   { labelKey: "nav.irccRequests", href: "/admin/ircc-requests", icon: ClipboardList },
   { labelKey: "nav.reports", href: "/admin/reports", icon: Banknote },
+  { labelKey: "nav.publicPosts", href: "/admin/public-posts", icon: FileText },
   { labelKey: "nav.employees", href: "/admin/employees", icon: UsersRound },
   { labelKey: "nav.auditLogs", href: "/admin/audit-logs", icon: ShieldCheck },
   { labelKey: "nav.settings", href: "/admin/settings", icon: Settings }

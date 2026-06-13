@@ -34,3 +34,15 @@ export type TableColumn = {
 };
 
 export type DemoRow = Record<string, string>;
+
+export type PublicServicePost = {
+  id: string;
+  title: string;
+  category: "Immigration" | "Accounting" | "Business" | "General";
+  service_type: string;
+  language: string;
+  content: string;
+  is_published: boolean;
+  published_at: string | null;
+  created_at: string;
+};

@@ -38,6 +38,14 @@ A professional Next.js 15 client portal and public website for a Canadian busine
 - About
 - Contact
 
+The homepage is mobile-first and uses the public translation dictionaries for headline text, navigation, service cards, service category explanations, buttons, how-it-works steps, and latest updates. It highlights:
+
+- Immigration
+- Accounting & Tax
+- Business Support
+
+Service categories open a simple explanation panel with Create Account, Client Login, and Contact Us actions.
+
 ## Authentication
 
 Supabase Auth supports:
@@ -100,11 +108,14 @@ These rules are enforced with Supabase RLS policies across the migration files, 
 - Follow-Ups
 - IRCC Requests
 - Reports
+- Public Posts
 - Employees
 - Audit Logs
 - Settings
 
 The main admin workflow is now: open `/admin/clients`, select a client, then manage that client's profile, documents, immigration, personal tax, self-employed records, income, expenses, GST, Workers & Payments, messages, tasks, notes, and reports from the client detail page.
+
+Admins can manage public service explanations at `/admin/public-posts`. Public posts support title, category, service type, language, content, and Published / Draft status. Published posts appear on the homepage under Latest Updates and are filtered by the selected public language with English fallback.
 
 ## Employee Dashboard
 
@@ -207,6 +218,7 @@ The app includes a client-side translation provider and language switcher for:
 - Amharic
 - Arabic
 - French
+- Somali
 
 Translation files live in `lib/i18n/dictionaries.ts`. Shared UI components use translation keys through `useT()` so future copy can be localized without hardcoding text inside components.
 
@@ -473,6 +485,11 @@ The client simplification and public service posts migration also:
 - adds admin expense classification fields for asset, equipment, vehicle, tools, furniture, computer, leasehold improvement, and CCA review
 - lets admin-classified expense purchases appear in admin asset/CCA review surfaces without removing existing asset records
 - creates `public_service_posts` for future public explanations by title, category, service type, language, content, and publish status
+
+The public service posts category migration also:
+
+- allows the `General` category for public homepage updates
+- keeps Immigration, Accounting, and Business post categories available for multilingual service explanations
 
 ## File Uploads
 

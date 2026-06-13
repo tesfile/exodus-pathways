@@ -50,14 +50,17 @@ export function PublicHeader() {
           </ButtonLink>
         </div>
 
-        <button
-          type="button"
-          className="focus-ring grid h-11 w-11 place-items-center rounded-md border border-slate-200 bg-white text-exodus-navy lg:hidden"
-          onClick={() => setOpen((value) => !value)}
-          aria-label={open ? "Close menu" : "Open menu"}
-        >
-          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        <div className="flex items-center gap-2 lg:hidden">
+          <LanguageSwitcher />
+          <button
+            type="button"
+            className="focus-ring grid h-11 w-11 place-items-center rounded-md border border-slate-200 bg-white text-exodus-navy"
+            onClick={() => setOpen((value) => !value)}
+            aria-label={open ? "Close menu" : "Open menu"}
+          >
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
 
       {open ? (
@@ -76,7 +79,6 @@ export function PublicHeader() {
                 {t(item.labelKey)}
               </Link>
             ))}
-            <LanguageSwitcher />
             <ButtonLink href="/login" variant="primary" icon={LockKeyhole} className="mt-2 w-full">
               {t("nav.clientLogin")}
             </ButtonLink>

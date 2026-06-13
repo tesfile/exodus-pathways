@@ -18,12 +18,13 @@
 16. Run `supabase/migrations/0015_paystub_pdf_fields.sql`.
 17. Run `supabase/migrations/0016_client_type_display_name.sql`.
 18. Run `supabase/migrations/0017_client_simplification_service_posts_expense_classification.sql`.
-19. In Authentication, enable email/password sign-in and email verification.
-20. Add redirect URLs for `/verify-email` and `/reset-password`.
-21. Create admin, employee, and client Auth users.
-22. Update the UUIDs in `supabase/seed.sql` to match those Auth users, then run the seed only when you want optional demo data.
-23. In `public.users`, set trusted staff roles to `admin` or `employee`. New signups default to `client`.
-24. Store uploaded files under paths that start with the client UUID, for example:
+19. Run `supabase/migrations/0018_public_service_posts_general_category.sql`.
+20. In Authentication, enable email/password sign-in and email verification.
+21. Add redirect URLs for `/verify-email` and `/reset-password`.
+22. Create admin, employee, and client Auth users.
+23. Update the UUIDs in `supabase/seed.sql` to match those Auth users, then run the seed only when you want optional demo data.
+24. In `public.users`, set trusted staff roles to `admin` or `employee`. New signups default to `client`.
+25. Store uploaded files under paths that start with the client UUID, for example:
    - `receipts/<client_uuid>/fuel-receipt.jpg`
    - `bank-statements/<client_uuid>/may-2026.pdf`
    - `immigration-documents/<client_uuid>/passport-scan.pdf`
@@ -52,6 +53,7 @@ The RLS policy model is:
 - `0015_paystub_pdf_fields.sql` adds pay period fields used by protected admin paystub PDF downloads.
 - `0016_client_type_display_name.sql` adds Individual vs Business / Corporation registration support, saves `client_type` and `display_name`, defaults existing clients to individual/full name, extends business company profile fields, and updates the Auth signup/onboarding profile save flow.
 - `0017_client_simplification_service_posts_expense_classification.sql` adds admin expense classification for asset/CCA review and creates `public_service_posts` for future public service explanations by category, service type, language, content, and publish status.
+- `0018_public_service_posts_general_category.sql` extends public posts so admins can publish General updates alongside Immigration, Accounting, and Business posts.
 - Worker payment records are grouped by client, company, and tax year. Employee access is still limited through `client_profiles.assigned_employee_id`.
 - Documents are private. Use signed URLs for download links.
 
