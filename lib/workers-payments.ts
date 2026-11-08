@@ -6,7 +6,8 @@ import {
   toNumber,
   type ClientOption
 } from "@/lib/accounting/data";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
+import { createServerSupabaseClient, requireRole } from "@/lib/supabase/server";
 import type { DemoRow } from "@/lib/types";
 
 export type CompanyOption = {
@@ -129,22 +130,30 @@ export async function getClientWorkersPaymentsData(taxYear: number): Promise<Wor
 }
 
 export async function getAdminWorkersPaymentsData(clientId: string | undefined, taxYear: number) {
+  await requireRole(["admin"]);
   const clients = await getClientOptions();
   const selectedClient = clients.find((client) => client.id === clientId) ?? clients[0] ?? null;
   return {
     clients,
     selectedClient,
     taxYear,
-    data: await getWorkersPaymentsData(selectedClient, taxYear)
+    data: await getWorkersPaymentsData(selectedClient, taxYear, true)
   };
 }
 
-export async function getWorkersPaymentsData(client: ClientOption | null, taxYear: number): Promise<WorkersPaymentsData> {
+export async function getWorkersPaymentsData(client: ClientOption | null, taxYear: number, adminRead = false): Promise<WorkersPaymentsData> {
   if (!client) {
     return emptyWorkersData(null, taxYear);
   }
 
-  const supabase = await createServerSupabaseClient();
+  // Admin review uses the server-only key because legacy workers RLS may not
+  // grant admin SELECT. Never expose this client to browser code.
+  const supabase = adminRead ? (() => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const secret = process.env.SUPABASE_SECRET_KEY;
+    if (!url || !secret) throw new Error("Admin payroll database configuration missing.");
+    return createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
+  })() : await createServerSupabaseClient();
   const [companiesResult, workersResult, paymentsResult] = await Promise.all([
     supabase.from("companies").select("id,legal_name,trade_name").eq("client_id", client.id).order("legal_name"),
     supabase
@@ -159,6 +168,16 @@ export async function getWorkersPaymentsData(client: ClientOption | null, taxYea
       .eq("tax_year", taxYear)
       .order("payment_date", { ascending: false })
   ]);
+
+  // An RLS/privilege error must not masquerade as an empty employee list.
+  if (companiesResult.error || workersResult.error || paymentsResult.error) {
+    console.error("Workers & Payments query failed:", {
+      companies: companiesResult.error?.message,
+      workers: workersResult.error?.message,
+      payments: paymentsResult.error?.message
+    });
+    throw new Error("Unable to load workers and payroll records. Check the staging server log.");
+  }
 
   const companies = ((companiesResult.data ?? []) as Array<{ id: string; legal_name: string; trade_name: string | null }>).map((company) => ({
     id: company.id,
