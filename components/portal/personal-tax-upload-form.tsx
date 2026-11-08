@@ -145,7 +145,7 @@ export function PersonalTaxUploadForm({ taxYear }: { taxYear: number }) {
         </label>
         <label className="grid gap-2 lg:col-span-2">
           <span className="label">Notes</span>
-          <textarea name="notes" className="field min-h-24" placeholder="Anything Exodus Pathways should know about this slip." />
+          <textarea name="notes" className="field min-h-24" placeholder="Anything KAL Accounting & Tax should know about this slip." />
         </label>
         <label className="flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-md border border-slate-200 bg-exodus-light px-4 text-sm font-black text-exodus-navy">
           <UploadCloud className="h-4 w-4 text-exodus-gold" aria-hidden="true" />
@@ -160,7 +160,7 @@ export function PersonalTaxUploadForm({ taxYear }: { taxYear: number }) {
         </label>
         <button
           type="button"
-          onClick={() => setStatus("Extract Slip Data is prepared for future OCR. For now, Exodus Pathways reviews uploaded slips.")}
+          onClick={() => setStatus("Extract Slip Data is prepared for future OCR. For now, KAL Accounting & Tax staff review uploaded slips.")}
           className="focus-ring inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-exodus-gold/50 bg-white px-4 text-sm font-black text-exodus-navy"
         >
           <ScanText className="h-4 w-4 text-exodus-gold" aria-hidden="true" />

@@ -14,7 +14,7 @@ export default async function ProfilePage() {
         <p className="eyebrow">Client profile</p>
         <h1 className="mt-2 text-3xl font-black text-exodus-navy">Profile</h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-exodus-slate">
-          Keep personal, company, contact, and service information current so Exodus Pathways can
+          Keep personal, company, contact, and service information current so KAL Accounting & Tax can
           prepare accurate document requests and filings.
         </p>
       </div>
@@ -42,7 +42,7 @@ export default async function ProfilePage() {
               <label htmlFor="phone" className="label">
                 Phone
               </label>
-              <input id="phone" className="field mt-2" defaultValue={serviceProfile.phone ?? ""} placeholder="+1 (000) 000-0000" />
+              <input id="phone" className="field mt-2" defaultValue={serviceProfile.phone ?? ""} placeholder="Your phone number" />
             </div>
           </div>
         </section>
@@ -69,7 +69,7 @@ export default async function ProfilePage() {
               <label htmlFor="services" className="label">
                 Services
               </label>
-              <input id="services" className="field mt-2" placeholder="Bookkeeping, payroll, tax, immigration" />
+              <input id="services" className="field mt-2" placeholder="Bookkeeping, payroll, GST/HST, personal or corporate tax" />
             </div>
           </div>
         </section>

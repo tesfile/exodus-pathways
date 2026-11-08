@@ -221,7 +221,7 @@ export function T4UploadWorkflow() {
       return;
     }
 
-    setStatus("T4 confirmed. Exodus Pathways will review it.");
+    setStatus("T4 confirmed. KAL Accounting & Tax staff will review it.");
     setExtracted(null);
   }
 
@@ -314,7 +314,7 @@ export function T4UploadWorkflow() {
               <input name="box22" type="number" min="0" step="0.01" className="field" defaultValue={extracted.box22} required />
             </label>
             <label className="grid gap-2 md:col-span-2 xl:col-span-4">
-              <span className="label">Notes for Exodus Pathways</span>
+              <span className="label">Notes for KAL Accounting &amp; Tax</span>
               <textarea name="clientNotes" className="field min-h-24" placeholder="Anything you want us to know about this T4." />
             </label>
           </div>

@@ -581,7 +581,7 @@ export function WorkerPaymentReviewCards({
       <div>
         <h2 className="text-xl font-black text-exodus-navy">Admin Classification</h2>
         <p className="mt-1 text-sm leading-6 text-exodus-slate">
-          Payroll calculations, slip decisions, and worker classification are reviewed by Exodus Pathways only.
+          Payroll calculations, slip decisions, and worker classification are reviewed by KAL Accounting & Tax staff only.
         </p>
       </div>
       {payments.length > 0 ? (

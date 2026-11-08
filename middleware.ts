@@ -6,7 +6,7 @@ const protectedRoutes = ["/dashboard", "/admin", "/employee", "/portal", "/clien
 
 function configured() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
   return url.startsWith("https://") && anon.length > 20 && !url.includes("your-project-ref");
 }
 
@@ -37,7 +37,7 @@ export async function middleware(request: NextRequest) {
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {
@@ -71,21 +71,31 @@ export async function middleware(request: NextRequest) {
   }
 
   const { data: userRecord } = await supabase
-    .from("users")
+    .from("exodus_users")
     .select("id,email,full_name,role")
     .eq("id", user.id)
     .maybeSingle();
 
   const role = userRecord?.role as PortalRole | undefined;
 
-  if (!role) {
-    const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = "/login";
-    loginUrl.searchParams.set("error", "user_record_required");
-    return NextResponse.redirect(loginUrl);
-  }
+  // A profile is created by the server-side portal layout on the first visit.
+  // Let that request through instead of trapping a new authenticated client in
+  // a redirect loop before their profile exists.
+  if (!role) return response;
 
   const requiredRole = requiredRoleForPath(pathname);
+
+  if (
+    role === "client" &&
+    pathname.startsWith("/portal") &&
+    !pathname.startsWith("/portal/documents") &&
+    !pathname.startsWith("/portal/messages")
+  ) {
+    const documentsUrl = request.nextUrl.clone();
+    documentsUrl.pathname = "/portal/documents";
+    documentsUrl.search = "";
+    return NextResponse.redirect(documentsUrl);
+  }
 
   if (requiredRole && role !== requiredRole) {
     const roleUrl = request.nextUrl.clone();

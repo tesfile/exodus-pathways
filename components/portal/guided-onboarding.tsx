@@ -3,11 +3,7 @@
 import { FormEvent, useState } from "react";
 import { ArrowRight, CheckCircle2, Save } from "lucide-react";
 import {
-  immigrationServiceOptions,
-  needsImmigration,
-  needsTaxAccounting,
   selfEmployedSubtypeOptions,
-  serviceNeedOptions,
   serviceSummary,
   taxAccountingTypeOptions,
   type ClientServiceProfile
@@ -36,35 +32,9 @@ export function ServicePreferencesForm({ profile, mode }: ServicePreferencesProp
   const [corporationNumber, setCorporationNumber] = useState(profile.corporation_number ?? "");
   const [contactPerson, setContactPerson] = useState(profile.contact_person ?? profile.full_name ?? "");
   const [businessAddress, setBusinessAddress] = useState(profile.business_address ?? "");
-  const [serviceSelection, setServiceSelection] = useState(profile.service_selection ?? "");
-  const [immigrationService, setImmigrationService] = useState(profile.immigration_service ?? "");
   const [taxType, setTaxType] = useState(profile.tax_accounting_type ?? "");
   const [selfEmployedType, setSelfEmployedType] = useState(profile.self_employed_type ?? "");
   const [status, setStatus] = useState("");
-
-  const draftProfile: ClientServiceProfile = {
-    ...profile,
-    onboarding_completed: true,
-    client_type: clientType,
-    display_name: clientType === "business" ? legalBusinessName : fullName,
-    full_name: clientType === "business" ? contactPerson : fullName,
-    email: profile.email,
-    phone,
-    sin_number: clientType === "individual" ? sinNumber : null,
-    address: clientType === "individual" ? address : null,
-    legal_business_name: clientType === "business" ? legalBusinessName : null,
-    operating_name: clientType === "business" ? operatingName : null,
-    business_number: clientType === "business" ? businessNumber : null,
-    corporation_number: clientType === "business" ? corporationNumber : null,
-    contact_person: clientType === "business" ? contactPerson : null,
-    business_address: clientType === "business" ? businessAddress : null,
-    service_selection: serviceSelection || null,
-    immigration_service: immigrationService || null,
-    tax_accounting_type: taxType || null,
-    self_employed_type: selfEmployedType || null
-  };
-  const showImmigration = needsImmigration(draftProfile);
-  const showTax = needsTaxAccounting(draftProfile);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -79,17 +49,7 @@ export function ServicePreferencesForm({ profile, mode }: ServicePreferencesProp
       return;
     }
 
-    if (!serviceSelection) {
-      setStatus("Choose what you need help with.");
-      return;
-    }
-
-    if (showImmigration && !immigrationService) {
-      setStatus("Choose an immigration service.");
-      return;
-    }
-
-    if (showTax && !taxType) {
+    if (!taxType) {
       setStatus("Choose a tax or accounting type.");
       return;
     }
@@ -113,9 +73,9 @@ export function ServicePreferencesForm({ profile, mode }: ServicePreferencesProp
       p_corporation_number: corporationNumber,
       p_contact_person: contactPerson,
       p_business_address: businessAddress,
-      p_service_selection: serviceSelection,
-      p_immigration_service: showImmigration ? immigrationService : null,
-      p_tax_accounting_type: showTax ? taxType : null,
+      p_service_selection: "Tax & Accounting",
+      p_immigration_service: profile.immigration_service,
+      p_tax_accounting_type: taxType,
       p_self_employed_type: taxType === "Self-Employed" ? selfEmployedType : null,
       p_onboarding_completed: true
     });
@@ -134,9 +94,9 @@ export function ServicePreferencesForm({ profile, mode }: ServicePreferencesProp
       {mode === "onboarding" ? (
         <div>
           <p className="eyebrow">First login</p>
-          <h1 className="mt-2 text-3xl font-black text-exodus-navy">Welcome to Exodus Pathways</h1>
+          <h1 className="mt-2 text-3xl font-black text-exodus-navy">Welcome to KAL Accounting &amp; Tax</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-exodus-slate">
-            What do you need help with? Choose the service that fits you today. You can change this later from Profile.
+            Set up your accounting and tax profile. You can update these details later from Profile.
           </p>
         </div>
       ) : (
@@ -182,23 +142,9 @@ export function ServicePreferencesForm({ profile, mode }: ServicePreferencesProp
       )}
 
       <section className="grid gap-3">
-        <h2 className="text-lg font-black text-exodus-navy">What do you need help with?</h2>
-        <OptionGrid options={serviceNeedOptions} value={serviceSelection} onChange={setServiceSelection} />
+        <h2 className="text-lg font-black text-exodus-navy">What accounting or tax support do you need?</h2>
+        <OptionGrid options={taxAccountingTypeOptions} value={taxType} onChange={setTaxType} />
       </section>
-
-      {showImmigration ? (
-        <section className="grid gap-3">
-          <h2 className="text-lg font-black text-exodus-navy">What immigration service do you need?</h2>
-          <OptionGrid options={immigrationServiceOptions} value={immigrationService} onChange={setImmigrationService} />
-        </section>
-      ) : null}
-
-      {showTax ? (
-        <section className="grid gap-3">
-          <h2 className="text-lg font-black text-exodus-navy">What type of taxpayer are you?</h2>
-          <OptionGrid options={taxAccountingTypeOptions} value={taxType} onChange={setTaxType} />
-        </section>
-      ) : null}
 
       {taxType === "Self-Employed" ? (
         <section className="grid gap-3">

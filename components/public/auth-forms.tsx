@@ -33,7 +33,7 @@ export function SignUpForm() {
         email,
         password,
         options: {
-          emailRedirectTo: `${siteUrl()}/verify-email`,
+          emailRedirectTo: `${siteUrl()}/auth/callback?next=/portal/documents`,
           data: {
             client_type: clientType,
             display_name: displayName,
@@ -93,7 +93,7 @@ export function ForgotPasswordForm() {
     setLoading(true);
     try {
       const { error } = await createBrowserSupabaseClient().auth.resetPasswordForEmail(email, {
-        redirectTo: `${siteUrl()}/reset-password`
+        redirectTo: `${siteUrl()}/auth/callback?next=/reset-password`
       });
       setStatus(error?.message ?? t("auth.forgot.button"));
     } catch (error) {
@@ -164,7 +164,7 @@ export function VerifyEmailPanel() {
       const { error } = await createBrowserSupabaseClient().auth.resend({
         type: "signup",
         email,
-        options: { emailRedirectTo: `${siteUrl()}/verify-email` }
+        options: { emailRedirectTo: `${siteUrl()}/auth/callback?next=/portal/documents` }
       });
       setStatus(error?.message ?? t("auth.signup.success"));
     } catch (error) {

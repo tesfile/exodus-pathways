@@ -1,0 +1,22 @@
+{
+  "id": "/",
+  "name": "KAL ACCOUNTING & TAX",
+  "short_name": "KAL Tax",
+  "description": "Secure accounting, bookkeeping, payroll, and tax services.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#fff9e9",
+  "theme_color": "#073c7b",
+  "categories": ["finance", "business"],
+  "icons": [
+    {
+      "src": "/images/kal-logo.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

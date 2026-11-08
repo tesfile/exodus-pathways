@@ -8,7 +8,7 @@ export default async function AdminDocumentsPage() {
     <div className="grid gap-6">
       <AccountingHeader
         title="Client Documents"
-        description="Review real uploaded receipts, invoices, bank statements, immigration files, tax documents, and shared client records."
+        description="Review uploaded receipts, invoices, bank statements, payroll records, tax documents, and shared client files."
       />
       <AccountingTable
         title="Uploaded Documents"
@@ -18,7 +18,9 @@ export default async function AdminDocumentsPage() {
           { key: "uploadedDate", label: "Uploaded Date" },
           { key: "status", label: "Status" },
           { key: "client", label: "Client" },
-          { key: "type", label: "Type" }
+          { key: "type", label: "Type" },
+          { key: "company", label: "Company" },
+          { key: "year", label: "Tax Year" }
         ]}
         rows={rows}
       />

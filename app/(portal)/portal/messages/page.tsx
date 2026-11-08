@@ -34,7 +34,7 @@ export default async function MessagesPage() {
     <div className="grid gap-6">
       <AccountingHeader
         title="Messages"
-        description="Send Exodus Pathways a secure question or update."
+        description="Send KAL Accounting & Tax a secure question or update."
         eyebrow="Client portal"
         showExports={false}
       />

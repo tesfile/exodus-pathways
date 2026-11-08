@@ -28,14 +28,12 @@ export default function AboutPage() {
     <>
       <section className="bg-exodus-navy py-16 text-white">
         <div className="section-shell max-w-4xl">
-          <p className="eyebrow text-exodus-goldSoft">About Exodus Pathways</p>
+          <p className="eyebrow text-exodus-goldSoft">About KAL ACCOUNTING &amp; TAX</p>
           <h1 className="mt-4 text-4xl font-black leading-tight sm:text-5xl">
             Professional support for the records, filings, and decisions that move life forward in Canada.
           </h1>
           <p className="mt-5 text-lg leading-8 text-blue-50">
-            Exodus Pathways brings accounting, tax, bookkeeping, payroll, immigration, and business
-            service workflows into one secure portal so clients and staff can work from the same
-            organized record.
+            KAL Accounting &amp; Tax provides accounting, bookkeeping, payroll, GST/HST, personal tax, and corporate tax support with a secure client portal.
           </p>
         </div>
       </section>

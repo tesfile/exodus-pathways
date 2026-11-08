@@ -33,7 +33,7 @@ export default async function AppointmentsPage() {
     <div className="grid gap-6">
       <AccountingHeader
         title="Appointments"
-        description="View upcoming consultations, bookkeeping reviews, tax planning calls, payroll check-ins, and immigration appointments."
+        description="View upcoming consultations, bookkeeping reviews, tax planning calls, and payroll check-ins."
       />
       <form action={requestAppointmentAction} className="grid gap-4 rounded-md border border-slate-200 bg-white p-5 shadow-sm md:grid-cols-[1fr_1fr_auto] md:items-end">
         <div>
@@ -44,7 +44,6 @@ export default async function AppointmentsPage() {
             <option>Bookkeeping review</option>
             <option>Tax consultation</option>
             <option>Payroll review</option>
-            <option>Immigration consultation</option>
             <option>Business services call</option>
           </select>
         </div>

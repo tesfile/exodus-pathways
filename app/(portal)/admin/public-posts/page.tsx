@@ -3,7 +3,7 @@ import { FileText, PlusCircle, Trash2 } from "lucide-react";
 import { languages } from "@/lib/i18n/types";
 import { createServerSupabaseClient, requireRole } from "@/lib/supabase/server";
 
-const categories = ["Immigration", "Accounting", "Business", "General"] as const;
+const categories = ["Accounting", "General"] as const;
 
 type PublicPostCategory = (typeof categories)[number];
 
@@ -118,7 +118,7 @@ export default async function PublicPostsPage() {
         <p className="eyebrow">Public website</p>
         <h1 className="mt-2 text-3xl font-black text-exodus-navy">Public Posts</h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-exodus-slate">
-          Create service explanations and homepage updates by language. Published posts appear on the public homepage under Latest Updates.
+          Create accounting and tax explanations by language. Published accounting updates appear on the public homepage.
         </p>
       </div>
 
@@ -195,12 +195,12 @@ function PostFields({ post }: { post?: AdminPublicPost }) {
         </label>
         <label className="grid gap-2">
           <span className="label">Service type</span>
-          <input name="serviceType" required className="field" defaultValue={post?.service_type ?? ""} placeholder="Study Permit, Personal Tax, GST" />
+          <input name="serviceType" required className="field" defaultValue={post?.service_type ?? ""} placeholder="Bookkeeping, Personal Tax, GST" />
         </label>
       </div>
       <label className="grid gap-2">
         <span className="label">Translation group key</span>
-        <input name="translationKey" className="field" defaultValue={post?.translation_key ?? ""} placeholder="study-permit-basics" />
+        <input name="translationKey" className="field" defaultValue={post?.translation_key ?? ""} placeholder="bookkeeping-basics" />
         <span className="text-xs font-semibold text-exodus-slate">
           Use the same key for each manual language version of one post. If a language version is missing, the homepage shows the English version.
         </span>

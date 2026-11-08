@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { BadgeDollarSign, FolderKanban, LogOut, Menu, MoreHorizontal, ReceiptText, UsersRound } from "lucide-react";
+import { FileText, LogOut, Menu, MessageSquareText } from "lucide-react";
 import { useState } from "react";
 import { adminNav, brand, clientNav, employeeNav } from "@/lib/constants";
 import type { PortalUser } from "@/lib/types";
@@ -40,11 +41,10 @@ export function PortalShell({ user, children }: PortalShellProps) {
     <aside className="flex h-full flex-col bg-exodus-navy text-white">
       <div className="border-b border-white/10 p-5">
         <Link href="/" className="focus-ring flex items-center gap-3 rounded-md">
-          <span className="grid h-10 w-10 place-items-center rounded-md bg-exodus-gold text-sm font-black text-exodus-ink">
-            EP
-          </span>
-          <span>
-            <span className="block text-base font-black">{brand.name}</span>
+          <Image src="/images/kal-logo.png" alt="KAL Service Alliance logo" width={48} height={48} className="h-12 w-12 shrink-0 rounded bg-white object-contain p-0.5" priority />
+          <span className="min-w-0">
+            <span className="block text-sm font-black leading-5">{brand.name}</span>
+            <span className="block text-[0.65rem] font-semibold leading-4 text-amber-100">{brand.tagline}</span>
             <span className="block text-xs font-semibold text-blue-100">
               {user.role === "admin" ? t("common.adminAccess") : user.role === "employee" ? t("common.employeeAccess") : t("common.yourRecordsOnly")}
             </span>
@@ -108,8 +108,9 @@ export function PortalShell({ user, children }: PortalShellProps) {
             >
               <Menu className="h-5 w-5" />
             </button>
-            <Link href="/portal" className="font-black text-exodus-navy">
-              {brand.name}
+            <Link href="/portal/documents" className="flex items-center gap-2 font-black text-exodus-navy">
+              <Image src="/images/kal-logo.png" alt="" width={36} height={36} className="h-9 w-9 object-contain" />
+              <span className="text-xs">{brand.name}</span>
             </Link>
             <LanguageSwitcher />
           </div>
@@ -128,25 +129,21 @@ export function PortalShell({ user, children }: PortalShellProps) {
         ) : null}
 
         <main className={cn("mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8 lg:py-8", user.role === "client" && "pb-28 lg:pb-8")}>{children}</main>
-        {user.role === "client" ? (
-          <ClientBottomNav pathname={pathname} onMore={() => setOpen(true)} />
-        ) : null}
+        {user.role === "client" ? <ClientBottomNav pathname={pathname} /> : null}
       </div>
     </div>
   );
 }
 
-function ClientBottomNav({ pathname, onMore }: { pathname: string; onMore: () => void }) {
+function ClientBottomNav({ pathname }: { pathname: string }) {
   const items = [
-    { label: "Home", href: "/portal", icon: FolderKanban },
-    { label: "Income", href: "/portal/income", icon: BadgeDollarSign },
-    { label: "Expense", href: "/portal/expenses", icon: ReceiptText },
-    { label: "Workers", href: "/portal/workers-payments", icon: UsersRound }
+    { label: "Documents", href: "/portal/documents", icon: FileText },
+    { label: "Messages", href: "/portal/messages", icon: MessageSquareText }
   ];
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 shadow-[0_-12px_30px_rgba(15,61,115,0.12)] backdrop-blur lg:hidden" aria-label="Quick client navigation">
-      <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
+      <div className="mx-auto grid max-w-md grid-cols-2 gap-1">
         {items.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href;
@@ -164,14 +161,6 @@ function ClientBottomNav({ pathname, onMore }: { pathname: string; onMore: () =>
             </Link>
           );
         })}
-        <button
-          type="button"
-          onClick={onMore}
-          className="focus-ring flex min-h-14 flex-col items-center justify-center gap-1 rounded-md px-1 text-[0.72rem] font-black text-exodus-slate"
-        >
-          <MoreHorizontal className="h-5 w-5 text-exodus-blue" aria-hidden="true" />
-          More
-        </button>
       </div>
     </nav>
   );

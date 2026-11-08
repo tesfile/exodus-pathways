@@ -1,4 +1,7 @@
+import { redirect } from "next/navigation";
+
 export default function EnglishTutorAIPrivacyPolicy() {
+  redirect("/");
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
       <h1 className="mb-4 text-4xl font-bold">
@@ -118,7 +121,7 @@ export default function EnglishTutorAIPrivacyPolicy() {
           <h2 className="mb-3 text-2xl font-semibold">10. Contact Us</h2>
           <p>
             If you have questions about this Privacy Policy, contact us through
-            Exodus Pathways.
+            KAL Accounting & Tax.
           </p>
         </section>
       </div>

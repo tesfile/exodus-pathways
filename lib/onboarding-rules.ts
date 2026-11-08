@@ -19,23 +19,6 @@ export type ClientServiceProfile = {
   self_employed_type: string | null;
 };
 
-export const serviceNeedOptions = [
-  "Immigration",
-  "Tax & Accounting",
-  "Immigration + Tax & Accounting"
-];
-
-export const immigrationServiceOptions = [
-  "Refugee Sponsorship",
-  "Family Sponsorship",
-  "Visitor Visa",
-  "Study Permit",
-  "Work Permit",
-  "Express Entry",
-  "Citizenship",
-  "Other"
-];
-
 export const taxAccountingTypeOptions = [
   "Personal Tax (T4 Employee)",
   "Self-Employed",
@@ -76,12 +59,8 @@ export function emptyClientServiceProfile(): ClientServiceProfile {
   };
 }
 
-export function needsImmigration(profile: ClientServiceProfile | null | undefined) {
-  return Boolean(profile?.service_selection?.includes("Immigration"));
-}
-
 export function needsTaxAccounting(profile: ClientServiceProfile | null | undefined) {
-  return Boolean(profile?.service_selection?.includes("Tax & Accounting"));
+  return Boolean(profile?.tax_accounting_type || profile?.service_selection?.includes("Tax & Accounting"));
 }
 
 export function isSelfEmployedClient(profile: ClientServiceProfile | null | undefined) {
@@ -101,15 +80,8 @@ export function serviceSummary(profile: ClientServiceProfile | null | undefined)
     return "Not selected yet";
   }
 
-  const parts: string[] = [];
-  if (needsImmigration(profile)) {
-    parts.push(`Immigration: ${profile.immigration_service ?? "Not selected"}`);
-  }
-  if (needsTaxAccounting(profile)) {
-    const tax = profile.tax_accounting_type === "Self-Employed" && profile.self_employed_type
-      ? `Self-Employed (${profile.self_employed_type})`
-      : profile.tax_accounting_type ?? "Not selected";
-    parts.push(`Tax: ${tax}`);
-  }
-  return parts.join(" | ");
+  const tax = profile.tax_accounting_type === "Self-Employed" && profile.self_employed_type
+    ? `Self-Employed (${profile.self_employed_type})`
+    : profile.tax_accounting_type ?? "Tax and accounting support";
+  return `Tax: ${tax}`;
 }

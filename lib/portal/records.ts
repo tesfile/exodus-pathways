@@ -143,7 +143,7 @@ export async function getMessageRows(clientId?: string): Promise<DemoRow[]> {
 
   return ((messages ?? []) as MessageRecord[]).map((message) => {
     const sender = userMap.get(message.sender_id);
-    const senderName = message.sender_id === user.id ? "You" : sender ? displayNameForUser(sender) : "Exodus Pathways";
+    const senderName = message.sender_id === user.id ? "You" : sender ? displayNameForUser(sender) : "KAL Accounting & Tax";
 
     return {
       subject: message.subject,
@@ -185,7 +185,7 @@ export async function getMessageThread(messageId: string): Promise<MessageThread
       const sender = userMap.get(row.sender_id);
       return {
         ...row,
-        sender_name: sender ? displayNameForUser(sender) : "Exodus Pathways",
+        sender_name: sender ? displayNameForUser(sender) : "KAL Accounting & Tax",
         sender_email: sender?.email ?? ""
       };
     })

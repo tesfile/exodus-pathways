@@ -26,7 +26,7 @@ export function createPaystubPdf(title: string, sections: PaystubSection[]) {
   });
 
   addLine(commands, 54, 62, 558, 62);
-  addText(commands, 54, 44, "Prepared through Exodus Pathways portal", 10, "F2");
+  addText(commands, 54, 44, "Prepared through KAL Accounting & Tax portal", 10, "F2");
 
   const stream = commands.join("\n");
   return buildPdf(stream);

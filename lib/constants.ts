@@ -4,37 +4,26 @@ import {
   BriefcaseBusiness,
   Building2,
   CalendarClock,
-  ClipboardList,
   FileText,
-  FolderKanban,
   Landmark,
   MessageSquareText,
-  Plane,
-  ReceiptText,
   Settings,
   ShieldCheck,
   SquareCheckBig,
-  UserRound,
   UsersRound,
   WalletCards
 } from "lucide-react";
 import type { DashboardItem, ServiceSlug } from "@/lib/types";
 
 export const brand = {
-  name: "Exodus Pathways",
-  tagline: "Accounting | Tax | Immigration | Business Services",
-  headline: "Guiding Your Financial and Immigration Journey in Canada",
-  subheadline:
-    "Professional support for tax, bookkeeping, payroll, immigration, corporate filings, and business growth."
+  name: "KAL ACCOUNTING & TAX",
+  tagline: "A Division of Kal Service Alliance Inc.",
+  headline: "Accounting & Tax Services",
+  subheadline: "Professional support for bookkeeping, payroll, GST/HST, and personal and corporate tax."
 };
 
 export const publicNav = [
-  { labelKey: "nav.home", href: "/" },
-  { labelKey: "nav.immigration", href: "/immigration-services" },
-  { labelKey: "nav.accountingTax", href: "/accounting-tax" },
-  { labelKey: "nav.business", href: "/business-services" },
-  { labelKey: "nav.about", href: "/about" },
-  { labelKey: "nav.contact", href: "/contact" }
+  { labelKey: "nav.home", href: "/" }
 ];
 
 export const defaultExpenseTypes = [
@@ -79,8 +68,7 @@ export const futureReadyItems = [
   "future.sms",
   "future.email",
   "future.t4",
-  "future.t2",
-  "future.immigrationAutomation"
+  "future.t2"
 ];
 
 export const services: Record<
@@ -143,81 +131,26 @@ export const services: Record<
       "Organized supporting documents",
       "Better deadline control"
     ]
-  },
-  "immigration-services": {
-    title: "Immigration Services",
-    eyebrow: "Document-first immigration case support",
-    summary:
-      "Secure intake, immigration file uploads, case milestones, appointment tracking, and staff messaging for Canadian immigration service workflows.",
-    bullets: [
-      "Immigration document checklist and secure upload",
-      "Case type, status, and milestone tracking",
-      "Appointment scheduling and message history",
-      "Admin and assigned employee review queues"
-    ],
-    outcomes: [
-      "One secure file hub",
-      "Clear next steps",
-      "Less document confusion"
-    ]
-  },
-  "business-services": {
-    title: "Business Services",
-    eyebrow: "Corporate filings and growth support",
-    summary:
-      "Business formation support, annual returns, corporate record organization, internal tasks, and client-facing status tracking.",
-    bullets: [
-      "Incorporation and corporate filing intake",
-      "Annual return and registry document tracking",
-      "Business advisory task lists",
-      "Secure company profile and ownership details"
-    ],
-    outcomes: [
-      "Organized corporate records",
-      "Cleaner filings",
-      "A practical growth support hub"
-    ]
   }
 };
 
 export const clientDashboardItems: DashboardItem[] = [
-  { title: "Immigration", description: "Sponsorship, visas, permits, PR, and citizenship.", href: "/portal?section=immigration", metric: "Choose" },
-  { title: "Accounting", description: "Income, purchases, workers, documents, and messages.", href: "/portal?section=accounting", metric: "Choose" }
-];
-
-export const clientImmigrationItems: DashboardItem[] = [
-  { title: "Sponsorship", description: "Family or refugee sponsorship help.", href: "/portal/immigration-files", metric: "Start" },
-  { title: "Visitor Visa", description: "Visitor visa documents and questions.", href: "/portal/immigration-files", metric: "Start" },
-  { title: "Work Permit", description: "Work permit documents and status.", href: "/portal/immigration-files", metric: "Start" },
-  { title: "Study Permit", description: "School and study permit documents.", href: "/portal/immigration-files", metric: "Start" },
-  { title: "Express Entry", description: "Express Entry and skilled worker files.", href: "/portal/immigration-files", metric: "Start" },
-  { title: "PR / Citizenship", description: "Permanent residence or citizenship help.", href: "/portal/immigration-files", metric: "Start" },
-  { title: "Upload Immigration Documents", description: "Upload files or take a picture.", href: "/portal/immigration-files", metric: "Upload" },
-  { title: "Messages", description: "Ask an immigration question.", href: "/portal/messages", metric: "Ask" }
-];
-
-export const clientAccountingItems: DashboardItem[] = [
-  { title: "Add Income", description: "Money someone paid you.", href: "/portal/income", metric: "Add" },
-  { title: "Add Expense / Purchase", description: "Something you bought for work.", href: "/portal/expenses", metric: "Add" },
-  { title: "Workers / Employees", description: "People you paid.", href: "/portal/workers-payments", metric: "Add" },
-  { title: "Upload Documents", description: "Receipts, invoices, or other files.", href: "/portal/documents", metric: "Upload" },
-  { title: "Messages", description: "Ask an accounting question.", href: "/portal/messages", metric: "Ask" }
+  { title: "My Documents", description: "Securely scan and upload documents for your accounting team.", href: "/portal/documents", metric: "Upload" },
+  { title: "Messages", description: "Send a secure message to the KAL Accounting & Tax team.", href: "/portal/messages", metric: "Open" }
 ];
 
 export const adminDashboardItems: DashboardItem[] = [
   { title: "Clients", titleKey: "nav.clients", description: "All client records and assignments.", href: "/admin/clients", metric: "Real records" },
-  { title: "Immigration Cases", titleKey: "nav.immigrationCases", description: "All immigration case files.", href: "/admin/immigration", metric: "Cases" },
   { title: "Accounting Clients", titleKey: "nav.accountingClients", description: "Accounting client year folders.", href: "/admin/accounting-clients", metric: "Select client" },
   { title: "Tax Years", titleKey: "nav.taxYears", description: "Client and year records.", href: "/admin/tax-years", metric: "Select year" },
   { title: "Tax Files", titleKey: "nav.taxFiles", description: "T4 slips and tax document review.", href: "/admin/tax-files", metric: "Review" },
   { title: "Personal Tax", titleKey: "nav.personalTax", description: "Personal slips, extraction review, and tax-prep readiness.", href: "/admin/personal-tax", metric: "Slips" },
   { title: "Self-Employed", titleKey: "nav.selfEmployed", description: "Self-employed income, expenses, GST, and receipts.", href: "/admin/self-employed", metric: "Summary" },
   { title: "Workers & Payments", titleKey: "nav.workersPayments", description: "Worker payments, payroll review, and slip preparation reports.", href: "/admin/workers-payroll-review", metric: "Review" },
-  { title: "Documents", titleKey: "nav.documents", description: "Receipts, bank statements, tax, and immigration files.", href: "/admin/documents", metric: "Files" },
+  { title: "Documents", titleKey: "nav.documents", description: "Receipts, bank statements, payroll, and tax files.", href: "/admin/documents", metric: "Files" },
   { title: "Messages", titleKey: "nav.messages", description: "Client and employee messages.", href: "/admin/messages", metric: "Open" },
   { title: "Tasks", titleKey: "nav.tasks", description: "Assigned staff work.", href: "/admin/tasks", metric: "Tasks" },
   { title: "Follow-Ups", titleKey: "nav.followUps", description: "Client follow-up dates.", href: "/admin/follow-ups", metric: "Follow up" },
-  { title: "IRCC Requests", titleKey: "nav.irccRequests", description: "IRCC request tracker.", href: "/admin/ircc-requests", metric: "Requests" },
   { title: "Reports", titleKey: "nav.reports", description: "Export reports and working papers.", href: "/admin/reports", metric: "Exports" },
   { title: "Public Posts", titleKey: "nav.publicPosts", description: "Published service explanations for the public homepage.", href: "/admin/public-posts", metric: "Publish" },
   { title: "Employees", titleKey: "nav.employees", description: "Staff access and assignments.", href: "/admin/employees", metric: "Staff" },
@@ -227,7 +160,6 @@ export const adminDashboardItems: DashboardItem[] = [
 
 export const employeeDashboardItems: DashboardItem[] = [
   { title: "Clients", titleKey: "nav.clients", description: "Clients assigned to you.", href: "/employee/clients", metric: "Assigned" },
-  { title: "Immigration Cases", titleKey: "nav.immigrationCases", description: "Cases assigned to you.", href: "/employee/immigration", metric: "Assigned" },
   { title: "Documents", titleKey: "nav.documents", description: "Files for assigned clients.", href: "/employee/documents", metric: "Review" },
   { title: "Messages", titleKey: "nav.messages", description: "Messages for assigned clients.", href: "/employee/messages", metric: "Open" },
   { title: "Appointments", titleKey: "nav.appointments", description: "Upcoming assigned-client calls.", href: "/employee/appointments", metric: "Today" },
@@ -235,20 +167,13 @@ export const employeeDashboardItems: DashboardItem[] = [
 ];
 
 export const clientNav = [
-  { labelKey: "nav.home", href: "/portal", icon: FolderKanban },
-  { labelKey: "nav.immigration", href: "/portal/immigration-files", icon: Plane },
-  { labelKey: "nav.income", href: "/portal/income", icon: BadgeDollarSign },
-  { labelKey: "nav.expenses", href: "/portal/expenses", icon: ReceiptText },
-  { labelKey: "nav.workersPayments", href: "/portal/workers-payments", icon: UsersRound },
   { labelKey: "nav.documents", href: "/portal/documents", icon: FileText },
-  { labelKey: "nav.messages", href: "/portal/messages", icon: MessageSquareText },
-  { labelKey: "nav.profile", href: "/portal/profile", icon: UserRound }
+  { labelKey: "nav.messages", href: "/portal/messages", icon: MessageSquareText }
 ];
 
 export const adminNav = [
   { labelKey: "nav.dashboard", href: "/admin", icon: ShieldCheck },
   { labelKey: "nav.clients", href: "/admin/clients", icon: UsersRound },
-  { labelKey: "nav.immigrationCases", href: "/admin/immigration", icon: Plane },
   { labelKey: "nav.accountingClients", href: "/admin/accounting-clients", icon: BadgeDollarSign },
   { labelKey: "nav.taxYears", href: "/admin/tax-years", icon: Landmark },
   { labelKey: "nav.taxFiles", href: "/admin/tax-files", icon: FileText },
@@ -259,7 +184,6 @@ export const adminNav = [
   { labelKey: "nav.messages", href: "/admin/messages", icon: MessageSquareText },
   { labelKey: "nav.tasks", href: "/admin/tasks", icon: SquareCheckBig },
   { labelKey: "nav.followUps", href: "/admin/follow-ups", icon: CalendarClock },
-  { labelKey: "nav.irccRequests", href: "/admin/ircc-requests", icon: ClipboardList },
   { labelKey: "nav.reports", href: "/admin/reports", icon: Banknote },
   { labelKey: "nav.publicPosts", href: "/admin/public-posts", icon: FileText },
   { labelKey: "nav.employees", href: "/admin/employees", icon: UsersRound },
@@ -270,7 +194,6 @@ export const adminNav = [
 export const employeeNav = [
   { labelKey: "nav.home", href: "/employee", icon: ShieldCheck },
   { labelKey: "nav.clients", href: "/employee/clients", icon: UsersRound },
-  { labelKey: "nav.immigrationCases", href: "/employee/immigration", icon: Plane },
   { labelKey: "nav.documents", href: "/employee/documents", icon: FileText },
   { labelKey: "nav.messages", href: "/employee/messages", icon: MessageSquareText },
   { labelKey: "nav.appointments", href: "/employee/appointments", icon: CalendarClock },

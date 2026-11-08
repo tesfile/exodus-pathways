@@ -5,7 +5,6 @@ import {
   CalendarClock,
   FileText,
   MessageSquareText,
-  Plane,
   ReceiptText,
   RefreshCw,
   UsersRound
@@ -37,9 +36,8 @@ type FeedItem = {
 
 const quickActions: DashboardItem[] = [
   { title: "Clients", titleKey: "nav.clients", description: "Open the client workspace and manage records.", href: "/admin/clients", metric: "Open" },
-  { title: "Documents", titleKey: "nav.documents", description: "Review uploaded receipts, statements, tax, and immigration files.", href: "/admin/documents", metric: "Review" },
+  { title: "Documents", titleKey: "nav.documents", description: "Review uploaded receipts, statements, payroll, and tax files.", href: "/admin/documents", metric: "Review" },
   { title: "Workers & Payments", titleKey: "nav.workersPayments", description: "Review workers, payment records, payroll, and slip needs.", href: "/admin/workers-payroll-review", metric: "Review" },
-  { title: "Immigration Cases", titleKey: "nav.immigrationCases", description: "Track assessments, documents, IRCC requests, and case status.", href: "/admin/immigration", metric: "Cases" },
   { title: "Messages", titleKey: "nav.messages", description: "Reply to client and employee message threads.", href: "/admin/messages", metric: "Reply" },
   { title: "Reports", titleKey: "nav.reports", description: "Open accounting, GST, payroll, and year-end reports.", href: "/admin/reports", metric: "Reports" }
 ];
@@ -104,7 +102,6 @@ async function getAdminFeed() {
     workerPaymentsResult,
     payrollReviewResult,
     messagesResult,
-    immigrationResult,
     remindersResult,
     tasksResult
   ] = await Promise.all([
@@ -152,12 +149,6 @@ async function getAdminFeed() {
       .order("created_at", { ascending: false })
       .limit(8),
     supabase
-      .from("immigration_cases")
-      .select("id,client_id,case_type,applicant_name,status,due_date,updated_at,created_at")
-      .or(`updated_at.gte.${todayIso},due_date.gte.${today}`)
-      .order("updated_at", { ascending: false })
-      .limit(8),
-    supabase
       .from("client_reminders")
       .select("id,client_id,title,plain_language_title,reminder_type,status,due_date,created_at")
       .in("status", ["open", "waiting_on_client"])
@@ -181,12 +172,13 @@ async function getAdminFeed() {
   const workerPayments = (workerPaymentsResult.data ?? []) as Array<{ id: string; client_id: string; amount_paid: number; payment_method: string | null; client_worker_type: string | null; slip_needed: string | null; status: string; created_at: string }>;
   const payrollReview = (payrollReviewResult.data ?? []) as Array<{ id: string; client_id: string; amount_paid: number; client_worker_type: string | null; slip_needed: string | null; admin_classification: string | null; t4_ready_status: string | null; created_at: string }>;
   const messages = (messagesResult.data ?? []) as Array<{ id: string; client_id: string; subject: string; read_at: string | null; created_at: string }>;
-  const immigration = (immigrationResult.data ?? []) as Array<{ id: string; client_id: string; case_type: string; applicant_name: string; status: string; due_date: string | null; updated_at: string; created_at: string }>;
-  const reminders = (remindersResult.data ?? []) as Array<{ id: string; client_id: string; title: string; plain_language_title: string; reminder_type: string; status: string; due_date: string | null; created_at: string }>;
-  const tasks = (tasksResult.data ?? []) as Array<{ id: string; client_id: string; title: string; plain_language_title: string; source_module: string; status: string; due_date: string | null; created_at: string }>;
+  const reminders = ((remindersResult.data ?? []) as Array<{ id: string; client_id: string; title: string; plain_language_title: string; reminder_type: string; status: string; due_date: string | null; created_at: string }>)
+    .filter((reminder) => !/immigration|ircc/i.test(reminder.reminder_type));
+  const tasks = ((tasksResult.data ?? []) as Array<{ id: string; client_id: string; title: string; plain_language_title: string; source_module: string; status: string; due_date: string | null; created_at: string }>)
+    .filter((task) => !/immigration|ircc/i.test(task.source_module));
 
   const clientIds = new Set<string>();
-  for (const row of [...documents, ...income, ...expenses, ...workerPayments, ...payrollReview, ...messages, ...immigration, ...reminders, ...tasks]) {
+  for (const row of [...documents, ...income, ...expenses, ...workerPayments, ...payrollReview, ...messages, ...reminders, ...tasks]) {
     clientIds.add(row.client_id);
   }
   for (const row of clients) {
@@ -283,17 +275,6 @@ async function getAdminFeed() {
       action: "Reply" as const,
       tone: message.read_at ? "slate" as const : "blue" as const
     })),
-    ...immigration.map((caseRow) => ({
-      id: `immigration-${caseRow.id}`,
-      clientId: caseRow.client_id,
-      clientName: nameFor(caseRow.client_id),
-      type: "Immigration update",
-      summary: `${caseRow.case_type} for ${caseRow.applicant_name}. Status: ${caseRow.status}${caseRow.due_date ? `, due ${caseRow.due_date}` : ""}.`,
-      timestamp: caseRow.updated_at || caseRow.created_at,
-      href: clientTab(caseRow.client_id, "immigration"),
-      action: "Open" as const,
-      tone: "blue" as const
-    })),
     ...reminders.map((reminder) => ({
       id: `reminder-${reminder.id}`,
       clientId: reminder.client_id,
@@ -341,7 +322,7 @@ export default async function AdminDashboardPage() {
             <p className="eyebrow">Admin workspace</p>
             <h2 className="mt-2 text-2xl font-black text-exodus-navy">Today&apos;s Activity Feed</h2>
             <p className="mt-1 text-sm leading-6 text-exodus-slate">
-              A live workspace view of client activity, documents, accounting entries, messages, immigration movement, and review items.
+              A live workspace view of client activity, documents, bookkeeping entries, messages, and review items.
             </p>
           </div>
           <Link
@@ -432,10 +413,6 @@ function FeedIcon({ type }: { type: string }) {
 
   if (type.includes("message")) {
     return <MessageSquareText className="h-5 w-5" aria-hidden="true" />;
-  }
-
-  if (type.includes("Immigration")) {
-    return <Plane className="h-5 w-5" aria-hidden="true" />;
   }
 
   if (type.includes("deadline")) {

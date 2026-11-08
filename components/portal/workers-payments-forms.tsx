@@ -188,7 +188,7 @@ export function WorkersPaymentsForms({
     }
 
     setFile(null);
-    setStatus("Payment saved. Exodus Pathways will review and classify it correctly.");
+    setStatus("Payment saved. KAL Accounting & Tax staff will review and classify it.");
     formElement.reset();
     window.location.reload();
   }
@@ -200,7 +200,7 @@ export function WorkersPaymentsForms({
         <div>
           <h2 className="text-xl font-black text-exodus-navy">Add a payment</h2>
           <p className="mt-1 text-sm leading-6 text-exodus-slate">
-            Tell us who you paid. Exodus Pathways will review if it is payroll, subcontractor, or something else.
+            Tell us who you paid. KAL Accounting & Tax staff will review if it is payroll, subcontractor, or something else.
           </p>
         </div>
       </div>

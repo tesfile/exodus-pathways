@@ -38,10 +38,10 @@ export default async function TaxFilesPage() {
 
   return (
     <div className="grid gap-6">
-      <AccountingHeader title="Tax Files" description="Admin review queue for T1, T2, GST/HST, trial balance, general ledger, and working paper preparation." />
+      <AccountingHeader title="Tax Files" description="KAL Accounting & Tax staff review queue for T1, T2, GST/HST, trial balance, general ledger, and working paper preparation." />
       <AccountingTable
         title="T4 Review Queue"
-        description="Client-confirmed T4 slips with boxes 14, 16, 18, and 22 ready for Exodus Pathways review."
+        description="Client-confirmed T4 slips with boxes 14, 16, 18, and 22 ready for KAL Accounting & Tax review."
         columns={[
           { key: "document", label: "Document" },
           { key: "client", label: "Client" },

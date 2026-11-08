@@ -10,17 +10,17 @@ const config: Config = {
     extend: {
       colors: {
         exodus: {
-          navy: "#0f3d73",
-          blue: "#1769aa",
-          light: "#e9f3fb",
-          gold: "#c99a2e",
-          goldSoft: "#f6e8c4",
+          navy: "#073c7b",
+          blue: "#08559e",
+          light: "#fff9e9",
+          gold: "#f2c34f",
+          goldSoft: "#ffe08b",
           ink: "#172033",
           slate: "#5d6b82"
         }
       },
       boxShadow: {
-        soft: "0 24px 70px rgba(15, 61, 115, 0.12)"
+        soft: "0 24px 70px rgba(6, 31, 73, 0.2)"
       }
     }
   },

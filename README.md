@@ -1,8 +1,8 @@
-# Exodus Pathways
+# KAL ACCOUNTING & TAX
 
-Accounting | Tax | Immigration | Business Services
+ A Division of Kal Service Alliance Inc.
 
-A professional Next.js 15 client portal and public website for a Canadian business that supports accounting, bookkeeping, payroll, corporate tax, immigration, and business services.
+The existing Exodus Pathways domain and Supabase project power KAL ACCOUNTING & TAX's Canadian accounting, bookkeeping, payroll, GST/HST, personal tax, and corporate tax workflows. Original KAL brand assets from kalservice.ca are stored in `public/images/kal-logo.png` and `public/images/calgary-skyline.png` (both PNG).
 
 ## Stack
 
@@ -14,37 +14,16 @@ A professional Next.js 15 client portal and public website for a Canadian busine
 - Supabase PostgreSQL
 - Supabase Row Level Security
 - Vercel-ready deployment
+- Installable Progressive Web App with a privacy-safe offline fallback
 
-## Public Pages
+## Public Website and Client Portal
 
-- Home
-- Accounting & Tax
-- Bookkeeping
-- Payroll
-- Immigration Services
-- Express Entry
-- Federal Skilled Worker
-- PNP
-- Study Permit
-- Work Permit
-- Visitor Visa
-- Family Sponsorship
-- Refugee Sponsorship
-- Business Immigration
-- Start-Up Visa
-- Self-Employed Program
-- Business Services
-- Client Login
-- About
-- Contact
+- Minimal accounting and tax homepage with client login and registration.
+- Separate staff login at `/staff/login`; permissions come from verified database roles.
+- Client portal limited to document scanning/upload, document status, and staff messages.
+- Staff dashboards retain client/accounting administration, bookkeeping, payroll, tax, and reporting workflows.
 
-The homepage is mobile-first and uses the public translation dictionaries for headline text, navigation, service cards, service category explanations, buttons, how-it-works steps, and latest updates. It highlights:
-
-- Immigration
-- Accounting & Tax
-- Business Support
-
-Service categories open a simple explanation panel with Create Account, Client Login, and Contact Us actions.
+The homepage and login screens use the original KAL gold-and-blue logo and Calgary skyline image. Public contact details are from the KAL Service reference website. The production domain remains `exoduspathways.ca` through existing site environment configuration.
 
 ## Authentication
 
@@ -61,8 +40,8 @@ Signup flow:
 1. Sign Up
 2. Email Verification
 3. Login
-4. Create Case
-5. Upload Documents
+4. Open the document-only client portal
+5. Upload documents, view review status, and message staff
 
 Signup and guided onboarding now ask whether the client is registering as an Individual or a Business / Corporation. Individual clients save their personal display name, optional SIN, phone, email, and address. Business clients save legal business name, optional operating name, optional BN, optional corporation number, contact person, phone, email, and business address. The app stores `client_type` and `display_name`, and client-facing/admin lists use `display_name` for client names.
 
@@ -74,28 +53,18 @@ Clients must verify their email before protected portal access when Supabase is 
 - Employee: can view and manage only assigned clients.
 - Client: can view and manage only their own records.
 
-These rules are enforced with Supabase RLS policies across the migration files, including the immigration case access helpers in `supabase/migrations/0003_immigration_case_management_and_auth.sql`.
+These rules are enforced with Supabase RLS policies across the migration files. Existing database schema and legacy client records are retained; this product-scope change does not drop tables, buckets, or client data.
 
 ## Client Dashboard
 
-- Immigration
-- Personal Tax
-- Self-Employed
-- Business / Corporation
-- Income
-- Expenses
-- GST
 - Documents
-- T4 Slips
-- Workers & Payments
 - Messages
-- Appointments
-- Profile
+
+Clients access only document upload/status and messages. Accounting entry, classification, payroll, and tax workflows remain on staff dashboards.
 
 ## Admin Dashboard
 
 - Clients
-- Immigration Cases
 - Accounting Clients
 - Tax Years
 - Tax Files
@@ -106,20 +75,19 @@ These rules are enforced with Supabase RLS policies across the migration files, 
 - Messages
 - Tasks
 - Follow-Ups
-- IRCC Requests
 - Reports
 - Public Posts
 - Employees
 - Audit Logs
 - Settings
 
-The main admin workflow is now: open `/admin/clients`, select a client, then manage that client's profile, documents, immigration, personal tax, self-employed records, income, expenses, GST, Workers & Payments, messages, tasks, notes, and reports from the client detail page.
+The main admin workflow is: open `/admin/clients`, select a client, then manage that client's profile, documents, personal tax, self-employed records, income, expenses, GST/HST, Workers & Payments, messages, tasks, notes, and reports from the client detail page.
 
-Admins can manage public service explanations at `/admin/public-posts`. Public posts support title, category, service type, language, translation group key, content, and Published / Draft status. Published posts appear on the homepage under Latest Updates. Admins create separate manual language versions by reusing the same translation group key, and the homepage falls back to English when a selected language version is missing.
+Admins can manage accounting and tax updates at `/admin/public-posts`. Posts support title, category, service type, language, translation group key, content, and Published / Draft status. Published Accounting and General posts appear on the homepage. The homepage falls back to English when a selected language version is missing.
 
 ## Employee Dashboard
 
-Employees use `/employee` and see only assigned clients and assigned immigration cases. The same RLS helpers that protect client/admin records also protect employee access.
+Employees use `/employee` and see only assigned clients. The same RLS policies that protect client/admin records also protect employee access.
 
 ## T4 Slip Workflow
 
@@ -151,11 +119,9 @@ Self-employed routes:
 - First login route: `/portal`
 - New clients see the guided onboarding welcome card, but portal sections remain visible.
 - Registration type, display name, contact details, and service selections are saved through `public.save_client_registration_profile`.
-- Supported choices include Immigration, Tax & Accounting, or both.
-- Immigration service choices include Refugee Sponsorship, Family Sponsorship, Visitor Visa, Study Permit, Work Permit, Express Entry, Citizenship, and Other.
-- Tax choices include Personal Tax, Self-Employed, Corporation, GST Only, and Bookkeeping & Payroll.
-- Clients can change service choices later from `/portal/profile`.
-- Guided onboarding saves preferences only; it does not remove immigration, tax, business, accounting, document, message, or profile sections.
+- Clients select an individual or business profile and choose accounting or tax support, such as Personal Tax, Self-Employed, Corporation, GST Only, or Bookkeeping & Payroll.
+- Clients can update their profile and service preferences later from `/portal/profile`.
+- Guided onboarding saves accounting and tax preferences; the portal presents accounting, bookkeeping, payroll, tax, documents, messages, and profile tools.
 
 ## Workers & Payments
 
@@ -174,40 +140,13 @@ Self-employed routes:
 - Admin sees yearly T4 totals, T4 preparation table, T4A preparation table, T5018 support table, payment list, worker list, and export placeholders for CSV, T4, T4A, and T5018 support.
 - No CRA connection is enabled; reports are export-ready placeholders only.
 
-## Immigration Case Management
+## Existing Database Preservation
 
-Client immigration workspace includes:
+Older immigration and general-business tables, storage buckets, and client records may still exist in the connected Supabase project. They are intentionally left untouched and are not linked from the current product navigation or dashboards. Do not drop or truncate them as part of this product-scope change.
 
-- Start new immigration case
-- Choose program
-- Complete assessment
-- Applicant information
-- Sponsor / inviter information
-- People involved
-- Document upload
-- Checklist
-- Case status
-- Secure messages
-- Missing items
-- Deadlines
-- Follow-up requests
-- IRCC request tracker
-- Case timeline
+## Progressive Web App
 
-Admin immigration workspace includes:
-
-- New assessments
-- Missing documents
-- Upcoming deadlines
-- Overdue tasks
-- Client messages
-- IRCC requests
-- Document approve, reject, request-again, note, and due-date actions
-- Task and follow-up assignment
-- Email reminder placeholder
-- SMS reminder placeholder
-
-People involved can include applicant, sponsor, inviter, spouse, children, employer, school, business partner, and other family members.
+The root manifest and service worker enable installation on supported browsers. The worker only caches a static offline notice; authenticated pages, accounting records, API requests, and uploaded files are never cached. A network connection is required to view private records.
 
 ## Multi-Language Foundation
 
@@ -298,7 +237,7 @@ Supabase environment variables are required for login, signup, logout, and all p
 
 ## Environment Variables
 
-Copy `.env.example` to `.env.local`:
+Keep the existing `.env.local` Supabase settings in place. Copy `.env.example` only when creating a fresh local environment:
 
 ```bash
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
@@ -329,12 +268,13 @@ Only expose `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to br
 16. Run `supabase/migrations/0015_paystub_pdf_fields.sql`.
 17. Run `supabase/migrations/0016_client_type_display_name.sql`.
 18. Run `supabase/migrations/0017_client_simplification_service_posts_expense_classification.sql`.
-19. Enable email/password authentication and email verification.
-20. Add redirect URLs for `/verify-email` and `/reset-password`.
-21. Create Auth users for admins, employees, and clients.
-22. Update `supabase/seed.sql` with matching Auth user UUIDs.
-23. Run `supabase/seed.sql` only when you want optional demo data.
-24. Confirm the private Storage buckets exist:
+19. Run `supabase/migrations/20261106150000_document_company_link.sql` to add nullable company linkage to document records; historical rows are preserved.
+20. Enable email/password authentication and email verification.
+21. Add `/auth/callback` to the Supabase redirect allowlist for localhost and the production host `exoduspathways.ca`.
+22. Create Auth users for admins, employees, and clients.
+23. Update `supabase/seed.sql` with matching Auth user UUIDs.
+24. Run `supabase/seed.sql` only when you want optional demo data.
+25. Confirm the private Storage buckets exist:
     - `receipts`
     - `invoices`
     - `bank-statements`

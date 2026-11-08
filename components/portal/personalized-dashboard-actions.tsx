@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { FileText, MessageSquareText, Send, SquareCheckBig } from "lucide-react";
 import {
-  isSelfEmployedClient,
-  needsImmigration,
   needsTaxAccounting,
   serviceSummary,
   type ClientServiceProfile
@@ -10,17 +8,16 @@ import {
 
 export function PersonalizedDashboardActions({ profile }: { profile: ClientServiceProfile }) {
   const enterInformationHref = getEnterInformationHref(profile);
-  const statusHref = needsImmigration(profile) ? "/portal/immigration-files" : "/portal/personal-tax";
   const actions = [
     {
       title: "Upload Documents",
-      detail: "Send slips, receipts, immigration files, and other documents.",
+      detail: "Send tax slips, receipts, and accounting documents.",
       href: "/portal/documents",
       icon: FileText
     },
     {
       title: "Enter Information",
-      detail: "Add the details Exodus Pathways needs for your selected service.",
+      detail: "Add the details KAL Accounting & Tax needs for your selected service.",
       href: enterInformationHref,
       icon: Send
     },
@@ -33,7 +30,7 @@ export function PersonalizedDashboardActions({ profile }: { profile: ClientServi
     {
       title: "Status Tracking",
       detail: "Check what is uploaded, waiting, or under review.",
-      href: statusHref,
+      href: "/portal/personal-tax",
       icon: SquareCheckBig
     }
   ];
@@ -61,16 +58,8 @@ export function PersonalizedDashboardActions({ profile }: { profile: ClientServi
 }
 
 function getEnterInformationHref(profile: ClientServiceProfile) {
-  if (needsImmigration(profile)) {
-    return "/portal/immigration-files";
-  }
-
-  if (isSelfEmployedClient(profile)) {
-    return "/portal/self-employed";
-  }
-
   if (needsTaxAccounting(profile)) {
-    return "/portal/personal-tax";
+    return profile.tax_accounting_type === "Self-Employed" ? "/portal/self-employed" : "/portal/personal-tax";
   }
 
   return "/portal/profile";

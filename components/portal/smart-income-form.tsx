@@ -114,7 +114,7 @@ export function SmartIncomeForm({ taxYear }: { taxYear: number }) {
         <Banknote className="h-6 w-6 text-exodus-gold" aria-hidden="true" />
         <div>
           <h2 className="text-xl font-black text-exodus-navy">Add money you received</h2>
-          <p className="mt-1 text-sm leading-6 text-exodus-slate">Enter the basics now. Exodus Pathways can review the details later.</p>
+          <p className="mt-1 text-sm leading-6 text-exodus-slate">Enter the basics now. KAL Accounting &amp; Tax staff can review the details later.</p>
         </div>
       </div>
 

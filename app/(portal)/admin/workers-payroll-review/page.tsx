@@ -1,16 +1,16 @@
-import {
-  AccountingHeader,
-  AdminAccountingFilter
-} from "@/components/portal/accounting-records";
+import Link from "next/link";
+import { AccountingHeader, AdminAccountingFilter } from "@/components/portal/accounting-records";
 import { WorkerReviewWorkspace } from "@/components/portal/workers-admin-review";
 import { parseYear } from "@/lib/accounting/data";
 import { getAdminWorkersPaymentsData } from "@/lib/workers-payments";
+import { requireRole } from "@/lib/supabase/server";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export default async function WorkersPayrollReviewPage({ searchParams }: PageProps) {
+  await requireRole(["admin"]);
   const params = await searchParams;
   const taxYear = parseYear(params?.year);
   const clientId = firstParam(params?.clientId);
@@ -27,6 +27,17 @@ export default async function WorkersPayrollReviewPage({ searchParams }: PagePro
       >
         <AdminAccountingFilter clients={clients} selectedClientId={selectedClient?.id} selectedYear={taxYear} action="/admin/workers-payroll-review" />
       </AccountingHeader>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-slate-600">Register employees under the correct company before entering payroll.</p>
+        {selectedClient ? (
+          <Link
+            href={`/admin/workers-payroll-review/new?clientId=${encodeURIComponent(selectedClient.id)}&year=${taxYear}`}
+            className="rounded-lg bg-blue-900 px-5 py-3 font-semibold text-white hover:bg-blue-800"
+          >
+            + Add Employee
+          </Link>
+        ) : null}
+      </div>
       <WorkerReviewWorkspace
         data={data}
         clientId={selectedClient?.id ?? ""}

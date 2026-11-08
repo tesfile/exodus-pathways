@@ -45,7 +45,6 @@ type PageProps = {
 const clientDetailTabs = [
   { key: "profile", label: "Profile" },
   { key: "documents", label: "Documents" },
-  { key: "immigration", label: "Immigration" },
   { key: "personal-tax", label: "Personal Tax" },
   { key: "self-employed", label: "Self-Employed" },
   { key: "income", label: "Income" },
@@ -136,9 +135,9 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
 
   return (
     <div className="grid gap-6">
-      <AccountingHeader
+    <AccountingHeader
         title={client.companyName}
-        description="Client detail workspace for profile, documents, accounting records, immigration cases, messages, tasks, and notes."
+        description="Client workspace for profile, documents, accounting and tax records, payroll, messages, tasks, and notes."
       >
         <form action={`/admin/clients/${client.id}`} className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
           <div className="grid gap-4 sm:grid-cols-[220px_auto] sm:items-end">
@@ -203,7 +202,7 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
                   <div>
                     <p className="text-base font-black text-exodus-navy">{document.file_name}</p>
                     <p className="mt-1 text-sm font-semibold text-exodus-slate">
-                      {document.document_type} | {document.bucket}
+                      {document.document_type} | {document.company_name} | {document.tax_year ?? "Year not set"}
                     </p>
                     <p className="mt-2 text-sm text-exodus-slate">Document Date: {formatDate(document.document_date)}</p>
                     <p className="mt-1 text-sm text-exodus-slate">Uploaded: {formatDateTime(document.created_at)}</p>
@@ -241,19 +240,6 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
         ) : (
           <EmptyState text="No documents uploaded for this client yet." />
         )}
-      </section>
-
-      <section id="immigration" className={tabSectionClass(activeTab, "immigration", "scroll-mt-24")}>
-        <AccountingTable
-          title="Immigration"
-          columns={[
-            { key: "case", label: "Case" },
-            { key: "applicant", label: "Applicant" },
-            { key: "status", label: "Status" },
-            { key: "due", label: "Due" }
-          ]}
-          rows={related.immigrationCases}
-        />
       </section>
 
       <section id="personal-tax" className={tabSectionClass(activeTab, "personal-tax", "scroll-mt-24")}>
@@ -453,18 +439,12 @@ function EmptyState({ text }: { text: string }) {
 }
 
 async function getRelatedClientRows(clientId: string): Promise<{
-  immigrationCases: DemoRow[];
   messages: DemoRow[];
   tasks: DemoRow[];
   notes: string;
 }> {
   const supabase = await createServerSupabaseClient();
-  const [casesResult, messagesResult, tasksResult, profileResult] = await Promise.all([
-    supabase
-      .from("immigration_cases")
-      .select("case_type,applicant_name,status,due_date")
-      .eq("client_id", clientId)
-      .order("created_at", { ascending: false }),
+  const [messagesResult, tasksResult, profileResult] = await Promise.all([
     supabase
       .from("messages")
       .select("id,subject,read_at,created_at")
@@ -483,12 +463,6 @@ async function getRelatedClientRows(clientId: string): Promise<{
   ]);
 
   return {
-    immigrationCases: ((casesResult.data ?? []) as Array<{ case_type: string; applicant_name: string; status: string; due_date: string | null }>).map((row) => ({
-      case: row.case_type,
-      applicant: row.applicant_name,
-      status: row.status,
-      due: formatDate(row.due_date)
-    })),
     messages: ((messagesResult.data ?? []) as Array<{ id: string; subject: string; read_at: string | null; created_at: string }>).map((row) => ({
       subject: row.subject,
       date: formatDate(row.created_at.slice(0, 10)),

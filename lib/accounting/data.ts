@@ -1,4 +1,4 @@
-import { createServerSupabaseClient, getCurrentUserRecord } from "@/lib/supabase/server";
+﻿import { createServerSupabaseClient, getCurrentUserRecord } from "@/lib/supabase/server";
 import type { DemoRow, PortalUser } from "@/lib/types";
 
 export type ClientOption = {
@@ -115,6 +115,7 @@ type DocumentRow = {
   client_id: string;
   bucket: string;
   storage_path: string;
+  company_id: string | null;
   document_type: string;
   file_name: string;
   status: string;
@@ -127,6 +128,7 @@ type DocumentRow = {
 
 export type ClientDocumentRow = DocumentRow & {
   client_name: string;
+  company_name: string;
   download_url: string;
 };
 
@@ -219,10 +221,18 @@ export function toNumber(value: number | string | null | undefined) {
 
 export async function getClientOptions() {
   const supabase = await createServerSupabaseClient();
-  const [{ data: users }, { data: companies }] = await Promise.all([
-    supabase.from("users").select("id,email,full_name,display_name,client_type,phone,role").eq("role", "client").order("display_name"),
+  const [{ data: users, error: usersError }, { data: companies, error: companiesError }] = await Promise.all([
+    supabase.from("users").select("id,email,full_name,role").eq("role", "client").order("full_name"),
     supabase.from("companies").select("id,client_id,legal_name,trade_name,business_number,corporation_number,contact_person,address").order("legal_name")
   ]);
+
+  if (usersError) {
+    throw new Error(`Failed to load clients: ${usersError.message}`);
+  }
+
+  if (companiesError) {
+    throw new Error(`Failed to load companies: ${companiesError.message}`);
+  }
 
   const companyByClient = new Map(
     ((companies ?? []) as CompanyRow[]).map((company) => [company.client_id, company])
@@ -697,7 +707,8 @@ export async function getDocumentRowsForScope(clientId?: string): Promise<DemoRo
     bucket: document.bucket,
     year: document.tax_year ? String(document.tax_year) : "-",
     due: formatDate(document.due_date),
-    note: document.review_notes ?? "-"
+    note: document.review_notes ?? "-",
+    company: document.company_name
   }));
 }
 
@@ -705,20 +716,26 @@ export async function getClientDocuments(clientId?: string): Promise<ClientDocum
   const supabase = await createServerSupabaseClient();
   let query = supabase
     .from("documents")
-    .select("id,client_id,bucket,storage_path,document_type,file_name,status,document_date,tax_year,review_notes,due_date,created_at")
+    .select("id,client_id,company_id,bucket,storage_path,document_type,file_name,status,document_date,tax_year,review_notes,due_date,created_at")
     .order("created_at", { ascending: false });
 
   if (clientId) {
     query = query.eq("client_id", clientId);
   }
 
-  const [{ data: documents }, clients] = await Promise.all([query, getClientOptions()]);
+  const [{ data: documents }, clients, { data: companies }] = await Promise.all([
+    query,
+    getClientOptions(),
+    supabase.from("companies").select("id,trade_name,legal_name")
+  ]);
   const clientById = new Map(clients.map((client) => [client.id, client.companyName]));
+  const companyById = new Map(((companies ?? []) as Array<{ id: string; trade_name: string | null; legal_name: string }>).map((company) => [company.id, company.trade_name || company.legal_name]));
 
   const rows = await Promise.all(
     ((documents ?? []) as DocumentRow[]).map(async (document) => ({
       ...document,
       client_name: clientById.get(document.client_id) ?? "Client",
+      company_name: document.company_id ? companyById.get(document.company_id) ?? "Company" : "Personal / not linked",
       download_url: await createSignedDownloadUrl(document.bucket, document.storage_path)
     }))
   );
@@ -738,3 +755,5 @@ async function createSignedDownloadUrl(bucket: string, storagePath: string) {
 
   return data.signedUrl;
 }
+
+

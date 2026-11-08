@@ -23,7 +23,6 @@ const clientDocumentTypes = [
   { value: "invoice", label: "Invoice" },
   { value: "bank_statement", label: "Bank statement" },
   { value: "tax_document", label: "Tax document" },
-  { value: "immigration_document", label: "Immigration document" },
   { value: "payroll_document", label: "Payroll document" }
 ];
 

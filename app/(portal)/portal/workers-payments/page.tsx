@@ -20,7 +20,7 @@ export default async function WorkersPaymentsPage({ searchParams }: PageProps) {
     <div className="grid gap-6">
       <AccountingHeader
         title="Workers & Payments"
-        description="Tell us who you paid. Exodus Pathways will review what type of payment it is."
+        description="Upload worker and payroll documents. KAL Accounting & Tax staff will review and classify records for you."
         eyebrow="Client portal"
         showExports={false}
       >

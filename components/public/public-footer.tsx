@@ -1,69 +1,34 @@
-"use client";
-
 import Link from "next/link";
-import { Mail, MapPin, Phone, ShieldCheck } from "lucide-react";
-import { brand, publicNav } from "@/lib/constants";
-import { useT } from "@/lib/i18n/provider";
+import Image from "next/image";
+import { Mail, MapPin, ShieldCheck } from "lucide-react";
+import { brand } from "@/lib/constants";
 
 export function PublicFooter() {
-  const { t } = useT();
-
   return (
     <footer className="border-t border-slate-200 bg-white">
-      <div className="section-shell grid gap-10 py-12 lg:grid-cols-[1.3fr_0.7fr_0.8fr]">
+      <div className="section-shell grid gap-8 py-8 sm:grid-cols-2 sm:items-center">
         <div>
           <div className="flex items-center gap-3">
-            <span className="grid h-11 w-11 place-items-center rounded-md bg-exodus-navy text-lg font-black text-white">
-              EP
-            </span>
-            <div>
-              <p className="font-black text-exodus-navy">{brand.name}</p>
-              <p className="text-sm font-semibold text-exodus-slate">{t("brand.tagline")}</p>
-            </div>
+            <Image src="/images/kal-logo.png" alt="KAL Service Alliance logo" width={44} height={44} className="h-11 w-11 object-contain" />
+            <div><p className="font-black text-exodus-navy">{brand.name}</p><p className="mt-1 text-xs font-semibold text-exodus-slate">{brand.tagline}</p></div>
           </div>
-          <p className="mt-5 max-w-2xl text-sm leading-6 text-exodus-slate">
-            Secure support for Canadian accounting, bookkeeping, payroll, corporate tax,
-            immigration, and business service workflows.
-          </p>
-          <p className="mt-4 flex max-w-2xl gap-2 rounded-md bg-exodus-light p-3 text-sm font-medium leading-6 text-exodus-navy">
+          <p className="mt-3 flex items-start gap-2 text-xs leading-5 text-exodus-slate">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-exodus-gold" aria-hidden="true" />
-            {t("common.disclaimer")}
+            Secure client documents are accessible only to the client and authorized staff roles.
           </p>
         </div>
-
-        <div>
-          <h2 className="text-sm font-black uppercase tracking-[0.16em] text-exodus-navy">Pages</h2>
-          <div className="mt-4 grid gap-2">
-            {publicNav.map((item) => (
-              <Link key={item.href} href={item.href} className="text-sm font-semibold text-exodus-slate hover:text-exodus-navy">
-                {t(item.labelKey)}
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h2 className="text-sm font-black uppercase tracking-[0.16em] text-exodus-navy">Contact</h2>
-          <div className="mt-4 grid gap-3 text-sm font-medium text-exodus-slate">
-            <p className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-exodus-gold" aria-hidden="true" />
-              Serving clients across Canada
-            </p>
-            <p className="flex items-center gap-2">
-              <Phone className="h-4 w-4 text-exodus-gold" aria-hidden="true" />
-              +1 (000) 000-0000
-            </p>
-            <p className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-exodus-gold" aria-hidden="true" />
-              hello@exoduspathways.ca
-            </p>
+        <div className="grid gap-3 text-sm font-semibold text-exodus-navy sm:justify-items-end">
+          <a href="mailto:info@kalservice.ca" className="focus-ring inline-flex items-center gap-2"><Mail className="h-4 w-4 text-exodus-gold" aria-hidden="true" />info@kalservice.ca</a>
+          <a href="tel:+13688869018" className="focus-ring">+1 (368) 886-9018</a>
+          <span className="inline-flex items-center gap-2"><MapPin className="h-4 w-4 text-exodus-gold" aria-hidden="true" />3016 5 Ave NE, Calgary, AB T2A 6K4</span>
+          <div className="flex gap-4 text-xs">
+            <Link href="/privacy" className="underline underline-offset-4">Privacy Policy</Link>
+            <Link href="/staff/login" className="underline underline-offset-4">Staff Login</Link>
           </div>
         </div>
       </div>
-      <div className="border-t border-slate-200 py-4">
-        <div className="section-shell text-sm text-exodus-slate">
-          Copyright {new Date().getFullYear()} Exodus Pathways. Do not submit credit card numbers or bank login credentials through this portal.
-        </div>
+      <div className="border-t border-slate-200 py-3 text-center text-xs text-exodus-slate">
+        Copyright {new Date().getFullYear()} KAL ACCOUNTING &amp; TAX
       </div>
     </footer>
   );

@@ -11,7 +11,7 @@ export default async function PortalT4Page() {
     <div className="grid gap-6">
       <AccountingHeader
         title="T4 Slips"
-        description="Upload a T4, let the portal read boxes 14, 16, 18, and 22, then confirm the numbers before Exodus Pathways reviews them."
+        description="Upload a T4 document. KAL Accounting & Tax staff will review it and contact you if more information is needed."
       />
       <T4UploadWorkflow />
       <AccountingTable

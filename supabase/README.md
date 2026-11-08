@@ -20,12 +20,14 @@
 18. Run `supabase/migrations/0017_client_simplification_service_posts_expense_classification.sql`.
 19. Run `supabase/migrations/0018_public_service_posts_general_category.sql`.
 20. Run `supabase/migrations/0019_public_service_posts_translation_key.sql`.
-21. In Authentication, enable email/password sign-in and email verification.
-22. Add redirect URLs for `/verify-email` and `/reset-password`.
-23. Create admin, employee, and client Auth users.
-24. Update the UUIDs in `supabase/seed.sql` to match those Auth users, then run the seed only when you want optional demo data.
-25. In `public.users`, set trusted staff roles to `admin` or `employee`. New signups default to `client`.
-26. Store uploaded files under paths that start with the client UUID, for example:
+21. Run `supabase/migrations/20260905150000_exodus_foundation.sql` to provision the `exodus_`-prefixed identity and portal schema used by app auth and route checks.
+22. Run `supabase/migrations/20261106150000_document_company_link.sql` to safely add optional company association to documents. It leaves existing rows intact.
+23. In Authentication, enable email/password sign-in and email verification.
+24. Add `/auth/callback` to the Supabase Auth redirect allowlist for local staging and the staging site URL only.
+25. Create test-only admin, employee, and client Auth users.
+26. In both `public.users` and `public.exodus_users`, set trusted staging staff roles to `admin` or `employee`. Mirror employee assignments in both `public.client_profiles` and `public.exodus_client_profiles`.
+27. Do not run `supabase/seed.sql` for isolated integration tests; it contains hardcoded demo identities and unrelated legacy data.
+28. Store uploaded files under paths that start with the client UUID, for example:
    - `receipts/<client_uuid>/fuel-receipt.jpg`
    - `bank-statements/<client_uuid>/may-2026.pdf`
    - `immigration-documents/<client_uuid>/passport-scan.pdf`

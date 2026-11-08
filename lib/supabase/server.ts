@@ -4,7 +4,7 @@ import { createServerClient } from "@supabase/ssr";
 import type { PortalRole, PortalUser } from "@/lib/types";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
 export function isSupabaseConfigured() {
   return (
@@ -67,11 +67,8 @@ export async function getCurrentUserRecord(): Promise<PortalUser> {
     redirect("/verify-email");
   }
 
-  const { data: userRecord, error } = await supabase
-    .from("users")
-    .select("id,email,full_name,display_name,client_type,phone,role")
-    .eq("id", user.id)
-    .maybeSingle();
+  // Keep the existing Exodus identity and role record in the shared project.
+  const { data: userRecord, error } = await supabase.rpc("exodus_ensure_profile");
 
   if (error || !userRecord) {
     redirect("/login?error=user_record_required");

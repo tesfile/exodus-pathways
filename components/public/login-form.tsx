@@ -8,7 +8,7 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { useT } from "@/lib/i18n/provider";
 import type { PortalRole } from "@/lib/types";
 
-export function LoginForm() {
+export function LoginForm({ staffOnly = false }: { staffOnly?: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState("");
@@ -43,19 +43,22 @@ export function LoginForm() {
         return;
       }
 
-      const { data: userRecord, error: userRecordError } = await supabase
-        .from("users")
-        .select("id,email,full_name,role")
-        .eq("id", user.id)
-        .maybeSingle();
+      const { data: userRecord, error: userRecordError } = await supabase.rpc("exodus_ensure_profile");
 
-      if (userRecordError || !userRecord || !isPortalRole(userRecord.role)) {
+      const profile = userRecord as { role?: unknown } | null;
+      if (userRecordError || !profile || !isPortalRole(profile.role)) {
         await supabase.auth.signOut();
-        setStatus("Account record not found. Please contact Exodus Pathways.");
+        setStatus("Account record not found. Please contact KAL Accounting & Tax.");
         return;
       }
 
-      router.push(routeForRole(userRecord.role, searchParams.get("next")));
+      if (staffOnly && profile.role === "client") {
+        await supabase.auth.signOut();
+        setStatus("This sign-in is for authorized staff. Use the client login instead.");
+        return;
+      }
+
+      router.push(routeForRole(profile.role, searchParams.get("next")));
       router.refresh();
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Invalid login credentials");
@@ -102,7 +105,7 @@ export function LoginForm() {
       </p>
 
       <div className="flex flex-col gap-2 text-sm font-black text-exodus-blue sm:flex-row sm:justify-between">
-        <Link href="/signup">{t("auth.login.needAccount")}</Link>
+        {staffOnly ? <Link href="/login">Client Login</Link> : <Link href="/signup">{t("auth.login.needAccount")}</Link>}
         <Link href="/forgot-password">{t("auth.login.forgot")}</Link>
       </div>
     </form>

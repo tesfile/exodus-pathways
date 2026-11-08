@@ -1,38 +1,22 @@
-import { AccountingHeader, AccountingTable } from "@/components/portal/accounting-records";
-import { UploadCard } from "@/components/portal/upload-card";
+import { ClientDocumentWorkspace } from "@/components/portal/client-document-workspace";
 import { getDocumentRowsForScope } from "@/lib/accounting/data";
-import { getCurrentUserRecord } from "@/lib/supabase/server";
+import { createServerSupabaseClient, getCurrentUserRecord } from "@/lib/supabase/server";
 
 export default async function DocumentsPage() {
   const user = await getCurrentUserRecord();
-  const rows = await getDocumentRowsForScope(user.id);
+  const [rows, supabase] = await Promise.all([
+    getDocumentRowsForScope(user.id),
+    createServerSupabaseClient()
+  ]);
+  const { data: companyRows } = await supabase
+    .from("companies")
+    .select("id,legal_name,trade_name")
+    .eq("client_id", user.id)
+    .order("legal_name");
+  const companies = (companyRows ?? []).map((company) => ({
+    id: String(company.id),
+    name: String(company.trade_name || company.legal_name)
+  }));
 
-  return (
-    <div className="grid gap-6">
-      <AccountingHeader
-        title="Documents"
-        description="Upload a file or take a picture. Choose the closest document type."
-        eyebrow="Client portal"
-        showExports={false}
-      />
-      <UploadCard
-        bucket="client-documents"
-        documentType="client_document"
-        title="Upload document"
-        allowDocumentTypeChoice
-        submitLabel="Save"
-      />
-      <AccountingTable
-        title="Uploaded Documents"
-        columns={[
-          { key: "name", label: "Document Name" },
-          { key: "documentDate", label: "Document Date" },
-          { key: "uploadedDate", label: "Uploaded Date" },
-          { key: "status", label: "Status" },
-          { key: "type", label: "Type" }
-        ]}
-        rows={rows}
-      />
-    </div>
-  );
+  return <ClientDocumentWorkspace companies={companies} taxYear={new Date().getFullYear()} rows={rows} />;
 }

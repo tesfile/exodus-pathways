@@ -44,7 +44,7 @@ export default async function PersonalTaxPage({ searchParams }: PageProps) {
       />
       <AccountingTable
         title="Future T4 Extraction Boxes"
-        description="These rows are prepared for future OCR. Exodus Pathways can review or update them from the admin portal."
+        description="These rows are prepared for future OCR. KAL Accounting & Tax staff can review or update them from the staff portal."
         columns={[
           { key: "box", label: "Box" },
           { key: "label", label: "Label" },

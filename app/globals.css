@@ -4,8 +4,13 @@
 
 :root {
   color-scheme: light;
-  --background: #f7fbff;
+  --background: #fff9e9;
   --foreground: #172033;
+  --kal-navy: #073c7b;
+  --kal-deep: #061f49;
+  --kal-blue: #08559e;
+  --kal-gold: #f2c34f;
+  --kal-cream: #fff9e9;
 }
 
 * {
@@ -37,8 +42,8 @@ textarea {
 }
 
 ::selection {
-  background: #f6e8c4;
-  color: #0f3d73;
+  background: #ffe08b;
+  color: #061f49;
 }
 
 @layer components {
@@ -68,5 +73,18 @@ textarea {
 
   .mobile-action {
     @apply focus-ring inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-md bg-exodus-navy px-5 text-base font-black text-white transition hover:bg-exodus-blue sm:w-auto;
+  }
+
+  .kal-skyline-hero {
+    background-image: linear-gradient(90deg, rgba(3, 21, 57, 0.96) 0%, rgba(4, 36, 87, 0.81) 44%, rgba(3, 35, 85, 0.3) 100%), url("/images/calgary-skyline.png");
+    background-position: center 52%;
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+
+  .kal-auth-backdrop {
+    background-image: linear-gradient(110deg, rgba(3, 21, 57, 0.82), rgba(4, 36, 87, 0.44)), url("/images/calgary-skyline.png");
+    background-position: center;
+    background-size: cover;
   }
 }

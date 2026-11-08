@@ -14,9 +14,7 @@ export type PortalUser = {
 export type ServiceSlug =
   | "accounting-tax"
   | "bookkeeping"
-  | "payroll"
-  | "immigration-services"
-  | "business-services";
+  | "payroll";
 
 export type DashboardItem = {
   title: string;
