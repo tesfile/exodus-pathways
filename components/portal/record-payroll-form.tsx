@@ -14,6 +14,8 @@ export function RecordPayrollForm({ clientId, workerId, today, initialClassifica
   const [frequency, setFrequency] = useState("biweekly");
   const [payDate, setPayDate] = useState(today);
   const [calculated, setCalculated] = useState(false);
+  const [prior, setPrior] = useState({ cpp: "", cpp2: "", ei: "", pensionableEarnings: "" });
+  const priorReady = Object.values(prior).every(value => value.trim() !== "" && Number.isFinite(Number(value)) && Number(value) >= 0);
   const [cpp, setCpp] = useState("0");
   const [ei, setEi] = useState("0");
   const [employerCpp, setEmployerCpp] = useState("0");
@@ -21,8 +23,10 @@ export function RecordPayrollForm({ clientId, workerId, today, initialClassifica
   const [tax, setTax] = useState("0");
   function autoCalculate(value: string, freq: string, date: string) {
     setCalculated(false);
-    if (!value || Number(value) <= 0 || !date.startsWith("2026-")) return;
-    const result = calculateStandardCppEi2026(Number(value), freq);
+    if (!value || Number(value) <= 0 || !date.startsWith("2026-") || !priorReady) return;
+    const result = calculateStandardCppEi2026(Number(value), freq, {
+      cpp: Number(prior.cpp), cpp2: Number(prior.cpp2), ei: Number(prior.ei), pensionableEarnings: Number(prior.pensionableEarnings)
+    });
     setCpp((result.cpp + result.cpp2).toFixed(2));
     setEi(result.ei.toFixed(2));
     setEmployerCpp(result.employerCpp.toFixed(2));
@@ -55,7 +59,16 @@ export function RecordPayrollForm({ clientId, workerId, today, initialClassifica
       <input required name="gross" type="number" min="0.01" step="0.01" value={gross} onChange={(e) => { setGross(e.target.value); autoCalculate(e.target.value, frequency, payDate); }} className="rounded border p-3"/>
     </label>
     {isEmployee ? <>
-      <div className="md:col-span-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm">2026 CPP and EI are prefilled for a standard Alberta pay period, without year-to-date limits or exemptions. Income tax is not yet calculated automatically. These are preliminary amounts and must be checked with CRA PDOC before saving.</div>
+      <div className="md:col-span-2 grid gap-3 rounded border border-blue-200 p-4">
+        <strong>Year-to-date values before this pay (required)</strong>
+        <p className="text-sm">Enter actual values from employer payroll records, including any payroll before KAL. Enter 0 only when genuinely zero. Changes recalculate when you edit gross pay or frequency.</p>
+        {([["pensionableEarnings", "Pensionable earnings YTD"], ["cpp", "CPP deducted YTD"], ["cpp2", "CPP2 deducted YTD"], ["ei", "EI deducted YTD"]] as const).map(([key, label]) =>
+          <label className="grid gap-1" key={key}>{label} ($)
+            <input type="number" min="0" step="0.01" required value={prior[key]} onChange={e => { setPrior(previous => ({...previous, [key]: e.target.value})); setCalculated(false); }} className="rounded border p-3"/>
+          </label>)}
+        <button type="button" className="rounded bg-blue-800 p-3 font-semibold text-white" onClick={() => autoCalculate(gross, frequency, payDate)}>Recalculate CPP / EI with YTD</button>
+      </div>
+      <div className="md:col-span-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm">2026 CPP and EI are prefilled for a standard Alberta pay period using the year-to-date amounts entered above. Income tax is not yet calculated automatically. These are preliminary amounts and must be checked with CRA PDOC before saving.</div>
       {([["cpp", "Employee CPP / CPP2", cpp, setCpp], ["ei", "Employee EI", ei, setEi], ["income_tax", "Income tax withheld (CRA PDOC)", tax, setTax], ["employer_cpp", "Employer CPP / CPP2", employerCpp, setEmployerCpp], ["employer_ei", "Employer EI", employerEi, setEmployerEi]] as const).map(([name, label, value, setter]) =>
         <label className="grid gap-1" key={name}>{label} ($)<input required name={name} type="number" min="0" step="0.01" value={value} onChange={(e) => setter(e.target.value)} className="rounded border p-3"/></label>
       )}
