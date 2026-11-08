@@ -14,7 +14,8 @@ export function RecordPayrollForm({ clientId, workerId, today, initialClassifica
   const [frequency, setFrequency] = useState("biweekly");
   const [payDate, setPayDate] = useState(today);
   const [calculated, setCalculated] = useState(false);
-  const [prior, setPrior] = useState({ cpp: "", cpp2: "", ei: "", pensionableEarnings: "" });
+  const [prior, setPrior] = useState({ cpp: "0", cpp2: "0", ei: "0", pensionableEarnings: "0" });
+  const [hasPriorPayroll, setHasPriorPayroll] = useState(false);
   const priorReady = Object.values(prior).every(value => value.trim() !== "" && Number.isFinite(Number(value)) && Number(value) >= 0);
   const [cpp, setCpp] = useState("0");
   const [ei, setEi] = useState("0");
@@ -60,9 +61,10 @@ export function RecordPayrollForm({ clientId, workerId, today, initialClassifica
     </label>
     {isEmployee ? <>
       <div className="md:col-span-2 grid gap-3 rounded border border-blue-200 p-4">
-        <strong>Year-to-date values before this pay (required)</strong>
-        <p className="text-sm">Enter actual values from employer payroll records, including any payroll before KAL. Enter 0 only when genuinely zero. Changes recalculate when you edit gross pay or frequency.</p>
-        {([["pensionableEarnings", "Pensionable earnings YTD"], ["cpp", "CPP deducted YTD"], ["cpp2", "CPP2 deducted YTD"], ["ei", "EI deducted YTD"]] as const).map(([key, label]) =>
+        <strong>Previous payroll this year</strong>
+        <label className="flex items-center gap-2"><input type="checkbox" checked={hasPriorPayroll} onChange={e => { setHasPriorPayroll(e.target.checked); setPrior({ cpp: e.target.checked ? "" : "0", cpp2: e.target.checked ? "" : "0", ei: e.target.checked ? "" : "0", pensionableEarnings: e.target.checked ? "" : "0" }); setCalculated(false); }} />This employee has already received pay from this employer in 2026</label>
+        <p className="text-sm">{hasPriorPayroll ? "Enter the actual opening year-to-date totals from earlier employer payroll records." : "First pay of 2026: opening year-to-date amounts are zero. No prior payroll amounts need to be entered."}</p>
+        {hasPriorPayroll && ([["pensionableEarnings", "Pensionable earnings YTD"], ["cpp", "CPP deducted YTD"], ["cpp2", "CPP2 deducted YTD"], ["ei", "EI deducted YTD"]] as const).map(([key, label]) =>
           <label className="grid gap-1" key={key}>{label} ($)
             <input type="number" min="0" step="0.01" required value={prior[key]} onChange={e => { setPrior(previous => ({...previous, [key]: e.target.value})); setCalculated(false); }} className="rounded border p-3"/>
           </label>)}
