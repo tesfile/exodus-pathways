@@ -202,6 +202,7 @@ function SelectedWorkerReview({
             {worker.sin_or_business_number ?? "No SIN/BN"} | {worker.worker_type} | {workerPayments.length} payment(s)
           </p>
         </div>
+        <Link href={`/admin/workers-payroll-review/record?clientId=${encodeURIComponent(clientId)}&workerId=${encodeURIComponent(worker.id)}`} className="focus-ring inline-flex min-h-10 items-center justify-center rounded-md bg-blue-900 px-4 text-sm font-black text-white">+ Record Payroll / Payment</Link>
         <Link href={baseHref} className="focus-ring inline-flex min-h-10 items-center justify-center rounded-md bg-exodus-light px-4 text-sm font-black text-exodus-navy">
           Back to worker list
         </Link>
