@@ -4,13 +4,15 @@ import { useState } from "react";
 
 type Totals = { gross: number; cpp: number; ei: number; tax: number; net: number; employerCpp: number; employerEi: number; remittance: number };
 const money = (value: number) => new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(value);
-export function PayrollEntryPreview() {
+export function PayrollEntryPreview({ classification }: { classification: string }) {
   const [totals, setTotals] = useState<Totals | null>(null);
   const [error, setError] = useState("");
+  const isEmployee = classification === "T4 Employee";
   function calculate(event: React.MouseEvent<HTMLButtonElement>) {
     const form = event.currentTarget.closest("form");
     if (!form) return;
     const data = new FormData(form);
+    if (!isEmployee) return;
     const read = (name: string) => {
       const raw = String(data.get(name) ?? "").trim();
       if (!/^\d+(?:\.\d{1,2})?$/.test(raw)) throw new Error("Enter a valid amount for " + name.replaceAll("_", " "));
@@ -33,6 +35,7 @@ export function PayrollEntryPreview() {
       setError(e instanceof Error ? e.message : "Invalid payroll amounts");
     }
   }
+  if (!isEmployee) return null;
   return <div className="md:col-span-2 grid gap-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
     <div><h2 className="text-lg font-bold text-blue-950">Payroll calculation preview</h2>
       <p className="text-sm text-slate-700">Calculates net pay and remittance totals from the deductions you entered. It does not calculate CRA CPP, EI or income tax rates. Verify those amounts with CRA PDOC first.</p></div>
