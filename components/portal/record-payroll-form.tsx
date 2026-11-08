@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { PayrollEntryPreview } from "@/components/portal/payroll-entry-preview";
 import { savePayrollEntry } from "@/app/(portal)/admin/workers-payroll-review/record/actions";
+import { calculateStandardCppEi2026 } from "@/lib/payroll/canada-2026";
 
 type Classification = "T4 Employee" | "T4A Contractor" | "T5018 Subcontractor";
 export function RecordPayrollForm({ clientId, workerId, today, initialClassification }: {
@@ -10,6 +11,24 @@ export function RecordPayrollForm({ clientId, workerId, today, initialClassifica
 }) {
   const [classification, setClassification] = useState<Classification>(initialClassification);
   const [gross, setGross] = useState("");
+  const [frequency, setFrequency] = useState("biweekly");
+  const [payDate, setPayDate] = useState(today);
+  const [calculated, setCalculated] = useState(false);
+  const [cpp, setCpp] = useState("0");
+  const [ei, setEi] = useState("0");
+  const [employerCpp, setEmployerCpp] = useState("0");
+  const [employerEi, setEmployerEi] = useState("0");
+  const [tax, setTax] = useState("0");
+  function autoCalculate(value: string, freq: string, date: string) {
+    setCalculated(false);
+    if (!value || Number(value) <= 0 || !date.startsWith("2026-")) return;
+    const result = calculateStandardCppEi2026(Number(value), freq);
+    setCpp((result.cpp + result.cpp2).toFixed(2));
+    setEi(result.ei.toFixed(2));
+    setEmployerCpp(result.employerCpp.toFixed(2));
+    setEmployerEi(result.employerEi.toFixed(2));
+    setCalculated(true);
+  }
   const isEmployee = classification === "T4 Employee";
   const numberField = (name: string, label: string) => <label className="grid gap-1" key={name}>{label} ($)
     <input required name={name} type="number" min="0" step="0.01" defaultValue="0" className="rounded border p-3"/>
@@ -28,19 +47,19 @@ export function RecordPayrollForm({ clientId, workerId, today, initialClassifica
       <strong>{isEmployee ? "T4 Employee Payroll" : classification}</strong>
       <p className="mt-1 text-sm">{isEmployee ? "Enter gross pay and verify CRA deductions before saving. The preview calculates net pay and remittance from the amounts entered." : "Enter the contractor amount and GST, if applicable. No employee CPP, EI, or payroll tax is deducted here. Confirm the correct information-slip rules before filing."}</p>
     </div>
-    <label className="grid gap-1">Pay date<input required name="payment_date" type="date" defaultValue={today} className="rounded border p-3"/></label>
-    <label className="grid gap-1">Pay frequency<select name="pay_frequency" defaultValue="biweekly" className="rounded border p-3"><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="semi-monthly">Semi-monthly</option><option value="monthly">Monthly</option></select></label>
+    <label className="grid gap-1">Pay date<input required name="payment_date" type="date" value={payDate} onChange={(e) => { setPayDate(e.target.value); autoCalculate(gross, frequency, e.target.value); }} className="rounded border p-3"/></label>
+    <label className="grid gap-1">Pay frequency<select name="pay_frequency" value={frequency} onChange={(e) => { setFrequency(e.target.value); autoCalculate(gross, e.target.value, payDate); }} className="rounded border p-3"><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="semi-monthly">Semi-monthly</option><option value="monthly">Monthly</option></select></label>
     <label className="grid gap-1">Period start<input required name="pay_period_start" type="date" defaultValue={today} className="rounded border p-3"/></label>
     <label className="grid gap-1">Period end<input required name="pay_period_end" type="date" defaultValue={today} className="rounded border p-3"/></label>
     <label className="grid gap-1">{isEmployee ? "Gross pay" : "Amount before GST"} ($)
-      <input required name="gross" type="number" min="0.01" step="0.01" value={gross} onChange={(e) => setGross(e.target.value)} className="rounded border p-3"/>
+      <input required name="gross" type="number" min="0.01" step="0.01" value={gross} onChange={(e) => { setGross(e.target.value); autoCalculate(e.target.value, frequency, payDate); }} className="rounded border p-3"/>
     </label>
     {isEmployee ? <>
-      {numberField("cpp", "Employee CPP / CPP2")}
-      {numberField("ei", "Employee EI")}
-      {numberField("income_tax", "Income tax withheld")}
-      {numberField("employer_cpp", "Employer CPP / CPP2")}
-      {numberField("employer_ei", "Employer EI")}
+      <div className="md:col-span-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm">2026 CPP and EI are prefilled for a standard Alberta pay period, without year-to-date limits or exemptions. Income tax is not yet calculated automatically. These are preliminary amounts and must be checked with CRA PDOC before saving.</div>
+      {([["cpp", "Employee CPP / CPP2", cpp, setCpp], ["ei", "Employee EI", ei, setEi], ["income_tax", "Income tax withheld (CRA PDOC)", tax, setTax], ["employer_cpp", "Employer CPP / CPP2", employerCpp, setEmployerCpp], ["employer_ei", "Employer EI", employerEi, setEmployerEi]] as const).map(([name, label, value, setter]) =>
+        <label className="grid gap-1" key={name}>{label} ($)<input required name={name} type="number" min="0" step="0.01" value={value} onChange={(e) => setter(e.target.value)} className="rounded border p-3"/></label>
+      )}
+      {calculated && <p className="md:col-span-2 text-sm font-semibold text-blue-800">CPP and EI prefilled from gross pay. Income tax still requires CRA verification.</p>}
     </> : numberField("gst", "GST paid")}
     {isEmployee ? <PayrollEntryPreview classification={classification}/> :
       <div className="md:col-span-2 rounded-lg border bg-slate-50 p-4">
