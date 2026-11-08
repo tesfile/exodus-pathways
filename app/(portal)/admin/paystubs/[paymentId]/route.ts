@@ -1,6 +1,7 @@
 import { formatDate, formatMoney, toNumber } from "@/lib/accounting/data";
 import { createPaystubPdf } from "@/lib/paystub-pdf";
-import { createServerSupabaseClient, requireRole } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
+import { requireRole } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -62,7 +63,10 @@ type UserRow = {
 export async function GET(_request: Request, { params }: RouteContext) {
   await requireRole(["admin"]);
   const { paymentId } = await params;
-  const supabase = await createServerSupabaseClient();
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const secret = process.env.SUPABASE_SECRET_KEY;
+  if (!url || !secret) return new Response("Paystub database configuration missing.", { status: 503 });
+  const supabase = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
 
   const { data: paymentData } = await supabase
     .from("worker_payments")
@@ -90,7 +94,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
   const user = userData as UserRow | null;
   const profile = profileData as ClientProfileRow | null;
   const company = companyData as CompanyRow | null;
-  const employerName = user?.display_name || company?.legal_name || company?.trade_name || user?.full_name || "Employer";
+  const employerName = company?.legal_name || company?.trade_name || user?.display_name || user?.full_name || "Employer";
   const companyAddress = company?.address || [profile?.address, profile?.province, profile?.postal_code].filter(Boolean).join(", ");
   const payDate = payment.payroll_calculator_pay_date || payment.payment_date;
   const grossPay = amountWithFallback(payment.t4_box14_employment_income, payment.gross_pay, payment.amount_paid);
@@ -99,9 +103,13 @@ export async function GET(_request: Request, { params }: RouteContext) {
   const tax = amountWithFallback(payment.t4_box22_income_tax_deducted, payment.income_tax_deducted);
   const benefits = amountWithFallback(payment.t4_benefits, payment.benefits);
   const vacationPay = amountWithFallback(payment.t4_vacation_pay, payment.vacation_pay);
-  const netPay = amountWithFallback(payment.t4_net_pay, payment.net_pay) || Math.max(grossPay - cpp - ei - tax, 0);
+  const netPay = toNumber(payment.net_pay);
 
   const pdf = createPaystubPdf(employerName, [
+    {
+      title: "Payroll verification",
+      rows: [{ label: "Status", value: "Unverified deductions - confirm against CRA PDOC before issuing" }]
+    },
     {
       title: "Employer",
       rows: [
