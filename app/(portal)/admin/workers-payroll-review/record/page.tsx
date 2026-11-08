@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/supabase/server";
 import { savePayrollEntry } from "./actions";
+import { PayrollEntryPreview } from "@/components/portal/payroll-entry-preview";
 
 export const dynamic = "force-dynamic";
 type Props = { searchParams: Promise<{ clientId?: string; workerId?: string }> };
@@ -45,6 +46,7 @@ export default async function RecordPaymentPage({ searchParams }: Props) {
           <label className="grid gap-1">Employer CPP (including applicable CPP2) ($)<input required name="employer_cpp" type="number" min="0" step="0.01" defaultValue="0" className="rounded border p-3"/></label>
           <label className="grid gap-1">Employer EI ($)<input required name="employer_ei" type="number" min="0" step="0.01" defaultValue="0" className="rounded border p-3"/></label>
         </> : <label className="grid gap-1">GST paid ($)<input required name="gst" type="number" min="0" step="0.01" defaultValue="0" className="rounded border p-3"/></label>}
+        {isEmployee && <PayrollEntryPreview />}
         <p className="md:col-span-2 text-sm text-amber-800">Draft entry only. Saving does not pay employees, submit T4/T4A/T5018 slips, or remit funds to CRA. Review amounts before use.</p>
         <button type="submit" className="rounded-lg bg-blue-900 px-6 py-3 font-bold text-white md:col-span-2">Save {isEmployee ? "Payroll Entry" : "Contractor Payment"}</button>
       </form>
