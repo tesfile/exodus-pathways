@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/supabase/server";
 
-const uuid = /^[0-9a-f]{8}-[0-9a-f-]{27}$/i;
+const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 const text = (form: FormData, key: string) => String(form.get(key) ?? "").trim();
 function amount(form: FormData, key: string) {
@@ -26,7 +26,7 @@ export async function savePayrollEntry(form: FormData) {
   const frequency = text(form, "pay_frequency");
   const classification = text(form, "classification");
   if (![clientId, workerId].every(id => uuid.test(id)) || ![date, start, end].every(d => datePattern.test(d)) ||
-      start > end || date < start || !["weekly", "biweekly", "semi-monthly", "monthly"].includes(frequency) ||
+      start > end || !["weekly", "biweekly", "semi-monthly", "monthly"].includes(frequency) ||
       !["T4 Employee", "T4A Contractor", "T5018 Subcontractor"].includes(classification)) {
     throw new Error("Invalid payroll entry or pay period");
   }
@@ -54,6 +54,9 @@ export async function savePayrollEntry(form: FormData) {
   const employerCpp = isT4 ? amount(form, "employer_cpp") : 0;
   const employerEi = isT4 ? amount(form, "employer_ei") : 0;
   const gst = isT4 ? 0 : amount(form, "gst");
+  if (isT4 && text(form, "deductions_verified") !== "yes") {
+    throw new Error("Confirm the payroll deductions against CRA PDOC before saving.");
+  }
   if (isT4 && (cpp + ei + incomeTax > gross)) throw new Error("Deductions exceed gross pay");
   const net = isT4 ? Math.round((gross - cpp - ei - incomeTax) * 100) / 100 : Math.round((gross + gst) * 100) / 100;
   const { error } = await db.from("worker_payments").insert({
