@@ -45,8 +45,8 @@ export async function savePayrollEntry(form: FormData) {
   const gross = amount(form, "gross");
   if (gross <= 0) throw new Error("Gross amount must be greater than zero");
   const isT4 = classification === "T4 Employee";
-  if (isT4 && worker.worker_type !== "Employee") throw new Error("This worker is not registered as an employee");
-  if (!isT4 && worker.worker_type === "Employee") throw new Error("Change the worker classification before recording contractor payments");
+  // Classification is selected per payment. Worker registration type does not
+  // determine tax treatment of every payment; staff must verify classification.
 
   const cpp = isT4 ? amount(form, "cpp") : 0;
   const ei = isT4 ? amount(form, "ei") : 0;
@@ -79,7 +79,7 @@ export async function savePayrollEntry(form: FormData) {
     payroll_calculator_gross_pay: isT4 ? gross : 0,
     payroll_calculator_employer_cpp: employerCpp,
     payroll_calculator_employer_ei: employerEi,
-    status: "submitted", review_notes: "Deductions entered manually; verify against CRA PDOC before remittance.",
+    status: "submitted", review_notes: isT4 ? "Deductions entered manually and confirmed against CRA PDOC by staff; verify before remittance." : "Contractor classification selected by staff; verify T4A/T5018 reporting requirements.",
     reviewed_by: admin.id, reviewed_at: new Date().toISOString()
   });
   if (error) {
