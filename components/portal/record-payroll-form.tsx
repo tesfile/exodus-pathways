@@ -38,6 +38,7 @@ export function RecordPayrollForm({ clientId, workerId, today, initialClassifica
     setCalculated(true);
   }
   const isEmployee = classification === "T4 Employee";
+  const [acknowledged, setAcknowledged] = useState(false);
   const numberField = (name: string, label: string) => <label className="grid gap-1" key={name}>{label} ($)
     <input required name={name} type="number" min="0" step="0.01" defaultValue="0" className="rounded border p-3"/>
   </label>;
@@ -76,10 +77,12 @@ export function RecordPayrollForm({ clientId, workerId, today, initialClassifica
       </div>
       <label className="grid gap-1">Federal TD1 total claim ($)<input type="number" min="0" step="0.01" value={federalTd1} onChange={e => {setFederalTd1(e.target.value);setCalculated(false);}} className="rounded border p-3" /></label>
       <label className="grid gap-1">Alberta TD1AB total claim ($)<input type="number" min="0" step="0.01" value={albertaTd1} onChange={e => {setAlbertaTd1(e.target.value);setCalculated(false);}} className="rounded border p-3" /></label>
+      <label className="md:col-span-2 flex items-start gap-2 text-sm"><input type="checkbox" checked={acknowledged} onChange={e => setAcknowledged(e.target.checked)} required />I confirm this is standard Alberta regular wages, with no bonus, taxable benefits, CPP exemption, or special tax situation. I will compare deductions with CRA PDOC.</label>
       <div className="md:col-span-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm">2026 CPP and EI are prefilled for a standard Alberta pay period using the year-to-date amounts entered above. Income tax is estimated using CRA T4127 Option 1 for standard regular wages and the TD1 amounts above. Special payroll situations are not supported. Verify all deductions against CRA PDOC before saving.</div>
       {([["cpp", "Employee CPP / CPP2", cpp, setCpp], ["ei", "Employee EI", ei, setEi], ["income_tax", "Income tax withheld (CRA PDOC)", tax, setTax], ["employer_cpp", "Employer CPP / CPP2", employerCpp, setEmployerCpp], ["employer_ei", "Employer EI", employerEi, setEmployerEi]] as const).map(([name, label, value, setter]) =>
         <label className="grid gap-1" key={name}>{label} ($)<input required name={name} type="number" min="0" step="0.01" value={value} onChange={(e) => setter(e.target.value)} className="rounded border p-3"/></label>
       )}
+      {!calculated && <p className="md:col-span-2 text-sm font-semibold text-red-800">Calculate or recalculate payroll before saving. Any change to TD1 or opening YTD requires recalculation.</p>}
       {calculated && <p className="md:col-span-2 text-sm font-semibold text-blue-800">CPP and EI prefilled from gross pay. Income tax was estimated from the TD1 amounts; verify with CRA PDOC.</p>}
     </> : numberField("gst", "GST paid")}
     {isEmployee ? <PayrollEntryPreview classification={classification}/> :
@@ -89,6 +92,6 @@ export function RecordPayrollForm({ clientId, workerId, today, initialClassifica
         <p>GST entered will be added to the payment total on save.</p>
       </div>}
     <p className="md:col-span-2 text-sm text-amber-800">Draft entry only. Saving does not pay anyone, file slips, or remit funds to CRA. Standard Alberta 2026 regular-wage tax estimates are automated but must be verified against CRA PDOC.</p>
-    <button type="submit" className="rounded-lg bg-blue-900 px-6 py-3 font-bold text-white md:col-span-2">Save {isEmployee ? "Payroll Entry" : "Contractor Payment"}</button>
+    <button type="submit" disabled={isEmployee && (!calculated || !acknowledged)} className="rounded-lg bg-blue-900 px-6 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 md:col-span-2">Save {isEmployee ? "Payroll Entry" : "Contractor Payment"}</button>
   </form>;
 }
