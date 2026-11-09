@@ -29,6 +29,7 @@ export default async function WorkersPayrollReviewPage({ searchParams }: PagePro
       </AccountingHeader>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-slate-600">Register employees under the correct company before entering payroll.</p>
+        <Link href={`/admin/t4-year-end?clientId=${encodeURIComponent(selectedClient?.id ?? "")}&year=${taxYear}`} className="rounded-lg border border-blue-900 px-5 py-3 font-semibold text-blue-900">T4 Year-End Review</Link>
         {selectedClient ? (
           <Link
             href={`/admin/workers-payroll-review/new?clientId=${encodeURIComponent(selectedClient.id)}&year=${taxYear}`}
