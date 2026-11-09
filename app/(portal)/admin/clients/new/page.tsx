@@ -1,5 +1,6 @@
 ﻿
 import { saveClient } from "./actions";
+import Link from "next/link";
 
 const fields = [
   ["Client Full Name", "full_name"],
@@ -48,12 +49,12 @@ export default async function NewClientPage({
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <a
+        <Link
           href="/admin/clients"
           className="text-blue-800 hover:underline"
         >
           ← Back to All Clients
-        </a>
+        </Link>
 
         <h1 className="mt-4 text-3xl font-bold text-blue-950">
           Add New Client
@@ -110,12 +111,12 @@ export default async function NewClientPage({
             Save Client
           </button>
 
-          <a
+          <Link
             href="/admin/clients"
             className="font-medium text-gray-600 hover:text-blue-900"
           >
             Cancel
-          </a>
+          </Link>
         </div>
       </form>
     </div>
