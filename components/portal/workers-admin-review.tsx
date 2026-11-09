@@ -2,6 +2,7 @@ import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { AccountingTable } from "@/components/portal/accounting-records";
 import { PayrollCalculator } from "@/components/portal/payroll-calculator";
+import { RoeWorksheet } from "@/components/portal/roe-worksheet";
 import { formatDate, formatMoney, toNumber } from "@/lib/accounting/data";
 import { createServerSupabaseClient, requireRole } from "@/lib/supabase/server";
 import { adminClassificationOptions } from "@/lib/workers-options";
@@ -483,26 +484,14 @@ function SlipSummaryTab({
 }
 
 function RoePreparationTab({ worker, payments }: { worker: WorkerRecord; payments: WorkerPaymentRecord[] }) {
-  const t4Payments = payments.filter(payment => payment.admin_classification === "T4 Employee");
-  const missingPeriods = t4Payments.filter(payment => !payment.pay_period_start || !payment.pay_period_end);
-  const earnings = t4Payments.reduce((sum, payment) => sum + toNumber(payment.t4_box24_ei_insurable_earnings ?? payment.gross_pay ?? payment.amount_paid), 0);
-  return <section className="grid gap-4">
-    <h3 className="text-lg font-black text-exodus-navy">Record of Employment (ROE) — Preparation</h3>
-    <p className="text-sm text-exodus-slate">Use this checklist when there is an interruption of earnings. This page does not issue an ROE or transmit anything to Service Canada.</p>
-    <div className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-      <strong>Not ready for filing.</strong> Confirm the employee SIN, employer CRA payroll account, first day worked, last day paid, final pay period ending date, ROE reason code, and any separation payments. Insurable hours and the required pay-period breakdown must be captured before an ROE can be generated.
-    </div>
-    <div className="grid gap-3 rounded-md border p-4 text-sm">
-      <p><strong>Employee:</strong> {worker.worker_name}</p>
-      <p><strong>Saved T4 payroll periods in selected year:</strong> {t4Payments.length}</p>
-      <p><strong>Insurable earnings in these saved records (not ROE Block 15B):</strong> {formatMoney(earnings)}</p>
-      <p><strong>Records missing pay period dates:</strong> {missingPeriods.length}</p>
-      <p><strong>Insurable hours:</strong> Not captured reliably — enter and verify against timesheets</p>
-      <p><strong>ROE status:</strong> Draft preparation only; not issued</p>
-    </div>
-    <p className="text-sm text-exodus-slate">ROE Block 15B and 15C require specific pay-period rules and lookback periods. The annual totals above must not be copied directly into an ROE.</p>
-    <a href="https://www.canada.ca/en/employment-social-development/programs/ei/ei-list/ei-roe.html" target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-blue-800 underline">Service Canada ROE guidance</a>
-  </section>;
+  const periods = payments.filter(p => p.admin_classification === "T4 Employee").map(p => ({
+    id: p.id,
+    start: p.pay_period_start ?? "",
+    end: p.pay_period_end ?? "",
+    payDate: p.payment_date,
+    earnings: toNumber(p.t4_box24_ei_insurable_earnings ?? p.gross_pay ?? p.amount_paid)
+  }));
+  return <RoeWorksheet workerName={worker.worker_name} companyName={worker.company_name} periods={periods} />;
 }
 
 function WorkerNotesTab({ worker, payments }: { worker: WorkerRecord; payments: WorkerPaymentRecord[] }) {
