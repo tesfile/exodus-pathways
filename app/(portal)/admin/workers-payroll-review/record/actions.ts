@@ -45,6 +45,7 @@ export async function savePayrollEntry(form: FormData) {
   const gross = amount(form, "gross");
   if (gross <= 0) throw new Error("Gross amount must be greater than zero");
   const isT4 = classification === "T4 Employee";
+  if (isT4 && year !== 2026) throw new Error("Automated T4 payroll is currently limited to the 2026 tax year. Do not use 2026 deduction rates for another year.");
   // Classification is selected per payment. Worker registration type does not
   // determine tax treatment of every payment; staff must verify classification.
 
@@ -59,6 +60,14 @@ export async function savePayrollEntry(form: FormData) {
   }
   if (isT4 && (cpp + ei + incomeTax > gross)) throw new Error("Deductions exceed gross pay");
   const net = isT4 ? Math.round((gross - cpp - ei - incomeTax) * 100) / 100 : Math.round((gross + gst) * 100) / 100;
+  if (isT4) {
+    const { data: duplicates, error: duplicateError } = await db.from("worker_payments")
+      .select("id").eq("worker_id", workerId).eq("company_id", company.id)
+      .eq("payment_date", date).eq("pay_period_start", start).eq("pay_period_end", end)
+      .eq("admin_classification", "T4 Employee").limit(1);
+    if (duplicateError) throw new Error("Unable to check duplicate payroll: " + duplicateError.message);
+    if (duplicates?.length) throw new Error("Payroll for this employee, pay date and period already exists. Review the existing record instead of saving a duplicate.");
+  }
   const { error } = await db.from("worker_payments").insert({
     worker_id: workerId, client_id: clientId, company_id: company.id, tax_year: year,
     payment_date: date, pay_period_start: start, pay_period_end: end,
