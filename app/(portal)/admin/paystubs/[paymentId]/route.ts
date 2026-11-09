@@ -35,6 +35,8 @@ type PaymentRow = {
   t4_net_pay: number | string;
   payroll_calculator_pay_date: string | null;
   payroll_calculator_pay_frequency: string | null;
+  review_notes: string | null;
+  reviewed_at: string | null;
 };
 
 type WorkerRow = {
@@ -70,7 +72,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
 
   const { data: paymentData } = await supabase
     .from("worker_payments")
-    .select("id,worker_id,client_id,company_id,payment_date,amount_paid,pay_period_start,pay_period_end,pay_frequency,gross_pay,cpp,ei,income_tax_deducted,benefits,vacation_pay,net_pay,t4_box14_employment_income,t4_box16_cpp,t4_box18_ei,t4_box22_income_tax_deducted,t4_benefits,t4_vacation_pay,t4_net_pay,payroll_calculator_pay_date,payroll_calculator_pay_frequency")
+    .select("id,worker_id,client_id,company_id,payment_date,amount_paid,pay_period_start,pay_period_end,pay_frequency,gross_pay,cpp,ei,income_tax_deducted,benefits,vacation_pay,net_pay,t4_box14_employment_income,t4_box16_cpp,t4_box18_ei,t4_box22_income_tax_deducted,t4_benefits,t4_vacation_pay,t4_net_pay,payroll_calculator_pay_date,payroll_calculator_pay_frequency,review_notes,reviewed_at")
     .eq("id", paymentId)
     .maybeSingle();
 
@@ -105,10 +107,11 @@ export async function GET(_request: Request, { params }: RouteContext) {
   const vacationPay = amountWithFallback(payment.t4_vacation_pay, payment.vacation_pay);
   const netPay = toNumber(payment.net_pay);
 
+  const staffConfirmed = Boolean(payment.reviewed_at && payment.review_notes?.includes("confirmed against CRA PDOC by staff"));
   const pdf = createPaystubPdf(employerName, [
     {
       title: "Payroll verification",
-      rows: [{ label: "Status", value: "Unverified deductions - confirm against CRA PDOC before issuing" }]
+      rows: [{ label: "Status", value: staffConfirmed ? "CRA PDOC check confirmed by staff (not independently verified by KAL)" : "Unverified deductions - confirm against CRA PDOC before issuing" }]
     },
     {
       title: "Employer",
