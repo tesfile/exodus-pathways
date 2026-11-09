@@ -27,6 +27,7 @@ const workerReviewTabs = [
   { key: "t4", label: "T4 Summary" },
   { key: "t4a", label: "T4A Summary" },
   { key: "t5018", label: "T5018 Summary" },
+  { key: "roe", label: "ROE Preparation" },
   { key: "notes", label: "Notes" }
 ] as const;
 
@@ -199,7 +200,7 @@ function SelectedWorkerReview({
         <div>
           <h2 className="text-xl font-black text-exodus-navy">{worker.worker_name}</h2>
           <p className="mt-1 text-sm font-semibold text-exodus-slate">
-            {worker.sin_or_business_number ?? "No SIN/BN"} | {worker.worker_type} | {workerPayments.length} payment(s)
+            {maskWorkerId(worker.sin_or_business_number)} | {worker.worker_type} | {workerPayments.length} payment(s)
           </p>
         </div>
         <Link href={`/admin/workers-payroll-review/record?clientId=${encodeURIComponent(clientId)}&workerId=${encodeURIComponent(worker.id)}`} className="focus-ring inline-flex min-h-10 items-center justify-center rounded-md bg-blue-900 px-4 text-sm font-black text-white">+ Record Payroll / Payment</Link>
@@ -231,6 +232,7 @@ function SelectedWorkerReview({
       {activeTab === "t4" ? <T4SummaryTab payments={workerPayments} /> : null}
       {activeTab === "t4a" ? <SlipSummaryTab payments={workerPayments} classification="T4A Contractor" title="T4A Summary" /> : null}
       {activeTab === "t5018" ? <SlipSummaryTab payments={workerPayments} classification="T5018 Subcontractor" title="T5018 Summary" /> : null}
+      {activeTab === "roe" ? <RoePreparationTab worker={worker} payments={workerPayments} /> : null}
       {activeTab === "notes" ? <WorkerNotesTab worker={worker} payments={workerPayments} /> : null}
     </section>
   );
@@ -480,6 +482,29 @@ function SlipSummaryTab({
   );
 }
 
+function RoePreparationTab({ worker, payments }: { worker: WorkerRecord; payments: WorkerPaymentRecord[] }) {
+  const t4Payments = payments.filter(payment => payment.admin_classification === "T4 Employee");
+  const missingPeriods = t4Payments.filter(payment => !payment.pay_period_start || !payment.pay_period_end);
+  const earnings = t4Payments.reduce((sum, payment) => sum + toNumber(payment.t4_box24_ei_insurable_earnings ?? payment.gross_pay ?? payment.amount_paid), 0);
+  return <section className="grid gap-4">
+    <h3 className="text-lg font-black text-exodus-navy">Record of Employment (ROE) — Preparation</h3>
+    <p className="text-sm text-exodus-slate">Use this checklist when there is an interruption of earnings. This page does not issue an ROE or transmit anything to Service Canada.</p>
+    <div className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+      <strong>Not ready for filing.</strong> Confirm the employee SIN, employer CRA payroll account, first day worked, last day paid, final pay period ending date, ROE reason code, and any separation payments. Insurable hours and the required pay-period breakdown must be captured before an ROE can be generated.
+    </div>
+    <div className="grid gap-3 rounded-md border p-4 text-sm">
+      <p><strong>Employee:</strong> {worker.worker_name}</p>
+      <p><strong>Saved T4 payroll periods in selected year:</strong> {t4Payments.length}</p>
+      <p><strong>Insurable earnings in these saved records (not ROE Block 15B):</strong> {formatMoney(earnings)}</p>
+      <p><strong>Records missing pay period dates:</strong> {missingPeriods.length}</p>
+      <p><strong>Insurable hours:</strong> Not captured reliably — enter and verify against timesheets</p>
+      <p><strong>ROE status:</strong> Draft preparation only; not issued</p>
+    </div>
+    <p className="text-sm text-exodus-slate">ROE Block 15B and 15C require specific pay-period rules and lookback periods. The annual totals above must not be copied directly into an ROE.</p>
+    <a href="https://www.canada.ca/en/employment-social-development/programs/ei/ei-list/ei-roe.html" target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-blue-800 underline">Service Canada ROE guidance</a>
+  </section>;
+}
+
 function WorkerNotesTab({ worker, payments }: { worker: WorkerRecord; payments: WorkerPaymentRecord[] }) {
   const rows = payments
     .filter((payment) => payment.notes || payment.review_notes)
@@ -507,10 +532,17 @@ function WorkerNotesTab({ worker, payments }: { worker: WorkerRecord; payments: 
   );
 }
 
+function maskWorkerId(value: string | null | undefined) {
+  if (!value) return "No SIN/BN";
+  const digits = value.replace(/\\D/g, "");
+  if (digits.length === 9) return "*** *** " + digits.slice(-3);
+  return value.length > 4 ? "••••" + value.slice(-4) : "••••";
+}
+
 function workerListRows(data: WorkersPaymentsData, baseHref: string): DemoRow[] {
   return data.summaries.map((summary) => ({
     worker: summary.worker.worker_name,
-    idNumber: summary.worker.sin_or_business_number ?? "-",
+    idNumber: maskWorkerId(summary.worker.sin_or_business_number),
     type: summary.worker.worker_type,
     payments: String(summary.paymentCount),
     totalPaid: formatMoney(summary.totalPaid),
