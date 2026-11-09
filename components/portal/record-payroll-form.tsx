@@ -6,15 +6,15 @@ import { savePayrollEntry } from "@/app/(portal)/admin/workers-payroll-review/re
 import { calculateStandardCppEi2026 } from "@/lib/payroll/canada-2026";
 
 type Classification = "T4 Employee" | "T4A Contractor" | "T5018 Subcontractor";
-export function RecordPayrollForm({ clientId, workerId, today, initialClassification }: {
-  clientId: string; workerId: string; today: string; initialClassification: Classification;
+export function RecordPayrollForm({ clientId, workerId, today, initialClassification, priorYtd, priorPaymentCount }: {
+  clientId: string; workerId: string; today: string; initialClassification: Classification; priorYtd: { cpp: number; cpp2: number; ei: number; pensionableEarnings: number }; priorPaymentCount: number;
 }) {
   const [classification, setClassification] = useState<Classification>(initialClassification);
   const [gross, setGross] = useState("");
   const [frequency, setFrequency] = useState("biweekly");
   const [payDate, setPayDate] = useState(today);
   const [calculated, setCalculated] = useState(false);
-  const [prior, setPrior] = useState({ cpp: "0", cpp2: "0", ei: "0", pensionableEarnings: "0" });
+  const [prior, setPrior] = useState({ cpp: String(priorYtd.cpp), cpp2: String(priorYtd.cpp2), ei: String(priorYtd.ei), pensionableEarnings: String(priorYtd.pensionableEarnings) });
   const [hasPriorPayroll, setHasPriorPayroll] = useState(false);
   const priorReady = Object.values(prior).every(value => value.trim() !== "" && Number.isFinite(Number(value)) && Number(value) >= 0);
   const [cpp, setCpp] = useState("0");
@@ -62,9 +62,10 @@ export function RecordPayrollForm({ clientId, workerId, today, initialClassifica
     {isEmployee ? <>
       <div className="md:col-span-2 grid gap-3 rounded border border-blue-200 p-4">
         <strong>Previous payroll this year</strong>
-        <label className="flex items-center gap-2"><input type="checkbox" checked={hasPriorPayroll} onChange={e => { setHasPriorPayroll(e.target.checked); setPrior({ cpp: e.target.checked ? "" : "0", cpp2: e.target.checked ? "" : "0", ei: e.target.checked ? "" : "0", pensionableEarnings: e.target.checked ? "" : "0" }); setCalculated(false); }} />This employee has already received pay from this employer in 2026</label>
-        <p className="text-sm">{hasPriorPayroll ? "Enter the actual opening year-to-date totals from earlier employer payroll records." : "First pay of 2026: opening year-to-date amounts are zero. No prior payroll amounts need to be entered."}</p>
-        {hasPriorPayroll && ([["pensionableEarnings", "Pensionable earnings YTD"], ["cpp", "CPP deducted YTD"], ["cpp2", "CPP2 deducted YTD"], ["ei", "EI deducted YTD"]] as const).map(([key, label]) =>
+        {priorPaymentCount > 0 && <p className="text-sm font-semibold text-blue-900">{priorPaymentCount} saved T4 payroll record(s) found for this employer in the current year. CPP, EI and pensionable earnings opening balances have been loaded from saved records. Historical CPP2 requires verification.</p>}
+        <label className="flex items-center gap-2"><input type="checkbox" checked={hasPriorPayroll || priorPaymentCount > 0} disabled={priorPaymentCount > 0} onChange={e => { setHasPriorPayroll(e.target.checked); setPrior({ cpp: e.target.checked ? "" : "0", cpp2: e.target.checked ? "" : "0", ei: e.target.checked ? "" : "0", pensionableEarnings: e.target.checked ? "" : "0" }); setCalculated(false); }} />This employee has already received pay from this employer in 2026</label>
+        <p className="text-sm">{hasPriorPayroll || priorPaymentCount > 0 ? "Review opening year-to-date totals from employer payroll records." : "First pay of 2026: opening year-to-date amounts are zero. No prior payroll amounts need to be entered."}</p>
+        {(hasPriorPayroll || priorPaymentCount > 0) && ([["pensionableEarnings", "Pensionable earnings YTD"], ["cpp", "CPP deducted YTD"], ["cpp2", "CPP2 deducted YTD"], ["ei", "EI deducted YTD"]] as const).map(([key, label]) =>
           <label className="grid gap-1" key={key}>{label} ($)
             <input type="number" min="0" step="0.01" required value={prior[key]} onChange={e => { setPrior(previous => ({...previous, [key]: e.target.value})); setCalculated(false); }} className="rounded border p-3"/>
           </label>)}
