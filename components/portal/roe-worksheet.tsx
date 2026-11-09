@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-type Period = { id: string; start: string; end: string; payDate: string; earnings: number };
+type Period = { id: string; start: string; end: string; payDate: string; earnings: number; insurableHours: number | null };
 type Props = { workerName: string; companyName: string; periods: Period[] };
 const money = (n: number) => n.toLocaleString("en-CA", { style: "currency", currency: "CAD" });
 
@@ -13,7 +13,7 @@ export function RoeWorksheet({ workerName, companyName, periods }: Props) {
   const [reason, setReason] = useState("");
   const [comments, setComments] = useState("");
   const [payrollAccount, setPayrollAccount] = useState("");
-  const [hours, setHours] = useState<Record<string, string>>({});
+  const [hours, setHours] = useState<Record<string, string>>(() => Object.fromEntries(periods.filter(p => p.insurableHours !== null).map(p => [p.id, String(p.insurableHours)])));
   const [otherPayments, setOtherPayments] = useState("");
   const [saved, setSaved] = useState(false);
   const validHours = periods.every(p => hours[p.id] !== undefined && hours[p.id].trim() !== "" && Number.isFinite(Number(hours[p.id])) && Number(hours[p.id]) >= 0);
@@ -56,9 +56,9 @@ export function RoeWorksheet({ workerName, companyName, periods }: Props) {
       <label className="grid gap-1 text-sm font-semibold md:col-span-2">Comments<textarea className="field min-h-20" value={comments} onChange={e=>setComments(e.target.value)} /></label>
     </div>
     <div className="overflow-x-auto rounded-md border">
-      <table className="w-full text-sm"><thead className="bg-slate-100"><tr><th className="p-3 text-left">Pay period</th><th className="p-3 text-left">Pay date</th><th className="p-3 text-right">Insurable earnings</th><th className="p-3 text-left">Insurable hours (enter)</th></tr></thead><tbody>{periods.map(p=><tr key={p.id} className="border-t"><td className="p-3">{p.start || "Missing"} to {p.end || "Missing"}</td><td className="p-3">{p.payDate}</td><td className="p-3 text-right">{money(p.earnings)}</td><td className="p-3"><input type="number" min="0" step="0.01" className="field w-32" aria-label={"Insurable hours for "+p.payDate} value={hours[p.id] ?? ""} onChange={e=>setHours(v=>({...v,[p.id]:e.target.value}))} placeholder="Hours" /></td></tr>)}</tbody></table>
+      <table className="w-full text-sm"><thead className="bg-slate-100"><tr><th className="p-3 text-left">Pay period</th><th className="p-3 text-left">Pay date</th><th className="p-3 text-right">Insurable earnings</th><th className="p-3 text-left">Insurable hours (saved / editable)</th></tr></thead><tbody>{periods.map(p=><tr key={p.id} className="border-t"><td className="p-3">{p.start || "Missing"} to {p.end || "Missing"}</td><td className="p-3">{p.payDate}</td><td className="p-3 text-right">{money(p.earnings)}</td><td className="p-3"><input type="number" min="0" step="0.01" className="field w-32" aria-label={"Insurable hours for "+p.payDate} value={hours[p.id] ?? ""} onChange={e=>setHours(v=>({...v,[p.id]:e.target.value}))} placeholder="Hours" /></td></tr>)}</tbody></table>
     </div>
-    <p className="text-sm font-semibold">Loaded payroll totals: {money(totalEarnings)} insurable earnings and {totalHours.toFixed(2)} entered hours across {periods.length} records.</p>
+    <p className="text-sm font-semibold">Loaded payroll totals: {money(totalEarnings)} insurable earnings and {totalHours.toFixed(2)} saved or entered hours across {periods.length} records.</p>
     <p className="text-sm text-amber-900">Important: These are only the records loaded for the selected tax year. ROE insurable hours, earnings and Block 15C may require additional prior-year periods and adjustments. Do not use these totals as final ROE blocks without reconciliation.</p>
     <div className="flex flex-wrap items-center gap-3"><button type="button" onClick={download} className="rounded-md bg-blue-900 px-5 py-3 font-bold text-white">Download ROE worksheet</button><span className="text-sm text-slate-600">{complete ? "Required worksheet fields completed. Review before official filing." : "Some details still need to be entered."}</span></div>
     {saved ? <p className="text-sm text-green-800">Worksheet downloaded to your device. It has not been submitted or saved to the company database.</p> : null}
