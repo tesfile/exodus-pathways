@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { T4YearEndFilters } from "@/components/portal/t4-year-end-filters";
 import { createClient } from "@supabase/supabase-js";
 import { requireRole } from "@/lib/supabase/server";
 import { summarizeT4Payroll, type T4PayrollRecord } from "@/lib/payroll/t4-year-end";
@@ -48,22 +49,13 @@ export default async function T4YearEndPage({ searchParams }: Props) {
     ...summarizeT4Payroll(records)
   })).sort((a, b) => a.name.localeCompare(b.name));
   const totals = summarizeT4Payroll(entries);
-  const link = (client: string, company: string) => "/admin/t4-year-end?clientId=" + encodeURIComponent(client) +
-    "&companyId=" + encodeURIComponent(company) + "&year=" + year;
+
 
   return <main className="mx-auto max-w-6xl space-y-6 p-5">
     <Link href="/admin/workers-payroll-review" className="text-blue-800 underline">← Workers & Payroll</Link>
     <h1 className="text-3xl font-bold text-blue-950">T4 Year-End Review — {year}</h1>
     <p className="text-slate-700">Review annual T4 amounts by employer and employee. This is a draft review, not a CRA T4 slip, T4 Summary, or submitted return.</p>
-    <div className="grid gap-4 md:grid-cols-2">
-      <label className="grid gap-2">Client
-        <select className="rounded border p-3" value={selectedClient} onChange={undefined} disabled>
-          <option value={selectedClient}>{clients?.find(c => c.id === selectedClient)?.full_name ?? "Select below"}</option>
-        </select>
-        <div className="flex flex-wrap gap-2 text-sm">{clients?.map(c => <Link key={c.id} href={link(c.id, "")} className="rounded border px-2 py-1 text-blue-800">{c.full_name}</Link>)}</div>
-      </label>
-      <div><p className="mb-2">Employer company</p><div className="flex flex-wrap gap-2 text-sm">{companies?.map(c => <Link key={c.id} href={link(selectedClient, c.id)} className={`rounded border px-3 py-2 ${c.id === selectedCompany ? "bg-blue-900 text-white" : "text-blue-800"}`}>{c.trade_name || c.legal_name}</Link>)}</div></div>
-    </div>
+    <T4YearEndFilters clients={clients ?? []} companies={companies ?? []} clientId={selectedClient} companyId={selectedCompany} year={year} />
     {selectedCompany ? <>
       <div className="overflow-x-auto rounded-lg border bg-white">
         <table className="w-full text-left text-sm"><thead className="bg-slate-100"><tr>{["Employee","Pay records","Box 14 Gross","Box 16 CPP","Box 18 EI","Box 22 Tax","Box 24 Insurable","Box 26 Pensionable"].map(h => <th key={h} className="p-3">{h}</th>)}</tr></thead>
