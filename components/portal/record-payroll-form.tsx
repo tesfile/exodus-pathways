@@ -12,6 +12,9 @@ export function RecordPayrollForm({ clientId, workerId, today, initialClassifica
   const [classification, setClassification] = useState<Classification>(initialClassification);
   const [gross, setGross] = useState("");
   const [frequency, setFrequency] = useState("biweekly");
+  const [hoursWorked, setHoursWorked] = useState("");
+  const [insurableHours, setInsurableHours] = useState("");
+  const [hoursCustomized, setHoursCustomized] = useState(false);
   const [payDate, setPayDate] = useState(today);
   const [calculated, setCalculated] = useState(false);
   const [prior, setPrior] = useState({ cpp: String(priorYtd.cpp), cpp2: String(priorYtd.cpp2), ei: String(priorYtd.ei), pensionableEarnings: String(priorYtd.pensionableEarnings) });
@@ -64,6 +67,13 @@ export function RecordPayrollForm({ clientId, workerId, today, initialClassifica
       <input required name="gross" type="number" min="0.01" step="0.01" value={gross} onChange={(e) => { setGross(e.target.value); autoCalculate(e.target.value, frequency, payDate); }} className="rounded border p-3"/>
     </label>
     {isEmployee ? <>
+      <label className="grid gap-1">Hours worked this pay period
+        <input required name="hours_worked" type="number" min="0" max="1000" step="0.01" value={hoursWorked} onChange={e => { setHoursWorked(e.target.value); if (!hoursCustomized) setInsurableHours(e.target.value); }} className="rounded border p-3" />
+      </label>
+      <label className="grid gap-1">EI insurable hours (for ROE)
+        <input required name="insurable_hours" type="number" min="0" max="1000" step="0.01" value={insurableHours} onChange={e => { setInsurableHours(e.target.value); setHoursCustomized(true); }} className="rounded border p-3" />
+        <span className="text-xs text-slate-600">Defaults to hours worked; adjust for overtime, paid leave or other EI rules.</span>
+      </label>
       <div className="md:col-span-2 grid gap-3 rounded border border-blue-200 p-4">
         <strong>Previous payroll this year</strong>
         {priorPaymentCount > 0 && <p className="text-sm font-semibold text-blue-900">{priorPaymentCount} saved T4 payroll record(s) found for this employer in the current year. CPP, EI and pensionable earnings opening balances have been loaded from saved records. Historical CPP2 requires verification.</p>}
