@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { AccountingTable } from "@/components/portal/accounting-records";
 import { PayrollCalculator } from "@/components/portal/payroll-calculator";
 import { RoeWorksheet } from "@/components/portal/roe-worksheet";
+import { T4CraReview } from "@/components/portal/t4-cra-review";
 import { T4PreparationDownload } from "@/components/portal/t4-preparation-download";
 import { formatDate, formatMoney, toNumber } from "@/lib/accounting/data";
 import { createServerSupabaseClient, requireRole } from "@/lib/supabase/server";
@@ -231,7 +232,7 @@ function SelectedWorkerReview({
       {activeTab === "payroll" ? (
         <PayrollPaystubsTab payments={workerPayments} worker={worker} clientId={clientId} taxYear={taxYear} returnPath={tabHref("payroll")} />
       ) : null}
-      {activeTab === "t4" ? <T4SummaryTab payments={workerPayments} workerName={worker.worker_name} year={taxYear} /> : null}
+      {activeTab === "t4" ? <T4SummaryTab payments={workerPayments} workerName={worker.worker_name} year={taxYear} worker={worker} /> : null}
       {activeTab === "t4a" ? <SlipSummaryTab payments={workerPayments} classification="T4A Contractor" title="T4A Summary" /> : null}
       {activeTab === "t5018" ? <SlipSummaryTab payments={workerPayments} classification="T5018 Subcontractor" title="T5018 Summary" /> : null}
       {activeTab === "roe" ? <RoePreparationTab worker={worker} payments={workerPayments} /> : null}
@@ -437,7 +438,7 @@ function PaymentReviewHiddenFields({
   );
 }
 
-function T4SummaryTab({ payments, workerName, year }: { payments: WorkerPaymentRecord[]; workerName: string; year: number }) {
+function T4SummaryTab({ payments, workerName, year, worker }: { payments: WorkerPaymentRecord[]; workerName: string; year: number; worker: WorkerRecord }) {
   const t4Payments = payments.filter((payment) => payment.admin_classification === "T4 Employee");
   const rows = selectedWorkerT4Rows(t4Payments);
   return (
@@ -450,6 +451,7 @@ function T4SummaryTab({ payments, workerName, year }: { payments: WorkerPaymentR
       ]}
       rows={rows}
     />
+    <T4CraReview workerName={workerName} year={year} hasSin={/^\\d{9}$/.test((worker.sin_or_business_number ?? "").replace(/\\D/g, ""))} hasAddress={Boolean(worker.address?.trim())} entries={t4Payments.map(p => ({ gross: toNumber(p.t4_box14_employment_income ?? p.gross_pay), cpp: toNumber(p.t4_box16_cpp ?? p.cpp), ei: toNumber(p.t4_box18_ei ?? p.ei), tax: toNumber(p.t4_box22_income_tax_deducted ?? p.income_tax_deducted), insurable: toNumber(p.t4_box24_ei_insurable_earnings), pensionable: toNumber(p.t4_box26_cpp_pensionable_earnings), net: toNumber(p.t4_net_pay ?? p.net_pay), payDate: p.payment_date, ready: p.t4_ready_status }))} />
     <T4PreparationDownload workerName={workerName} year={year} rows={rows.map(row => ({ label: String(row.item), amount: Number(String(row.value).replace(/[^0-9.-]/g, "")) || 0 }))} />
     <p className="text-sm text-amber-800">Preparation CSV only. This is not an official T4 slip or CRA submission.</p></div>
   );
