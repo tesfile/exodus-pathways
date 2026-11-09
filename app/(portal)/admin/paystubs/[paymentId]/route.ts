@@ -161,8 +161,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
         { label: "Vacation pay", value: formatMoney(vacationPay) },
         { label: "Net pay", value: formatMoney(netPay) }
       ]
-    }
-    ,
+    },
     {
       title: "Year-to-Date Totals (" + year + ")",
       rows: [
