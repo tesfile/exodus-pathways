@@ -107,12 +107,25 @@ export async function GET(_request: Request, { params }: RouteContext) {
   const vacationPay = amountWithFallback(payment.t4_vacation_pay, payment.vacation_pay);
   const netPay = toNumber(payment.net_pay);
 
-  const staffConfirmed = Boolean(payment.reviewed_at && payment.review_notes?.includes("confirmed against CRA PDOC by staff"));
+  const year = payDate.slice(0, 4);
+  let q = supabase.from("worker_payments")
+    .select("id,gross_pay,cpp,ei,income_tax_deducted,net_pay,t4_box14_employment_income,t4_box16_cpp,t4_box18_ei,t4_box22_income_tax_deducted")
+    .eq("worker_id", payment.worker_id).eq("client_id", payment.client_id)
+    .eq("admin_classification", "T4 Employee")
+    .gte("payment_date", year + "-01-01").lte("payment_date", payDate);
+  q = payment.company_id ? q.eq("company_id", payment.company_id) : q.is("company_id", null);
+  const { data: history, error: historyError } = await q;
+  if (historyError) return new Response("Unable to calculate year-to-date totals.", { status: 503 });
+  const records = [...(history ?? [])];
+  if (!records.some(record => record.id === payment.id)) records.push(payment);
+  const ytd = records.reduce((total, record) => ({
+    gross: total.gross + amountWithFallback(record.t4_box14_employment_income, record.gross_pay),
+    cpp: total.cpp + amountWithFallback(record.t4_box16_cpp, record.cpp),
+    ei: total.ei + amountWithFallback(record.t4_box18_ei, record.ei),
+    tax: total.tax + amountWithFallback(record.t4_box22_income_tax_deducted, record.income_tax_deducted),
+    net: total.net + toNumber(record.net_pay)
+  }), { gross: 0, cpp: 0, ei: 0, tax: 0, net: 0 });
   const pdf = createPaystubPdf(employerName, [
-    {
-      title: "Payroll verification",
-      rows: [{ label: "Status", value: staffConfirmed ? "CRA PDOC check confirmed by staff (not independently verified by KAL)" : "Unverified deductions - confirm against CRA PDOC before issuing" }]
-    },
     {
       title: "Employer",
       rows: [
@@ -147,6 +160,17 @@ export async function GET(_request: Request, { params }: RouteContext) {
         { label: "Benefits", value: formatMoney(benefits) },
         { label: "Vacation pay", value: formatMoney(vacationPay) },
         { label: "Net pay", value: formatMoney(netPay) }
+      ]
+    }
+    ,
+    {
+      title: "Year-to-Date Totals (" + year + ")",
+      rows: [
+        { label: "Gross earnings YTD", value: formatMoney(ytd.gross) },
+        { label: "CPP deducted YTD", value: formatMoney(ytd.cpp) },
+        { label: "EI deducted YTD", value: formatMoney(ytd.ei) },
+        { label: "Income tax deducted YTD", value: formatMoney(ytd.tax) },
+        { label: "Net pay YTD", value: formatMoney(ytd.net) }
       ]
     }
   ]);
