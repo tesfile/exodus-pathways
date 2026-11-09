@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { AccountingTable } from "@/components/portal/accounting-records";
 import { PayrollCalculator } from "@/components/portal/payroll-calculator";
 import { RoeWorksheet } from "@/components/portal/roe-worksheet";
+import { T4PreparationDownload } from "@/components/portal/t4-preparation-download";
 import { formatDate, formatMoney, toNumber } from "@/lib/accounting/data";
 import { createServerSupabaseClient, requireRole } from "@/lib/supabase/server";
 import { adminClassificationOptions } from "@/lib/workers-options";
@@ -230,7 +231,7 @@ function SelectedWorkerReview({
       {activeTab === "payroll" ? (
         <PayrollPaystubsTab payments={workerPayments} worker={worker} clientId={clientId} taxYear={taxYear} returnPath={tabHref("payroll")} />
       ) : null}
-      {activeTab === "t4" ? <T4SummaryTab payments={workerPayments} /> : null}
+      {activeTab === "t4" ? <T4SummaryTab payments={workerPayments} workerName={worker.worker_name} year={taxYear} /> : null}
       {activeTab === "t4a" ? <SlipSummaryTab payments={workerPayments} classification="T4A Contractor" title="T4A Summary" /> : null}
       {activeTab === "t5018" ? <SlipSummaryTab payments={workerPayments} classification="T5018 Subcontractor" title="T5018 Summary" /> : null}
       {activeTab === "roe" ? <RoePreparationTab worker={worker} payments={workerPayments} /> : null}
@@ -436,18 +437,21 @@ function PaymentReviewHiddenFields({
   );
 }
 
-function T4SummaryTab({ payments }: { payments: WorkerPaymentRecord[] }) {
+function T4SummaryTab({ payments, workerName, year }: { payments: WorkerPaymentRecord[]; workerName: string; year: number }) {
   const t4Payments = payments.filter((payment) => payment.admin_classification === "T4 Employee");
+  const rows = selectedWorkerT4Rows(t4Payments);
   return (
-    <AccountingTable
+    <div className="grid gap-4"><AccountingTable
       title="T4 Summary"
       description="Full-year T4 totals for the selected worker."
       columns={[
         { key: "item", label: "Item" },
         { key: "value", label: "Value" }
       ]}
-      rows={selectedWorkerT4Rows(t4Payments)}
+      rows={rows}
     />
+    <T4PreparationDownload workerName={workerName} year={year} rows={rows.map(row => ({ label: String(row.item), amount: Number(String(row.value).replace(/[^0-9.-]/g, "")) || 0 }))} />
+    <p className="text-sm text-amber-800">Preparation CSV only. This is not an official T4 slip or CRA submission.</p></div>
   );
 }
 
@@ -489,7 +493,8 @@ function RoePreparationTab({ worker, payments }: { worker: WorkerRecord; payment
     start: p.pay_period_start ?? "",
     end: p.pay_period_end ?? "",
     payDate: p.payment_date,
-    earnings: toNumber(p.t4_box24_ei_insurable_earnings ?? p.gross_pay ?? p.amount_paid)
+    earnings: toNumber(p.t4_box24_ei_insurable_earnings ?? p.gross_pay ?? p.amount_paid),
+    insurableHours: p.insurable_hours === null || p.insurable_hours === undefined ? null : toNumber(p.insurable_hours)
   }));
   return <RoeWorksheet workerName={worker.worker_name} companyName={worker.company_name} periods={periods} />;
 }
