@@ -50,6 +50,8 @@ export type WorkerPaymentRecord = {
   pay_period_start: string | null;
   pay_period_end: string | null;
   pay_frequency: string | null;
+  hours_worked: number | string | null;
+  insurable_hours: number | string | null;
   invoice_bucket: string | null;
   invoice_storage_path: string | null;
   invoice_file_name: string | null;
@@ -163,7 +165,7 @@ export async function getWorkersPaymentsData(client: ClientOption | null, taxYea
       .order("worker_name"),
     supabase
       .from("worker_payments")
-      .select("id,worker_id,client_id,company_id,tax_year,payment_date,amount_paid,gst_paid,payment_method,client_worker_type,invoice_provided,admin_classification,slip_needed,pay_period,pay_period_start,pay_period_end,pay_frequency,invoice_bucket,invoice_storage_path,invoice_file_name,notes,gross_pay,cpp,ei,income_tax_deducted,benefits,vacation_pay,net_pay,t4_box14_employment_income,t4_box16_cpp,t4_box18_ei,t4_box22_income_tax_deducted,t4_box24_ei_insurable_earnings,t4_box26_cpp_pensionable_earnings,t4_benefits,t4_vacation_pay,t4_net_pay,t4_ready_status,payroll_calculator_province,payroll_calculator_pay_frequency,payroll_calculator_pay_date,payroll_calculator_gross_pay,payroll_calculator_td1_federal_amount,payroll_calculator_td1_provincial_amount,payroll_calculator_cpp_exempt,payroll_calculator_ei_exempt,payroll_calculator_employer_cpp,payroll_calculator_employer_ei,business_name,gst_number,invoice_number,amount_before_gst,subcontractor_gst,total_paid,status,review_notes")
+      .select("id,worker_id,client_id,company_id,tax_year,payment_date,amount_paid,gst_paid,payment_method,client_worker_type,invoice_provided,admin_classification,slip_needed,pay_period,pay_period_start,pay_period_end,pay_frequency,hours_worked,insurable_hours,invoice_bucket,invoice_storage_path,invoice_file_name,notes,gross_pay,cpp,ei,income_tax_deducted,benefits,vacation_pay,net_pay,t4_box14_employment_income,t4_box16_cpp,t4_box18_ei,t4_box22_income_tax_deducted,t4_box24_ei_insurable_earnings,t4_box26_cpp_pensionable_earnings,t4_benefits,t4_vacation_pay,t4_net_pay,t4_ready_status,payroll_calculator_province,payroll_calculator_pay_frequency,payroll_calculator_pay_date,payroll_calculator_gross_pay,payroll_calculator_td1_federal_amount,payroll_calculator_td1_provincial_amount,payroll_calculator_cpp_exempt,payroll_calculator_ei_exempt,payroll_calculator_employer_cpp,payroll_calculator_employer_ei,business_name,gst_number,invoice_number,amount_before_gst,subcontractor_gst,total_paid,status,review_notes")
       .eq("client_id", client.id)
       .eq("tax_year", taxYear)
       .order("payment_date", { ascending: false })
