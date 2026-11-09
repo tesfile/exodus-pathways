@@ -55,6 +55,9 @@ export async function savePayrollEntry(form: FormData) {
   const employerCpp = isT4 ? amount(form, "employer_cpp") : 0;
   const employerEi = isT4 ? amount(form, "employer_ei") : 0;
   const gst = isT4 ? 0 : amount(form, "gst");
+  const hoursWorked = isT4 ? amount(form, "hours_worked") : null;
+  const insurableHours = isT4 ? amount(form, "insurable_hours") : null;
+  if (isT4 && (hoursWorked! > 1000 || insurableHours! > 1000)) throw new Error("Hours exceed the allowed per-period range");
   if (isT4 && text(form, "deductions_verified") !== "yes") {
     throw new Error("Confirm the payroll deductions against CRA PDOC before saving.");
   }
@@ -74,6 +77,7 @@ export async function savePayrollEntry(form: FormData) {
     pay_period: start + " to " + end, pay_frequency: frequency,
     amount_paid: isT4 ? gross : net, gross_pay: isT4 ? gross : 0,
     cpp, ei, income_tax_deducted: incomeTax, net_pay: net,
+    hours_worked: hoursWorked, insurable_hours: insurableHours,
     gst_paid: gst, subcontractor_gst: gst, amount_before_gst: isT4 ? 0 : gross,
     total_paid: net, admin_classification: classification,
     slip_needed: isT4 ? "T4" : classification === "T4A Contractor" ? "T4A" : "T5018",
