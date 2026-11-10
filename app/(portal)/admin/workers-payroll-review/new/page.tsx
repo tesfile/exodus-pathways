@@ -28,21 +28,18 @@ export default async function AddEmployeePage({ searchParams }: Props) {
       <div>
         <Link href={back} className="font-semibold text-blue-800 hover:underline">← Workers & Payments</Link>
         <h1 className="mt-4 text-3xl font-bold text-blue-950">Add Employee</h1>
-        <p className="mt-2 text-slate-600">Client: {profile.full_name}. Choose the employer company below.</p>
+        <p className="mt-2 text-slate-600">Client: {profile.full_name}. Add employees directly to this client.</p>
       </div>
       {error ? <p role="alert" className="rounded-lg border border-red-300 bg-red-50 p-4 text-red-800">Employee could not be saved. Check the staging server terminal for the exact error.</p> : null}
-      {(!companies || companies.length === 0) ? (
-        <div className="grid gap-3 rounded-lg border bg-white p-5"><p className="font-semibold text-blue-950">Payroll is available, but this client has no employer company record linked yet.</p><p className="text-sm text-slate-600">Create the employer company under this client first. This does not reset or replace the existing payroll system.</p><Link href={`/admin/clients/${encodeURIComponent(clientId)}/edit`} className="w-fit rounded-lg bg-blue-900 px-5 py-3 font-semibold text-white">+ Set Up Employer Company</Link><Link href={back} className="text-sm font-semibold text-blue-800 underline">Return to this client’s Payroll</Link></div>
-      ) : (
         <form action={saveEmployee} className="grid gap-5 rounded-xl border bg-white p-6 shadow-sm md:grid-cols-2">
           <input type="hidden" name="client_id" value={clientId} />
           <input type="hidden" name="year" value={year ?? String(new Date().getFullYear())} />
-          <label className="grid gap-2 md:col-span-2"><span className="font-semibold">Employer Company *</span>
-            <select name="company_id" required className="rounded-lg border p-3" defaultValue="">
-              <option value="" disabled>Select the employer company</option>
+          {companies && companies.length > 0 ? <label className="grid gap-2 md:col-span-2"><span className="font-semibold">Employer Company</span>
+            <select name="company_id" className="rounded-lg border p-3" defaultValue={companies[0].id}>
+              
               {companies.map(c => <option key={c.id} value={c.id}>{c.trade_name || c.legal_name}</option>)}
             </select>
-          </label>
+          </label> : <p className="text-sm text-slate-600 md:col-span-2">Payroll will use this client as the employer. No separate company setup is required.</p>}
           <label className="grid gap-2"><span className="font-semibold">Employee Full Name *</span><input name="worker_name" required maxLength={200} className="rounded-lg border p-3" /></label>
           <label className="grid gap-2"><span className="font-semibold">Email</span><input name="email" type="email" maxLength={254} className="rounded-lg border p-3" /></label>
           <label className="grid gap-2"><span className="font-semibold">Phone</span><input name="phone" type="tel" maxLength={50} className="rounded-lg border p-3" /></label>
@@ -52,7 +49,6 @@ export default async function AddEmployeePage({ searchParams }: Props) {
           <p className="text-xs text-slate-500 md:col-span-2">Social Insurance Numbers are not collected on this basic registration page. Payroll setup and secure SIN handling must be implemented separately.</p>
           <div className="flex flex-wrap gap-3 md:col-span-2"><button type="submit" className="rounded-lg bg-blue-900 px-6 py-3 font-semibold text-white">Save Employee</button><Link href={back} className="rounded-lg border px-6 py-3 font-semibold">Cancel</Link></div>
         </form>
-      )}
     </main>
   );
 }
