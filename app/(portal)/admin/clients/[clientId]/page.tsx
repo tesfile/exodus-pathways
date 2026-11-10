@@ -180,6 +180,20 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
               <a key={label} href={`#bookkeeping-${label.toLowerCase().replaceAll(" ", "-")}`} className="rounded-md bg-exodus-light px-3 py-2 text-sm font-bold text-exodus-navy">{label}</a>
             ))}
           </nav>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-md border border-slate-200 p-4">
+              <h3 className="font-black text-exodus-navy">Expense Categories</h3>
+              <p className="mt-2 text-sm text-exodus-slate">Choose a category when entering an expense.</p>
+              <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                {["Advertising", "Automobile & Fuel", "Bank Charges", "Contract Labour", "Insurance", "Meals", "Office Expenses", "Professional Fees", "Rent", "Repairs", "Salaries & Wages", "Supplies", "Telephone & Internet", "Travel", "Utilities", "Other"].map(category => <div key={category} className="rounded bg-exodus-light p-2">{category}</div>)}
+              </div>
+            </div>
+            <div className="rounded-md border border-slate-200 p-4">
+              <h3 className="font-black text-exodus-navy">Income Information</h3>
+              <p className="mt-2 text-sm text-exodus-slate">Each income entry should identify the payer, company address, invoice number, service description, amount, GST, date and payment status.</p>
+              <p className="mt-3 text-sm text-exodus-slate">Income and expense entry forms are being connected to the database. The existing tables below show saved entries.</p>
+            </div>
+          </div>
           <div id="bookkeeping-income"><AccountingTable title="Income" columns={[{ key: "date", label: "Date" }, { key: "source", label: "Payer / Company" }, { key: "amount", label: "Amount" }, { key: "gst", label: "GST" }, { key: "status", label: "Status" }]} rows={incomeTableRows(accounting)} /></div>
           <div id="bookkeeping-expenses"><AccountingTable title="Expenses by Category" columns={[{ key: "date", label: "Date" }, { key: "paidTo", label: "Supplier" }, { key: "what", label: "Description" }, { key: "type", label: "Expense Category" }, { key: "amount", label: "Amount" }, { key: "gst", label: "GST" }]} rows={expenseTableRows(accounting)} /></div>
           <div id="bookkeeping-general-ledger"><GeneralLedgerTable data={accounting} /></div>
