@@ -20,6 +20,8 @@ type PaymentRow = {
   pay_period_end: string | null;
   pay_frequency: string | null;
   gross_pay: number | string;
+  hours_worked: number | string | null;
+  insurable_hours: number | string | null;
   cpp: number | string;
   ei: number | string;
   income_tax_deducted: number | string;
@@ -72,7 +74,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
 
   const { data: paymentData } = await supabase
     .from("worker_payments")
-    .select("id,worker_id,client_id,company_id,payment_date,amount_paid,pay_period_start,pay_period_end,pay_frequency,gross_pay,cpp,ei,income_tax_deducted,benefits,vacation_pay,net_pay,t4_box14_employment_income,t4_box16_cpp,t4_box18_ei,t4_box22_income_tax_deducted,t4_benefits,t4_vacation_pay,t4_net_pay,payroll_calculator_pay_date,payroll_calculator_pay_frequency,review_notes,reviewed_at")
+    .select("id,worker_id,client_id,company_id,payment_date,amount_paid,pay_period_start,pay_period_end,pay_frequency,gross_pay,hours_worked,insurable_hours,cpp,ei,income_tax_deducted,benefits,vacation_pay,net_pay,t4_box14_employment_income,t4_box16_cpp,t4_box18_ei,t4_box22_income_tax_deducted,t4_benefits,t4_vacation_pay,t4_net_pay,payroll_calculator_pay_date,payroll_calculator_pay_frequency,review_notes,reviewed_at")
     .eq("id", paymentId)
     .maybeSingle();
 
@@ -106,6 +108,9 @@ export async function GET(_request: Request, { params }: RouteContext) {
   const benefits = amountWithFallback(payment.t4_benefits, payment.benefits);
   const vacationPay = amountWithFallback(payment.t4_vacation_pay, payment.vacation_pay);
   const netPay = toNumber(payment.net_pay);
+  const hoursWorked = payment.hours_worked == null ? null : toNumber(payment.hours_worked);
+  const insurableHours = payment.insurable_hours == null ? null : toNumber(payment.insurable_hours);
+  const effectiveHourlyRate = hoursWorked != null && hoursWorked > 0 ? grossPay / hoursWorked : null;
 
   const year = payDate.slice(0, 4);
   let q = supabase.from("worker_payments")
@@ -153,6 +158,9 @@ export async function GET(_request: Request, { params }: RouteContext) {
     {
       title: "Earnings and Deductions",
       rows: [
+        ...(hoursWorked != null ? [{ label: "Hours worked", value: hoursWorked.toFixed(2) + " hrs" }] : []),
+        ...(effectiveHourlyRate != null ? [{ label: "Gross pay per hour (calculated)", value: formatMoney(effectiveHourlyRate) + " / hr" }] : []),
+        ...(insurableHours != null ? [{ label: "EI insurable hours", value: insurableHours.toFixed(2) + " hrs" }] : []),
         { label: "Gross pay", value: formatMoney(grossPay) },
         { label: "CPP", value: formatMoney(cpp) },
         { label: "EI", value: formatMoney(ei) },
