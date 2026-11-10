@@ -46,6 +46,7 @@ export default async function WorkersPayrollReviewPage({ searchParams }: PagePro
         baseHref={baseHref}
         selectedWorkerId={selectedWorkerId}
         selectedTab={selectedWorkerTab}
+        workerNotice={firstParam(params?.workerNotice)}
       />
     </div>
   );
