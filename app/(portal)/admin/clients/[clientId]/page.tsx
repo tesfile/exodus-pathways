@@ -390,6 +390,16 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
       </section>
 
       <section id="workers-payments" className={tabSectionClass(activeTab, "workers-payments", "scroll-mt-24 grid gap-6")}>
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-slate-200 bg-white p-4">
+          <div>
+            <h2 className="text-lg font-black text-exodus-navy">Client Payroll</h2>
+            <p className="text-sm text-exodus-slate">Add a worker first, then select that worker to record payroll or contractor payments.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link href={`/admin/workers-payroll-review/new?clientId=${encodeURIComponent(client.id)}&year=${taxYear}`} className="rounded-md bg-exodus-navy px-4 py-3 text-sm font-bold text-white">+ Add Employee / Contractor</Link>
+            <Link href={`/admin/workers-payroll-review?clientId=${encodeURIComponent(client.id)}&year=${taxYear}`} className="rounded-md border border-exodus-navy px-4 py-3 text-sm font-bold text-exodus-navy">Manage Workers &amp; Payments</Link>
+          </div>
+        </div>
         <WorkerReviewWorkspace
           data={workersPayments}
           clientId={client.id}
