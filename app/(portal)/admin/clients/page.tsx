@@ -4,7 +4,7 @@ import { AccountingHeader } from "@/components/portal/accounting-records";
 import { getClientOptions } from "@/lib/accounting/data";
 import { requireRole } from "@/lib/supabase/server";
 import { createClient } from "@supabase/supabase-js";
-import { archiveClient, restoreClient } from "./actions";
+import { archiveClient, restoreClient, deleteArchivedClient } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -63,7 +63,7 @@ export default async function AdminClientsPage({
 
       {params.error && (
         <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
-          The requested action could not be completed. No client was deleted.
+          Action blocked. Only archived clients without linked records can be permanently deleted.
         </div>
       )}
 
@@ -168,6 +168,13 @@ export default async function AdminClientsPage({
                           >
                             Archive
                           </button>
+                        </form>
+                      )}
+                      {archivedView && (
+                        <form action={deleteArchivedClient} className="flex items-center gap-2">
+                          <input type="hidden" name="client_id" value={client.id} />
+                          <input name="confirm_delete" aria-label="Type DELETE to confirm" placeholder="Type DELETE" pattern="DELETE" required className="w-28 rounded border px-2 py-1" />
+                          <button type="submit" className="font-semibold text-red-700 hover:underline">Delete Permanently</button>
                         </form>
                       )}
                     </div>
