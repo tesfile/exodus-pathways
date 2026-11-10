@@ -57,13 +57,13 @@ export default async function AdminClientsPage({
 
       {params.saved === "1" && (
         <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-green-900">
-          Client information saved successfully.
+          {params.saved === "deleted" ? "Archived client and linked records deleted." : "Client information saved successfully."}
         </div>
       )}
 
       {params.error && (
         <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
-          Deletion was not completed. Linked financial records must be retained and database dependencies checked before permanent removal.
+          Deletion failed. Check that the staging SQL setup is installed and that no unsupported database dependencies remain.
         </div>
       )}
 
@@ -173,7 +173,7 @@ export default async function AdminClientsPage({
                       {archivedView && (
                         <form action={deleteArchivedClient} className="flex flex-wrap items-center gap-2">
                           <input type="hidden" name="client_id" value={client.id} />
-                          <input name="confirm_delete" aria-label="Type DELETE to confirm" placeholder="Type DELETE" pattern="DELETE" required className="w-28 rounded border px-2 py-1" />
+                          <input name="confirm_delete" aria-label="Type DELETE PERMANENTLY to confirm" placeholder="DELETE PERMANENTLY" pattern="DELETE PERMANENTLY" required className="w-48 rounded border px-2 py-1" />
                           <button type="submit" className="font-semibold text-red-700 hover:underline">Delete Permanently</button>
                         </form>
                       )}
