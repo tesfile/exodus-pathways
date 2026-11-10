@@ -182,9 +182,10 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
               <a key={label} href={`#bookkeeping-${label.toLowerCase().replaceAll(" ", "-")}`} className="rounded-md bg-exodus-light px-3 py-2 text-sm font-bold text-exodus-navy">{label}</a>
             ))}
           </nav>
+          <p className="text-sm text-exodus-slate">Enter transactions below, or <a className="font-bold text-exodus-blue underline" href={`?year=${taxYear}&tab=documents`}>upload a receipt or invoice</a>. A receipt can create a categorized expense draft after you enter its details.</p>
           <div className="grid gap-4 lg:grid-cols-2">
             {(["income", "expense"] as const).map(kind => (
-              <form key={kind} action={saveClientBookkeepingEntry} className="grid gap-3 rounded-md border border-slate-200 p-4">
+              <form id={`bookkeeping-add-${kind}`} key={kind} action={saveClientBookkeepingEntry} className="grid gap-3 rounded-md border border-slate-200 p-4">
                 <h3 className="text-lg font-black text-exodus-navy">+ Add {kind === "income" ? "Income" : "Expense"}</h3>
                 <input type="hidden" name="kind" value={kind}/><input type="hidden" name="clientId" value={client.id}/><input type="hidden" name="taxYear" value={taxYear}/>
                 <label className="grid gap-1 text-sm">Transaction date<input className="field" name="date" type="date" required/></label>
@@ -208,12 +209,12 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
             <div className="rounded-md border border-slate-200 p-4">
               <h3 className="font-black text-exodus-navy">Income Information</h3>
               <p className="mt-2 text-sm text-exodus-slate">Each income entry should identify the payer, company address, invoice number, service description, amount, GST, date and payment status.</p>
-              <p className="mt-3 text-sm text-exodus-slate">Income and expense entry forms are being connected to the database. The existing tables below show saved entries.</p>
+              <p className="mt-3 text-sm text-exodus-slate">Use the forms above to save draft transactions. Review and approve entries before using them in finalized accounts.</p>
             </div>
           </div>
           <div id="bookkeeping-income"><AccountingTable title="Income" columns={[{ key: "date", label: "Date" }, { key: "source", label: "Payer / Company" }, { key: "amount", label: "Amount" }, { key: "gst", label: "GST" }, { key: "status", label: "Status" }]} rows={incomeTableRows(accounting)} /></div>
           <div id="bookkeeping-expenses"><AccountingTable title="Expenses by Category" columns={[{ key: "date", label: "Date" }, { key: "paidTo", label: "Supplier" }, { key: "what", label: "Description" }, { key: "type", label: "Expense Category" }, { key: "amount", label: "Amount" }, { key: "gst", label: "GST" }]} rows={expenseTableRows(accounting)} /></div>
-          <AccountingFoundation clientId={client.id} />
+          <AccountingFoundation clientId={client.id} taxYear={taxYear} />
           <div id="bookkeeping-general-ledger"><GeneralLedgerTable data={accounting} /></div>
           <div id="bookkeeping-trial-balance"><p className="font-bold text-exodus-navy">Trial Balance</p><p className="text-sm text-exodus-slate">Use the Trial Balance export above for the selected client and year.</p></div>
           <div id="bookkeeping-financial-statements"><p className="font-bold text-exodus-navy">Financial Statements</p><AccountingSummary data={accounting} /></div>
