@@ -55,7 +55,7 @@ export default async function AdminClientsPage({
         description="Manage client profiles and linked company records."
       />
 
-      {params.saved === "1" && (
+      {(params.saved === "1" || params.saved === "deleted") && (
         <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-green-900">
           {params.saved === "deleted" ? "Archived client and linked records deleted." : "Client information saved successfully."}
         </div>
