@@ -89,31 +89,27 @@ export async function restoreClient(form: FormData) {
 }
 
 
-/** Delete only an archived, unused client. Never cascade financial history. */
+/** Permanently delete an archived client and dependent trial data in one database transaction. */
 export async function deleteArchivedClient(form: FormData) {
   const admin = await requireRole(["admin"]);
   const clientId = clientIdFrom(form);
-  if (clientId === admin.id || String(form.get("confirm_delete") ?? "") !== "DELETE") {
+  if (clientId === admin.id || String(form.get("confirm_delete") ?? "") !== "DELETE PERMANENTLY") {
     redirect("/admin/clients?view=archived&error=confirmation");
   }
   const db = adminDb();
+  const { data: client, error: clientError } = await db.from("users").select("id,role").eq("id", clientId).maybeSingle();
+  if (clientError || client?.role !== "client") redirect("/admin/clients?view=archived&error=client");
   const { data: archived, error: archiveError } = await db.from("archived_clients").select("client_id").eq("client_id", clientId).maybeSingle();
   if (archiveError || !archived) redirect("/admin/clients?view=archived&error=not_archived");
-  const { data: client, error: clientError } = await db.from("users").select("id,role").eq("id",clientId).maybeSingle();
-  if (clientError || client?.role !== "client") redirect("/admin/clients?view=archived&error=client");
 
-  // Do not remove a company, worker, payment, or other accounting records.
-  for (const table of ["companies", "workers", "worker_payments"] as const) {
-    const { count, error } = await db.from(table).select("id", { count: "exact", head: true }).eq("client_id",clientId);
-    if (error || (count ?? 0) > 0) redirect("/admin/clients?view=archived&error=has_records");
+  const { error } = await db.rpc("admin_delete_archived_client", {
+    p_client_id: clientId,
+    p_admin_id: admin.id,
+  });
+  if (error) {
+    console.error("Archived client deletion failed:", error.message);
+    redirect("/admin/clients?view=archived&error=delete_failed");
   }
-  // Deletion can still be refused by foreign keys for any other linked records.
-  const { error: deleteError } = await db.from("users").delete().eq("id",clientId).eq("role","client");
-  if (deleteError) {
-    console.error("Client permanent deletion blocked:",deleteError.message);
-    redirect("/admin/clients?view=archived&error=linked_records");
-  }
-  await db.from("archived_clients").delete().eq("client_id",clientId);
   revalidatePath("/admin/clients");
   redirect("/admin/clients?view=archived&saved=deleted");
 }
