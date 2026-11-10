@@ -1,3 +1,4 @@
+import { saveClientBookkeepingEntry, uploadAdminClientDocument } from "./bookkeeping-actions";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { notFound } from "next/navigation";
@@ -180,6 +181,21 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
               <a key={label} href={`#bookkeeping-${label.toLowerCase().replaceAll(" ", "-")}`} className="rounded-md bg-exodus-light px-3 py-2 text-sm font-bold text-exodus-navy">{label}</a>
             ))}
           </nav>
+          <div className="grid gap-4 lg:grid-cols-2">
+            {(["income", "expense"] as const).map(kind => (
+              <form key={kind} action={saveClientBookkeepingEntry} className="grid gap-3 rounded-md border border-slate-200 p-4">
+                <h3 className="text-lg font-black text-exodus-navy">+ Add {kind === "income" ? "Income" : "Expense"}</h3>
+                <input type="hidden" name="kind" value={kind}/><input type="hidden" name="clientId" value={client.id}/><input type="hidden" name="taxYear" value={taxYear}/>
+                <label className="grid gap-1 text-sm">Transaction date<input className="field" name="date" type="date" required/></label>
+                <label className="grid gap-1 text-sm">{kind === "income" ? "Payer / company name" : "Supplier / payee"}<input className="field" name="party" required/></label>
+                {kind === "expense" ? <label className="grid gap-1 text-sm">Expense category<select className="field" name="category">{["Advertising","Automobile & Fuel","Bank Charges","Contract Labour","Insurance","Meals","Office Expenses","Professional Fees","Rent","Repairs","Salaries & Wages","Supplies","Telephone & Internet","Travel","Utilities","Other"].map(item => <option key={item} value={item}>{item}</option>)}</select></label> : <><label className="grid gap-1 text-sm">Payer address<input className="field" name="address"/></label><label className="grid gap-1 text-sm">Invoice number<input className="field" name="invoice"/></label></>}
+                <label className="grid gap-1 text-sm">Description<input className="field" name="description"/></label>
+                <div className="grid grid-cols-2 gap-2"><label className="grid gap-1 text-sm">Amount ($)<input className="field" name="amount" type="number" step="0.01" min="0.01" required/></label><label className="grid gap-1 text-sm">GST ($)<input className="field" name="gst" type="number" step="0.01" min="0" defaultValue="0"/></label></div>
+                <label className="grid gap-1 text-sm">Notes<input className="field" name="notes"/></label>
+                <button type="submit" className="rounded-md bg-exodus-navy px-4 py-3 text-sm font-bold text-white">Save {kind} as draft</button>
+              </form>
+            ))}
+          </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="rounded-md border border-slate-200 p-4">
               <h3 className="font-black text-exodus-navy">Expense Categories</h3>
@@ -222,7 +238,17 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
       ) : null}
 
       <section id="documents" className={tabSectionClass(activeTab, "documents", "scroll-mt-24 grid gap-4")}>
-        <h2 className="text-xl font-black text-exodus-navy">Documents</h2>
+        <h2 className="text-xl font-black text-exodus-navy">Scan & Upload Documents</h2>
+        <form action={uploadAdminClientDocument} className="grid gap-3 rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+          <input type="hidden" name="clientId" value={client.id}/><input type="hidden" name="taxYear" value={taxYear}/>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="grid gap-1 text-sm">Document type<select className="field" name="documentType"><option value="receipt">Expense receipt</option><option value="invoice">Income invoice</option><option value="bank_statement">Bank statement</option><option value="payroll_document">Payroll document</option><option value="tax_document">Tax document</option><option value="client_document">Other</option></select></label>
+            <label className="grid gap-1 text-sm">Company<select className="field" name="companyId"><option value="">Selected client / personal</option>{accounting.companies.map(item => <option key={item.id} value={item.id}>{item.legal_name}</option>)}</select></label>
+          </div>
+          <label className="grid gap-1 text-sm font-bold">Camera scan or upload PDF, Excel, CSV, image or Word<input className="field" name="file" type="file" accept="image/*,.pdf,.jpg,.jpeg,.png,.webp,.heic,.tif,.tiff,.doc,.docx,.xls,.xlsx,.csv" required/></label>
+          <p className="text-xs text-exodus-slate">On a phone, use the file chooser to take a photo. Receipts are placed in the document review queue; they are not automatically posted as expenses.</p>
+          <button type="submit" className="rounded-md bg-exodus-navy px-4 py-3 text-sm font-bold text-white">Upload to selected client</button>
+        </form>
         {documents.length > 0 ? (
           <div className="grid gap-4">
             {documents.map((document) => (
