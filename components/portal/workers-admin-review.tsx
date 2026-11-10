@@ -143,7 +143,7 @@ async function manageWorkerAction(formData: FormData) {
     if (String(formData.get("confirmDelete") ?? "") !== "DELETE") throw new Error("Type DELETE to confirm permanent deletion.");
     const { count, error: countError } = await db.from("worker_payments").select("id", { count: "exact", head: true }).eq("worker_id", workerId);
     if (countError) throw new Error("Unable to verify employee payroll history.");
-    if (count !== 0) throw new Error("This employee has payment records. Permanent deletion is blocked to preserve payroll and tax records. Set the employee to Inactive instead.");
+    if (count !== 0) redirect("/admin/workers-payroll-review?clientId=" + encodeURIComponent(clientId) + "&year=" + encodeURIComponent(year) + "&workerId=" + encodeURIComponent(workerId) + "&workerNotice=hasPayments");
     const { error } = await db.from("workers").delete().eq("id", workerId).eq("client_id", clientId);
     if (error) throw new Error("Employee could not be deleted: " + error.message);
   } else {
@@ -160,7 +160,8 @@ export function WorkerReviewWorkspace({
   taxYear,
   baseHref,
   selectedWorkerId,
-  selectedTab
+  selectedTab,
+  workerNotice
 }: {
   data: WorkersPaymentsData;
   clientId: string;
@@ -168,6 +169,7 @@ export function WorkerReviewWorkspace({
   baseHref: string;
   selectedWorkerId?: string;
   selectedTab?: string;
+  workerNotice?: string;
 }) {
   const selectedWorker = data.workers.find((worker) => worker.id === selectedWorkerId) ?? null;
   const activeTab = parseWorkerReviewTab(selectedTab);
@@ -198,6 +200,7 @@ export function WorkerReviewWorkspace({
           clientId={clientId}
           taxYear={taxYear}
           baseHref={baseHref}
+          workerNotice={workerNotice}
         />
       ) : (
         <div className="rounded-md border border-dashed border-slate-300 bg-white p-6 text-sm font-semibold text-exodus-slate">
@@ -217,11 +220,13 @@ function SelectedWorkerReview({
   activeTab,
   clientId,
   taxYear,
-  baseHref
+  baseHref,
+  workerNotice
 }: {
   data: WorkersPaymentsData;
   worker: WorkerRecord;
   activeTab: WorkerReviewTab;
+  workerNotice?: string;
   clientId: string;
   taxYear: number;
   baseHref: string;
@@ -244,6 +249,7 @@ function SelectedWorkerReview({
         </Link>
       </div>
 
+      {workerNotice === "hasPayments" ? <p role="alert" className="rounded-md border border-amber-400 bg-amber-50 p-3 text-sm font-semibold text-amber-900">This employee has saved payments and cannot be permanently deleted. Set the employee to Inactive to stop future payroll while preserving T4 and paystub records.</p> : null}
       <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
         <h3 className="font-bold text-exodus-navy">Employee status and deletion</h3>
         <p className="mt-1 text-sm">Current status: <strong>{worker.status}</strong>. Inactive employees remain in payroll and T4 history.</p>
