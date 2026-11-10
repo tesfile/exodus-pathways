@@ -128,7 +128,7 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
     getRelatedClientRows(client.id),
     getPersonalTaxSlips(client.id, taxYear),
     getSelfEmployedData(client, taxYear),
-    getWorkersPaymentsData(client, taxYear)
+    getWorkersPaymentsData(client, taxYear, true)
   ]);
 
   const company = accounting.companies[0];
