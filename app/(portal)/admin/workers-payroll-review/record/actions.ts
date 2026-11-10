@@ -100,7 +100,7 @@ export async function savePayrollEntry(form: FormData) {
     throw new Error("Payroll entry could not be saved: " + error.message);
   }
   revalidatePath("/admin/workers-payroll-review");
-  redirect("/admin/workers-payroll-review?clientId=" + encodeURIComponent(clientId) +
-    "&year=" + year + "&workerId=" + encodeURIComponent(workerId) + "&workerTab=" +
-    (isT4 ? "payroll" : "payments"));
+  revalidatePath("/admin/clients/" + clientId);
+  redirect("/admin/clients/" + encodeURIComponent(clientId) + "?tab=workers-payments&year=" + year +
+    "&workerId=" + encodeURIComponent(workerId) + "&workerTab=" + (isT4 ? "payroll" : "payments"));
 }
