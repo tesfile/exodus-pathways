@@ -44,13 +44,13 @@ type PageProps = {
 
 const clientDetailTabs = [
   { key: "profile", label: "Profile" },
-  { key: "documents", label: "Documents" },
+  { key: "documents", label: "Scan & Documents" },
+  { key: "workers-payments", label: "Payroll" },
   { key: "personal-tax", label: "Personal Tax" },
   { key: "self-employed", label: "Self-Employed" },
-  { key: "income", label: "Income" },
-  { key: "expenses", label: "Expenses" },
+  { key: "income", label: "Bookkeeping · Income" },
+  { key: "expenses", label: "Bookkeeping · Expenses" },
   { key: "gst", label: "GST" },
-  { key: "workers-payments", label: "Workers & Payments" },
   { key: "messages", label: "Messages" },
   { key: "tasks", label: "Tasks" },
   { key: "notes", label: "Notes" },
@@ -137,7 +137,7 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
     <div className="grid gap-6">
     <AccountingHeader
         title={client.companyName}
-        description="Client workspace for profile, documents, accounting and tax records, payroll, messages, tasks, and notes."
+        description="Dedicated client workspace: payroll, bookkeeping, documents, tax and reports. All records are scoped to this client."
       >
         <form action={`/admin/clients/${client.id}`} className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
           <div className="grid gap-4 sm:grid-cols-[220px_auto] sm:items-end">
