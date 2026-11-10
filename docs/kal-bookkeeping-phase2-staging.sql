@@ -55,6 +55,10 @@ alter table public.kal_accounts enable row level security;
 alter table public.kal_open_items enable row level security;
 alter table public.kal_journals enable row level security;
 alter table public.kal_journal_lines enable row level security;
--- No browser/client policies: administrator server actions must use verified server-only service role.
--- Do not grant anon or authenticated direct table access.
-revoke all on public.kal_accounts, public.kal_open_items, public.kal_journals, public.kal_journal_lines from anon,authenticated;
+-- Admin-only RLS. Database role is checked, not editable JWT metadata.
+create policy kal_accounts_admin on public.kal_accounts for all to authenticated using (exists (select 1 from public.users u where u.id=auth.uid() and u.role='admin')) with check (exists (select 1 from public.users u where u.id=auth.uid() and u.role='admin'));
+create policy kal_open_items_admin on public.kal_open_items for all to authenticated using (exists (select 1 from public.users u where u.id=auth.uid() and u.role='admin')) with check (exists (select 1 from public.users u where u.id=auth.uid() and u.role='admin'));
+create policy kal_journals_admin on public.kal_journals for all to authenticated using (exists (select 1 from public.users u where u.id=auth.uid() and u.role='admin')) with check (exists (select 1 from public.users u where u.id=auth.uid() and u.role='admin'));
+create policy kal_journal_lines_admin on public.kal_journal_lines for all to authenticated using (exists (select 1 from public.users u where u.id=auth.uid() and u.role='admin')) with check (exists (select 1 from public.users u where u.id=auth.uid() and u.role='admin'));
+grant select,insert,update,delete on public.kal_accounts, public.kal_open_items, public.kal_journals, public.kal_journal_lines to authenticated;
+revoke all on public.kal_accounts, public.kal_open_items, public.kal_journals, public.kal_journal_lines from anon;
