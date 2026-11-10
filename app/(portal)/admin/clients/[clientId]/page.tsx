@@ -144,7 +144,7 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
             <label className="grid gap-2">
               <span className="label">Year</span>
               <select name="year" className="field" defaultValue={taxYear}>
-                {[taxYear, new Date().getFullYear(), new Date().getFullYear() - 1, new Date().getFullYear() - 2].map((year) => (
+                {Array.from(new Set([taxYear, new Date().getFullYear(), new Date().getFullYear() - 1, new Date().getFullYear() - 2])).map((year) => (
                   <option key={year} value={year}>
                     {year}
                   </option>
