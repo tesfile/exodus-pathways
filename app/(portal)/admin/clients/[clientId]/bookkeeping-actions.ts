@@ -56,5 +56,15 @@ export async function uploadAdminClientDocument(formData: FormData) {
     await db.storage.from("client-documents").remove([storagePath]);
     throw new Error("Document record failed: " + error.message);
   }
+  if (documentType === "receipt" && String(formData.get("createExpense") || "") === "yes") {
+    const vendor = String(formData.get("vendor") || "").trim();
+    const category = String(formData.get("category") || "Other");
+    const expenseDate = String(formData.get("expenseDate") || "");
+    const amount = Number(formData.get("amount"));
+    const gst = Number(formData.get("gst") || 0);
+    if (!vendor || !categories.includes(category) || !/^\d{4}-\d{2}-\d{2}$/.test(expenseDate) || Number(expenseDate.slice(0,4)) !== year || !Number.isFinite(amount) || amount <= 0 || !Number.isFinite(gst) || gst < 0) throw new Error("Receipt saved, but expense draft needs valid supplier, category, date and amounts.");
+    const { error: expenseError } = await db.from("expense_entries").insert({client_id: clientId, tax_year: year, expense_date: expenseDate, vendor, category, description: "Receipt: " + file.name, amount, gst_hst_amount: gst, status: "draft", notes: "Supporting document: " + storagePath});
+    if (expenseError) throw new Error("Receipt saved, but expense draft could not be created: " + expenseError.message);
+  }
   revalidatePath(`/admin/clients/${clientId}`);
 }
