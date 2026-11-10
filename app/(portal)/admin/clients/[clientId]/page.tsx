@@ -1,3 +1,4 @@
+import { AccountingFoundation } from "./accounting-foundation";
 import { saveClientBookkeepingEntry, uploadAdminClientDocument } from "./bookkeeping-actions";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
@@ -177,7 +178,7 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
           <h2 className="text-xl font-black text-exodus-navy">Bookkeeping</h2>
           <p className="text-sm text-exodus-slate">All accounting records below belong to this client and selected tax year.</p>
           <nav className="flex flex-wrap gap-2" aria-label="Bookkeeping sections">
-            {["Income", "Expenses", "General Ledger", "Trial Balance", "Financial Statements", "GST"].map((label) => (
+            {["Income", "Expenses", "Accounts Receivable", "Accounts Payable", "Chart of Accounts", "General Ledger", "Trial Balance", "Financial Statements", "GST"].map((label) => (
               <a key={label} href={`#bookkeeping-${label.toLowerCase().replaceAll(" ", "-")}`} className="rounded-md bg-exodus-light px-3 py-2 text-sm font-bold text-exodus-navy">{label}</a>
             ))}
           </nav>
@@ -212,6 +213,7 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
           </div>
           <div id="bookkeeping-income"><AccountingTable title="Income" columns={[{ key: "date", label: "Date" }, { key: "source", label: "Payer / Company" }, { key: "amount", label: "Amount" }, { key: "gst", label: "GST" }, { key: "status", label: "Status" }]} rows={incomeTableRows(accounting)} /></div>
           <div id="bookkeeping-expenses"><AccountingTable title="Expenses by Category" columns={[{ key: "date", label: "Date" }, { key: "paidTo", label: "Supplier" }, { key: "what", label: "Description" }, { key: "type", label: "Expense Category" }, { key: "amount", label: "Amount" }, { key: "gst", label: "GST" }]} rows={expenseTableRows(accounting)} /></div>
+          <AccountingFoundation clientId={client.id} />
           <div id="bookkeeping-general-ledger"><GeneralLedgerTable data={accounting} /></div>
           <div id="bookkeeping-trial-balance"><p className="font-bold text-exodus-navy">Trial Balance</p><p className="text-sm text-exodus-slate">Use the Trial Balance export above for the selected client and year.</p></div>
           <div id="bookkeeping-financial-statements"><p className="font-bold text-exodus-navy">Financial Statements</p><AccountingSummary data={accounting} /></div>
