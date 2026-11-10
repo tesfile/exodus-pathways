@@ -25,13 +25,13 @@ begin
       into parent_cols
       from unnest(fk.confkey) with ordinality u(attnum, ord)
       join pg_attribute a on a.attrelid = fk.confrelid and a.attnum = u.attnum;
-    child_filter := format('(%s) in (select %s from %s where %s)', child_cols, parent_cols, p_table, p_filter);
-    execute format('select exists(select 1 from %s where %s)', fk.conrelid, child_filter) into has_rows;
+    child_filter := format('(%s) in (select %s from %s where %s)', child_cols, parent_cols, p_table::text, p_filter);
+    execute format('select exists(select 1 from %s where %s)', fk.conrelid::text, child_filter) into has_rows;
     if has_rows then
       perform public._delete_client_dependents(fk.conrelid, child_filter, p_depth + 1);
     end if;
   end loop;
-  execute format('delete from %s where %s', p_table, p_filter);
+  execute format('delete from %s where %s', p_table::text, p_filter);
 end $$;
 
 create or replace function public.admin_delete_archived_client(p_client_id uuid, p_admin_id uuid)
