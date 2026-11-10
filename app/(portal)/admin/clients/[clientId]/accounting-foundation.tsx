@@ -1,11 +1,11 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { addAccount, addOpenItem } from "./accounting-actions";
 
-export async function AccountingFoundation({clientId}:{clientId:string}) {
+export async function AccountingFoundation({clientId,taxYear}:{clientId:string;taxYear:number}) {
  const db=await createServerSupabaseClient();
  const [accountsResult,itemsResult]=await Promise.all([
   db.from("kal_accounts").select("id,code,name,type,active").eq("client_id",clientId).order("code"),
-  db.from("kal_open_items").select("id,kind,party_name,reference,issue_date,due_date,amount,tax_amount,paid_amount,status").eq("client_id",clientId).order("issue_date",{ascending:false})
+  db.from("kal_open_items").select("id,kind,party_name,reference,issue_date,due_date,amount,tax_amount,paid_amount,status").eq("client_id",clientId).gte("issue_date",`${taxYear}-01-01`).lte("issue_date",`${taxYear}-12-31`).order("issue_date",{ascending:false})
  ]);
  if(accountsResult.error||itemsResult.error) return <div className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm">Chart of Accounts and A/R–A/P require the staging database setup in <code>docs/kal-bookkeeping-phase2-staging.sql</code>. No data has been changed.</div>;
  const accounts=accountsResult.data??[];
@@ -28,7 +28,7 @@ export async function AccountingFoundation({clientId}:{clientId:string}) {
       <h3 className="text-lg font-black text-exodus-navy">{kind==="receivable"?"Accounts Receivable (A/R)":"Accounts Payable (A/P)"}</h3>
       <p className="text-sm text-slate-600">{kind==="receivable"?"Customer invoices awaiting payment":"Supplier bills awaiting payment"}</p>
       <form action={addOpenItem} className="mt-3 grid gap-3">
-        <input type="hidden" name="clientId" value={clientId}/><input type="hidden" name="kind" value={kind}/>
+        <input type="hidden" name="clientId" value={clientId}/><input type="hidden" name="kind" value={kind}/><p className="text-xs text-slate-600">Selected year: {taxYear}. Enter an issue date in this year.</p>
         <label className="grid gap-1 text-sm">{kind==="receivable"?"Customer / payer":"Supplier / payee"}<input className="field" name="party" required/></label>
         <label className="grid gap-1 text-sm">Address<input className="field" name="address"/></label>
         <label className="grid gap-1 text-sm">Invoice / bill number<input className="field" name="reference" required/></label>
