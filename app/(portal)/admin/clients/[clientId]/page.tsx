@@ -214,6 +214,28 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
           </div>
           <div id="bookkeeping-income"><AccountingTable title="Income" columns={[{ key: "date", label: "Date" }, { key: "source", label: "Payer / Company" }, { key: "amount", label: "Amount" }, { key: "gst", label: "GST" }, { key: "status", label: "Status" }]} rows={incomeTableRows(accounting)} /></div>
           <div id="bookkeeping-expenses"><AccountingTable title="Expenses by Category" columns={[{ key: "date", label: "Date" }, { key: "paidTo", label: "Supplier" }, { key: "what", label: "Description" }, { key: "type", label: "Expense Category" }, { key: "amount", label: "Amount" }, { key: "gst", label: "GST" }]} rows={expenseTableRows(accounting)} /></div>
+          <div className="rounded-md border border-slate-200 p-4">
+            <h3 className="text-lg font-black text-exodus-navy">Payroll expenses — linked from saved payroll</h3>
+            <p className="mt-1 text-sm text-exodus-slate">Read-only Salaries & Wages entries from this client's existing payroll. Do not enter these payments again as manual expenses. These are not yet posted journal entries.</p>
+            {workersPayments.payments.filter(payment => payment.admin_classification === "T4 Employee").length ? (
+              <div className="mt-3 overflow-x-auto"><table className="w-full text-left text-sm">
+                <thead><tr className="border-b"><th className="p-2">Pay date</th><th className="p-2">Employee</th><th className="p-2">Category</th><th className="p-2">Gross wages</th><th className="p-2">Net pay</th><th className="p-2">Employer CPP/EI</th><th className="p-2">Paystub</th></tr></thead>
+                <tbody>{workersPayments.payments.filter(payment => payment.admin_classification === "T4 Employee").map(payment => {
+                  const worker = workersPayments.workers.find(item => item.id === payment.worker_id);
+                  const money = (value: number | string) => new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(Number(value) || 0);
+                  return <tr key={payment.id} className="border-b">
+                    <td className="p-2">{payment.payment_date}</td>
+                    <td className="p-2">{worker?.worker_name ?? "Employee"}</td>
+                    <td className="p-2">Salaries & Wages</td>
+                    <td className="p-2">{money(payment.gross_pay)}</td>
+                    <td className="p-2">{money(payment.net_pay)}</td>
+                    <td className="p-2">{money(Number(payment.payroll_calculator_employer_cpp || 0) + Number(payment.payroll_calculator_employer_ei || 0))}</td>
+                    <td className="p-2"><a className="font-bold text-blue-800 underline" href={`/admin/paystubs/${payment.id}`} target="_blank" rel="noopener noreferrer">Paystub PDF</a></td>
+                  </tr>;
+                })}</tbody>
+              </table></div>
+            ) : <p className="mt-3 text-sm text-exodus-slate">No T4 employee payroll payments found for this client and year. Check the Payroll tab and selected year.</p>}
+          </div>
           <AccountingFoundation clientId={client.id} taxYear={taxYear} />
           <div id="bookkeeping-general-ledger"><GeneralLedgerTable data={accounting} /></div>
           <div id="bookkeeping-trial-balance"><p className="font-bold text-exodus-navy">Trial Balance</p><p className="text-sm text-exodus-slate">Use the Trial Balance export above for the selected client and year.</p></div>
