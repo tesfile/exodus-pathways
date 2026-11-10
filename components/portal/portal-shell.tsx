@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { FileText, LogOut, Menu, MessageSquareText } from "lucide-react";
+import { ArrowLeft, BookOpen, FileText, LogOut, Menu, MessageSquareText, Receipt, Users, Wallet } from "lucide-react";
 import { useState } from "react";
 import { adminNav, brand, clientNav, employeeNav } from "@/lib/constants";
 import type { PortalUser } from "@/lib/types";
@@ -23,6 +23,16 @@ export function PortalShell({ user, children }: PortalShellProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const { t } = useT();
+  const selectedClientId = user.role === "admin" ? pathname.match(/^\/admin\/clients\/([^/]+)/)?.[1] : undefined;
+  const clientBase = selectedClientId ? `/admin/clients/${selectedClientId}` : "";
+  const clientWorkspaceNav = selectedClientId ? [
+    { href: "/admin/clients", label: "Back to All Clients", icon: ArrowLeft },
+    { href: clientBase, label: "Client Overview", icon: Users },
+    { href: `${clientBase}?tab=bookkeeping`, label: "Bookkeeping", icon: BookOpen },
+    { href: `${clientBase}?tab=workers-payments`, label: "Payroll", icon: Wallet },
+    { href: `${clientBase}?tab=documents`, label: "Scan & Documents", icon: FileText },
+    { href: `${clientBase}?tab=reports`, label: "Reports", icon: Receipt },
+  ] : [];
   const nav = user.role === "admin"
     ? adminNav
     : user.role === "employee"
@@ -53,7 +63,12 @@ export function PortalShell({ user, children }: PortalShellProps) {
       </div>
 
       <nav className="grid gap-1 overflow-y-auto p-3" aria-label="Portal navigation">
-        {nav.map((item) => {
+        {selectedClientId ? <p className="px-3 pb-2 text-xs font-black uppercase tracking-widest text-amber-200">Selected Client Only</p> : null}
+        {selectedClientId ? clientWorkspaceNav.map((item) => {
+          const Icon = item.icon;
+          const active = item.href === clientBase ? pathname === clientBase : false;
+          return <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className={cn("focus-ring flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm font-bold text-blue-50 hover:bg-white/10", active && "bg-white text-exodus-navy")}><Icon className="h-4 w-4" aria-hidden="true"/><span>{item.label}</span></Link>;
+        }) : nav.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href;
           return (
