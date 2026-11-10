@@ -21,7 +21,7 @@ export default async function AddEmployeePage({ searchParams }: Props) {
   const { data: companies, error: companiesError } = await db.from("companies").select("id,legal_name,trade_name").eq("client_id", clientId).order("legal_name");
   if (profileError || companiesError) throw new Error("Unable to load client companies.");
   if (!profile || profile.role !== "client") notFound();
-  const back = `/admin/workers-payroll-review?clientId=${encodeURIComponent(clientId)}&year=${encodeURIComponent(year ?? String(new Date().getFullYear()))}`;
+  const back = `/admin/clients/${encodeURIComponent(clientId)}?year=${encodeURIComponent(year ?? String(new Date().getFullYear()))}&tab=workers-payments`;
 
   return (
     <main className="mx-auto grid max-w-3xl gap-6">
@@ -32,7 +32,7 @@ export default async function AddEmployeePage({ searchParams }: Props) {
       </div>
       {error ? <p role="alert" className="rounded-lg border border-red-300 bg-red-50 p-4 text-red-800">Employee could not be saved. Check the staging server terminal for the exact error.</p> : null}
       {(!companies || companies.length === 0) ? (
-        <p className="rounded-lg border bg-white p-5">This client has no company yet. Add a company before registering an employee.</p>
+        <div className="grid gap-3 rounded-lg border bg-white p-5"><p className="font-semibold text-blue-950">Payroll is available, but this client has no employer company record linked yet.</p><p className="text-sm text-slate-600">Create the employer company under this client first. This does not reset or replace the existing payroll system.</p><Link href={`/admin/clients/${encodeURIComponent(clientId)}/edit`} className="w-fit rounded-lg bg-blue-900 px-5 py-3 font-semibold text-white">+ Set Up Employer Company</Link><Link href={back} className="text-sm font-semibold text-blue-800 underline">Return to this client’s Payroll</Link></div>
       ) : (
         <form action={saveEmployee} className="grid gap-5 rounded-xl border bg-white p-6 shadow-sm md:grid-cols-2">
           <input type="hidden" name="client_id" value={clientId} />
