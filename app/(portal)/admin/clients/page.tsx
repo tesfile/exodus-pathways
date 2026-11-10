@@ -63,7 +63,7 @@ export default async function AdminClientsPage({
 
       {params.error && (
         <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
-          Action blocked. Only archived clients without linked records can be permanently deleted.
+          Deletion was not completed. Linked financial records must be retained and database dependencies checked before permanent removal.
         </div>
       )}
 
@@ -171,7 +171,7 @@ export default async function AdminClientsPage({
                         </form>
                       )}
                       {archivedView && (
-                        <form action={deleteArchivedClient} className="flex items-center gap-2">
+                        <form action={deleteArchivedClient} className="flex flex-wrap items-center gap-2">
                           <input type="hidden" name="client_id" value={client.id} />
                           <input name="confirm_delete" aria-label="Type DELETE to confirm" placeholder="Type DELETE" pattern="DELETE" required className="w-28 rounded border px-2 py-1" />
                           <button type="submit" className="font-semibold text-red-700 hover:underline">Delete Permanently</button>
