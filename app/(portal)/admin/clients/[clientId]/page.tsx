@@ -1,4 +1,5 @@
 import { AccountingFoundation } from "./accounting-foundation";
+import { PayrollLedger } from "./payroll-ledger";
 import { saveClientBookkeepingEntry, uploadAdminClientDocument } from "./bookkeeping-actions";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
@@ -236,6 +237,7 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
               </table></div>
             ) : <p className="mt-3 text-sm text-exodus-slate">No T4 employee payroll payments found for this client and year. Check the Payroll tab and selected year.</p>}
           </div>
+          <PayrollLedger data={workersPayments} />
           <AccountingFoundation clientId={client.id} taxYear={taxYear} />
           <div id="bookkeeping-general-ledger"><GeneralLedgerTable data={accounting} /></div>
           <div id="bookkeeping-trial-balance"><p className="font-bold text-exodus-navy">Trial Balance</p><p className="text-sm text-exodus-slate">Use the Trial Balance export above for the selected client and year.</p></div>
