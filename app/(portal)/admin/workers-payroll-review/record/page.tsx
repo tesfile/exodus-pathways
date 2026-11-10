@@ -29,10 +29,10 @@ export default async function RecordPaymentPage({ searchParams }: Props) {
     Math.round(priorPayments.reduce((total, p) => total + Number(p[field] ?? 0), 0) * 100) / 100;
   const priorYtd = { cpp: sum("cpp"), cpp2: 0, ei: sum("ei"), pensionableEarnings: sum("t4_box26_cpp_pensionable_earnings") };
   const today = new Date().toISOString().slice(0, 10);
-  const back = "/admin/workers-payroll-review?clientId=" + encodeURIComponent(clientId);
+  const back = "/admin/clients/" + encodeURIComponent(clientId) + "?tab=workers-payments&year=" + year + "&workerId=" + encodeURIComponent(workerId) + "&workerTab=payroll";
   return (
     <main className="mx-auto grid max-w-4xl gap-5">
-      <Link href={back} className="font-bold text-blue-800">← Workers & Payments</Link>
+      <Link href={back} className="font-bold text-blue-800">← Back to Client Payroll</Link>
       <div><h1 className="text-3xl font-bold text-blue-950">Record {isEmployee ? "Payroll" : "Contractor Payment"}</h1>
         <p className="text-slate-600">{worker.worker_name} · {worker.worker_type}</p></div>
       <RecordPayrollForm clientId={clientId} workerId={workerId} today={today} initialClassification={isEmployee ? "T4 Employee" : "T5018 Subcontractor"} priorYtd={priorYtd} priorPaymentCount={priorPayments.length} />
