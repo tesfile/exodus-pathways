@@ -246,6 +246,18 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
             <label className="grid gap-1 text-sm">Company<select className="field" name="companyId"><option value="">Selected client / personal</option>{accounting.companies.map(item => <option key={item.id} value={item.id}>{item.legal_name}</option>)}</select></label>
           </div>
           <label className="grid gap-1 text-sm font-bold">Camera scan or upload PDF, Excel, CSV, image or Word<input className="field" name="file" type="file" accept="image/*,.pdf,.jpg,.jpeg,.png,.webp,.heic,.tif,.tiff,.doc,.docx,.xls,.xlsx,.csv" required/></label>
+          <details className="rounded-md border border-slate-200 p-3">
+            <summary className="cursor-pointer font-bold text-exodus-navy">Receipt → Create categorized expense draft</summary>
+            <p className="mt-2 text-xs text-exodus-slate">Select Expense receipt above. Enter the receipt details to save a draft under the chosen expense category. Check before submitting; no automatic OCR is used.</p>
+            <label className="mt-3 flex items-center gap-2 text-sm"><input type="checkbox" name="createExpense" value="yes"/> Also create an expense draft</label>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-1 text-sm">Supplier<input name="vendor" className="field"/></label>
+              <label className="grid gap-1 text-sm">Expense date<input name="expenseDate" type="date" className="field"/></label>
+              <label className="grid gap-1 text-sm">Expense category<select name="category" className="field">{["Advertising","Automobile & Fuel","Bank Charges","Contract Labour","Insurance","Meals","Office Expenses","Professional Fees","Rent","Repairs","Salaries & Wages","Supplies","Telephone & Internet","Travel","Utilities","Other"].map(item => <option key={item} value={item}>{item}</option>)}</select></label>
+              <label className="grid gap-1 text-sm">Amount ($)<input name="amount" type="number" min="0.01" step="0.01" className="field"/></label>
+              <label className="grid gap-1 text-sm">GST ($)<input name="gst" type="number" min="0" step="0.01" defaultValue="0" className="field"/></label>
+            </div>
+          </details>
           <p className="text-xs text-exodus-slate">On a phone, use the file chooser to take a photo. Receipts are placed in the document review queue; they are not automatically posted as expenses.</p>
           <button type="submit" className="rounded-md bg-exodus-navy px-4 py-3 text-sm font-bold text-white">Upload to selected client</button>
         </form>
