@@ -69,7 +69,7 @@ export async function savePayrollEntry(form: FormData) {
       .eq("payment_date", date).eq("pay_period_start", start).eq("pay_period_end", end)
       .eq("admin_classification", "T4 Employee").limit(1);
     if (duplicateError) throw new Error("Unable to check duplicate payroll: " + duplicateError.message);
-    if (duplicates?.length) throw new Error("Payroll for this employee, pay date and period already exists. Review the existing record instead of saving a duplicate.");
+    if (duplicates?.length) redirect("/admin/clients/" + encodeURIComponent(clientId) + "?tab=workers-payments&year=" + year + "&workerId=" + encodeURIComponent(workerId) + "&workerTab=payroll&payrollNotice=duplicate");
   }
   const { error } = await db.from("worker_payments").insert({
     worker_id: workerId, client_id: clientId, company_id: company.id, tax_year: year,
