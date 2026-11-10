@@ -48,8 +48,7 @@ const clientDetailTabs = [
   { key: "workers-payments", label: "Payroll" },
   { key: "personal-tax", label: "Personal Tax" },
   { key: "self-employed", label: "Self-Employed" },
-  { key: "income", label: "Bookkeeping · Income" },
-  { key: "expenses", label: "Bookkeeping · Expenses" },
+  { key: "bookkeeping", label: "Bookkeeping" },
   { key: "gst", label: "GST" },
   { key: "messages", label: "Messages" },
   { key: "tasks", label: "Tasks" },
@@ -171,6 +170,24 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
           </Link>
         ))}
       </nav>
+
+      {activeTab === "bookkeeping" ? (
+        <section className="grid gap-4 rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="text-xl font-black text-exodus-navy">Bookkeeping</h2>
+          <p className="text-sm text-exodus-slate">All accounting records below belong to this client and selected tax year.</p>
+          <nav className="flex flex-wrap gap-2" aria-label="Bookkeeping sections">
+            {["Income", "Expenses", "General Ledger", "Trial Balance", "Financial Statements", "GST"].map((label) => (
+              <a key={label} href={`#bookkeeping-${label.toLowerCase().replaceAll(" ", "-")}`} className="rounded-md bg-exodus-light px-3 py-2 text-sm font-bold text-exodus-navy">{label}</a>
+            ))}
+          </nav>
+          <div id="bookkeeping-income"><AccountingTable title="Income" columns={[{ key: "date", label: "Date" }, { key: "source", label: "Payer / Company" }, { key: "amount", label: "Amount" }, { key: "gst", label: "GST" }, { key: "status", label: "Status" }]} rows={incomeTableRows(accounting)} /></div>
+          <div id="bookkeeping-expenses"><AccountingTable title="Expenses by Category" columns={[{ key: "date", label: "Date" }, { key: "paidTo", label: "Supplier" }, { key: "what", label: "Description" }, { key: "type", label: "Expense Category" }, { key: "amount", label: "Amount" }, { key: "gst", label: "GST" }]} rows={expenseTableRows(accounting)} /></div>
+          <div id="bookkeeping-general-ledger"><GeneralLedgerTable data={accounting} /></div>
+          <div id="bookkeeping-trial-balance"><p className="font-bold text-exodus-navy">Trial Balance</p><p className="text-sm text-exodus-slate">Use the Trial Balance export above for the selected client and year.</p></div>
+          <div id="bookkeeping-financial-statements"><p className="font-bold text-exodus-navy">Financial Statements</p><AccountingSummary data={accounting} /></div>
+          <div id="bookkeeping-gst"><GstSummaryTable data={accounting} /></div>
+        </section>
+      ) : null}
 
       <section id="profile" className={tabSectionClass(activeTab, "profile", "scroll-mt-24 rounded-md border border-slate-200 bg-white p-5 shadow-sm")}>
         <h2 className="text-xl font-black text-exodus-navy">Profile</h2>
