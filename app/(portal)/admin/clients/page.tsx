@@ -63,7 +63,7 @@ export default async function AdminClientsPage({
 
       {params.error && (
         <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
-          Deletion failed. Check that the staging SQL setup is installed and that no unsupported database dependencies remain.
+          Deletion failed: {params.error}
         </div>
       )}
 
