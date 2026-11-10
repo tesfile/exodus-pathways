@@ -218,7 +218,7 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
           <details id="bookkeeping-payroll-expenses" className="rounded-md border border-slate-200 p-4">
             <summary className="cursor-pointer text-lg font-black text-exodus-navy">Payroll Expenses — View payments and PDF paystubs</summary>
 
-            <p className="mt-1 text-sm text-exodus-slate">Read-only Salaries & Wages entries from this client's existing payroll. Do not enter these payments again as manual expenses. These are not yet posted journal entries.</p>
+            <p className="mt-1 text-sm text-exodus-slate">Read-only Salaries & Wages entries from this client&apos;s existing payroll. Do not enter these payments again as manual expenses. These are not yet posted journal entries.</p>
             {workersPayments.payments.filter(payment => payment.admin_classification === "T4 Employee").length ? (
               <div className="mt-3 overflow-x-auto"><table className="w-full text-left text-sm">
                 <thead><tr className="border-b"><th className="p-2">Pay date</th><th className="p-2">Employee</th><th className="p-2">Category</th><th className="p-2">Gross wages</th><th className="p-2">Net pay</th><th className="p-2">Employer CPP/EI</th><th className="p-2">Paystub</th></tr></thead>
