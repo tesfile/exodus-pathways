@@ -180,7 +180,7 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
           <p className="text-sm text-exodus-slate">All accounting records below belong to this client and selected tax year.</p>
           <nav className="flex flex-wrap gap-2" aria-label="Bookkeeping sections">
             {["Income", "Expenses", "Accounts Receivable", "Accounts Payable", "Chart of Accounts", "General Ledger", "Trial Balance", "Financial Statements", "GST"].map((label) => (
-              <a key={label} href={`#bookkeeping-${label.toLowerCase().replaceAll(" ", "-")}`} className="rounded-md bg-exodus-light px-3 py-2 text-sm font-bold text-exodus-navy">{label}</a>
+              <a key={label} href={`#bookkeeping-${label === "Chart of Accounts" || label === "Accounts Receivable" || label === "Accounts Payable" ? "accounts" : label.toLowerCase().replaceAll(" ", "-")}`} className="rounded-md bg-exodus-light px-3 py-2 text-sm font-bold text-exodus-navy">{label}</a>
             ))}
           </nav>
           <p className="text-sm text-exodus-slate">Enter transactions below, or <a className="font-bold text-exodus-blue underline" href={`?year=${taxYear}&tab=documents`}>upload a receipt or invoice</a>. A receipt can create a categorized expense draft after you enter its details.</p>
@@ -215,8 +215,9 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
           </div>
           <div id="bookkeeping-income"><AccountingTable title="Income" columns={[{ key: "date", label: "Date" }, { key: "source", label: "Payer / Company" }, { key: "amount", label: "Amount" }, { key: "gst", label: "GST" }, { key: "status", label: "Status" }]} rows={incomeTableRows(accounting)} /></div>
           <div id="bookkeeping-expenses"><AccountingTable title="Expenses by Category" columns={[{ key: "date", label: "Date" }, { key: "paidTo", label: "Supplier" }, { key: "what", label: "Description" }, { key: "type", label: "Expense Category" }, { key: "amount", label: "Amount" }, { key: "gst", label: "GST" }]} rows={expenseTableRows(accounting)} /></div>
-          <div className="rounded-md border border-slate-200 p-4">
-            <h3 className="text-lg font-black text-exodus-navy">Payroll expenses — linked from saved payroll</h3>
+          <details id="bookkeeping-payroll-expenses" className="rounded-md border border-slate-200 p-4">
+            <summary className="cursor-pointer text-lg font-black text-exodus-navy">Payroll Expenses — View payments and PDF paystubs</summary>
+
             <p className="mt-1 text-sm text-exodus-slate">Read-only Salaries & Wages entries from this client's existing payroll. Do not enter these payments again as manual expenses. These are not yet posted journal entries.</p>
             {workersPayments.payments.filter(payment => payment.admin_classification === "T4 Employee").length ? (
               <div className="mt-3 overflow-x-auto"><table className="w-full text-left text-sm">
@@ -236,9 +237,15 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
                 })}</tbody>
               </table></div>
             ) : <p className="mt-3 text-sm text-exodus-slate">No T4 employee payroll payments found for this client and year. Check the Payroll tab and selected year.</p>}
-          </div>
-          <PayrollLedger data={workersPayments} />
-          <AccountingFoundation clientId={client.id} taxYear={taxYear} />
+          </details>
+          <details id="bookkeeping-payroll-ledger" className="rounded-md border border-slate-200 p-4">
+            <summary className="cursor-pointer text-lg font-black text-exodus-navy">Payroll General Ledger &amp; Trial Balance — View entries</summary>
+            <div className="mt-3"><PayrollLedger data={workersPayments} /></div>
+          </details>
+          <details id="bookkeeping-accounts" className="rounded-md border border-slate-200 p-4">
+            <summary className="cursor-pointer text-lg font-black text-exodus-navy">Chart of Accounts · Accounts Receivable · Accounts Payable</summary>
+            <div className="mt-3"><AccountingFoundation clientId={client.id} taxYear={taxYear} /></div>
+          </details>
           <div id="bookkeeping-general-ledger"><GeneralLedgerTable data={accounting} /></div>
           <div id="bookkeeping-trial-balance"><p className="font-bold text-exodus-navy">Trial Balance</p><p className="text-sm text-exodus-slate">Use the Trial Balance export above for the selected client and year.</p></div>
           <div id="bookkeeping-financial-statements"><p className="font-bold text-exodus-navy">Financial Statements</p><AccountingSummary data={accounting} /></div>
