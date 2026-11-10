@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
 import { AccountingTable } from "@/components/portal/accounting-records";
 import { PayrollCalculator } from "@/components/portal/payroll-calculator";
 import { RoeWorksheet } from "@/components/portal/roe-worksheet";
@@ -122,6 +124,36 @@ async function reviewWorkerPaymentAction(formData: FormData) {
   revalidatePath(`/admin/workers-payroll-review?clientId=${clientId}&year=${taxYear}`);
 }
 
+async function manageWorkerAction(formData: FormData) {
+  "use server";
+  await requireRole(["admin"]);
+  const workerId = String(formData.get("workerId") ?? "");
+  const clientId = String(formData.get("clientId") ?? "");
+  const action = String(formData.get("workerAction") ?? "");
+  const year = String(formData.get("taxYear") ?? "2026");
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuid.test(workerId) || !uuid.test(clientId) || !["active", "inactive", "delete"].includes(action)) throw new Error("Invalid employee action.");
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SECRET_KEY;
+  if (!url || !key) throw new Error("Payroll database configuration missing.");
+  const db = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  const { data: worker, error: workerError } = await db.from("workers").select("id").eq("id", workerId).eq("client_id", clientId).maybeSingle();
+  if (workerError || !worker) throw new Error("Employee not found for this client.");
+  if (action === "delete") {
+    if (String(formData.get("confirmDelete") ?? "") !== "DELETE") throw new Error("Type DELETE to confirm permanent deletion.");
+    const { count, error: countError } = await db.from("worker_payments").select("id", { count: "exact", head: true }).eq("worker_id", workerId);
+    if (countError) throw new Error("Unable to verify employee payroll history.");
+    if (count !== 0) throw new Error("This employee has payment records. Permanent deletion is blocked to preserve payroll and tax records. Set the employee to Inactive instead.");
+    const { error } = await db.from("workers").delete().eq("id", workerId).eq("client_id", clientId);
+    if (error) throw new Error("Employee could not be deleted: " + error.message);
+  } else {
+    const { error } = await db.from("workers").update({ status: action }).eq("id", workerId).eq("client_id", clientId);
+    if (error) throw new Error("Employee status could not be updated: " + error.message);
+  }
+  revalidatePath("/admin/workers-payroll-review");
+  redirect("/admin/workers-payroll-review?clientId=" + encodeURIComponent(clientId) + "&year=" + encodeURIComponent(year));
+}
+
 export function WorkerReviewWorkspace({
   data,
   clientId,
@@ -210,6 +242,33 @@ function SelectedWorkerReview({
         <Link href={baseHref} className="focus-ring inline-flex min-h-10 items-center justify-center rounded-md bg-exodus-light px-4 text-sm font-black text-exodus-navy">
           Back to worker list
         </Link>
+      </div>
+
+      <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+        <h3 className="font-bold text-exodus-navy">Employee status and deletion</h3>
+        <p className="mt-1 text-sm">Current status: <strong>{worker.status}</strong>. Inactive employees remain in payroll and T4 history.</p>
+        <div className="mt-3 flex flex-wrap gap-3">
+          {(["active", "inactive"] as const).map(status => (
+            <form key={status} action={manageWorkerAction}>
+              <input type="hidden" name="workerId" value={worker.id} />
+              <input type="hidden" name="clientId" value={clientId} />
+              <input type="hidden" name="taxYear" value={taxYear} />
+              <input type="hidden" name="workerAction" value={status} />
+              <button type="submit" disabled={worker.status.toLowerCase() === status} className="rounded bg-blue-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-40">
+                Set {status === "active" ? "Active" : "Inactive"}
+              </button>
+            </form>
+          ))}
+        </div>
+        <form action={manageWorkerAction} className="mt-4 grid max-w-lg gap-2 border-t pt-3">
+          <input type="hidden" name="workerId" value={worker.id} />
+          <input type="hidden" name="clientId" value={clientId} />
+          <input type="hidden" name="taxYear" value={taxYear} />
+          <input type="hidden" name="workerAction" value="delete" />
+          <p className="text-sm text-red-800">Permanent deletion (not archive) is available only if this employee has no saved payments in any year. Type DELETE to confirm.</p>
+          <input name="confirmDelete" required pattern="DELETE" placeholder="Type DELETE" className="rounded border p-2" />
+          <button type="submit" className="w-fit rounded bg-red-700 px-4 py-2 text-sm font-semibold text-white">Permanently Delete Employee</button>
+        </form>
       </div>
 
       <nav className="flex flex-wrap gap-2" aria-label="Selected worker review tabs">
