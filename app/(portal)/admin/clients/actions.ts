@@ -108,7 +108,7 @@ export async function deleteArchivedClient(form: FormData) {
   });
   if (error) {
     console.error("Archived client deletion failed:", error.message);
-    redirect("/admin/clients?view=archived&error=delete_failed");
+    redirect(`/admin/clients?view=archived&error=${encodeURIComponent(error.message.slice(0, 300))}`);
   }
   revalidatePath("/admin/clients");
   redirect("/admin/clients?view=archived&saved=deleted");
