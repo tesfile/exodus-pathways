@@ -176,14 +176,37 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
 
       {activeTab === "bookkeeping" ? (
         <section className="grid gap-4 rounded-md border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-xl font-black text-exodus-navy">Bookkeeping</h2>
-          <p className="text-sm text-exodus-slate">All accounting records below belong to this client and selected tax year.</p>
-          <nav className="flex flex-wrap gap-2" aria-label="Bookkeeping sections">
-            {["Income", "Expenses", "Accounts Receivable", "Accounts Payable", "Chart of Accounts", "General Ledger", "Trial Balance", "Financial Statements", "GST"].map((label) => (
-              <a key={label} href={`#bookkeeping-${label === "Chart of Accounts" || label === "Accounts Receivable" || label === "Accounts Payable" ? "accounts" : label.toLowerCase().replaceAll(" ", "-")}`} className="rounded-md bg-exodus-light px-3 py-2 text-sm font-bold text-exodus-navy">{label}</a>
+          <div className="rounded-xl bg-gradient-to-r from-slate-900 via-blue-950 to-slate-800 p-6 text-white shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-200">KAL Accounting · {taxYear}</p>
+            <h2 className="mt-2 text-2xl font-black">Bookkeeping workspace</h2>
+            <p className="mt-2 max-w-2xl text-sm text-slate-200">One client. Organized transactions, payroll, accounts and reports. Open only the section you need.</p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <a href="#bookkeeping-entry" className="rounded-lg bg-white px-4 py-2.5 text-sm font-bold text-slate-900">+ New transaction</a>
+              <a href={`/admin/clients/${client.id}?year=${taxYear}&tab=documents`} className="rounded-lg border border-white/40 px-4 py-2.5 text-sm font-bold text-white">Upload receipt or invoice</a>
+              <a href={`/admin/clients/${client.id}?year=${taxYear}&tab=workers-payments`} className="rounded-lg border border-white/40 px-4 py-2.5 text-sm font-bold text-white">Manage payroll</a>
+            </div>
+          </div>
+          <nav className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-label="Bookkeeping sections">
+            {[
+              { label: "Income & Sales", id: "bookkeeping-income", detail: "Income entries and invoices", icon: "↗" },
+              { label: "Expenses & Purchases", id: "bookkeeping-expenses", detail: "Suppliers, bills and receipts", icon: "↙" },
+              { label: "Chart of Accounts", id: "bookkeeping-accounts", detail: "Assets, liabilities and equity", icon: "▦" },
+              { label: "Payroll", id: "bookkeeping-payroll-expenses", detail: "Wages, paystubs and payroll ledger", icon: "◷" },
+              { label: "General Ledger", id: "bookkeeping-general-ledger", detail: "Transactions and journal entries", icon: "≡" },
+              { label: "Trial Balance", id: "bookkeeping-trial-balance", detail: "Review debits and credits", icon: "⚖" },
+              { label: "Financial Statements", id: "bookkeeping-financial-statements", detail: "Income and balance reports", icon: "▥" },
+              { label: "GST", id: "bookkeeping-gst", detail: "Tax collected and paid", icon: "%" }
+            ].map(item => (
+              <a key={item.id} href={`#${item.id}`} className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 transition hover:border-blue-400 hover:bg-blue-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600">
+                <span aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white text-xl font-black text-blue-900 shadow-sm">{item.icon}</span>
+                <span className="min-w-0"><span className="block font-black text-slate-900">{item.label}</span><span className="block text-xs text-slate-600">{item.detail}</span></span>
+                <span aria-hidden="true" className="ml-auto text-blue-800">›</span>
+              </a>
             ))}
           </nav>
-          <p className="text-sm text-exodus-slate">Enter transactions below, or <a className="font-bold text-exodus-blue underline" href={`?year=${taxYear}&tab=documents`}>upload a receipt or invoice</a>. A receipt can create a categorized expense draft after you enter its details.</p>
+          <details id="bookkeeping-entry" className="rounded-xl border border-blue-200 bg-blue-50/50 p-4">
+            <summary className="cursor-pointer text-lg font-black text-exodus-navy">+ Enter income or expense · Draft entry</summary>
+            <p className="my-3 text-sm text-slate-700">Save transactions for review. Drafts do not automatically post to the ledger or update A/R and A/P yet. For an unpaid invoice or supplier bill, use the Accounts section below.</p>
           <div className="grid gap-4 lg:grid-cols-2">
             {(["income", "expense"] as const).map(kind => (
               <form id={`bookkeeping-add-${kind}`} key={kind} action={saveClientBookkeepingEntry} className="grid gap-3 rounded-md border border-slate-200 p-4">
@@ -199,22 +222,9 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
               </form>
             ))}
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-md border border-slate-200 p-4">
-              <h3 className="font-black text-exodus-navy">Expense Categories</h3>
-              <p className="mt-2 text-sm text-exodus-slate">Choose a category when entering an expense.</p>
-              <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                {["Advertising", "Automobile & Fuel", "Bank Charges", "Contract Labour", "Insurance", "Meals", "Office Expenses", "Professional Fees", "Rent", "Repairs", "Salaries & Wages", "Supplies", "Telephone & Internet", "Travel", "Utilities", "Other"].map(category => <div key={category} className="rounded bg-exodus-light p-2">{category}</div>)}
-              </div>
-            </div>
-            <div className="rounded-md border border-slate-200 p-4">
-              <h3 className="font-black text-exodus-navy">Income Information</h3>
-              <p className="mt-2 text-sm text-exodus-slate">Each income entry should identify the payer, company address, invoice number, service description, amount, GST, date and payment status.</p>
-              <p className="mt-3 text-sm text-exodus-slate">Use the forms above to save draft transactions. Review and approve entries before using them in finalized accounts.</p>
-            </div>
-          </div>
-          <div id="bookkeeping-income"><AccountingTable title="Income" columns={[{ key: "date", label: "Date" }, { key: "source", label: "Payer / Company" }, { key: "amount", label: "Amount" }, { key: "gst", label: "GST" }, { key: "status", label: "Status" }]} rows={incomeTableRows(accounting)} /></div>
-          <div id="bookkeeping-expenses"><AccountingTable title="Expenses by Category" columns={[{ key: "date", label: "Date" }, { key: "paidTo", label: "Supplier" }, { key: "what", label: "Description" }, { key: "type", label: "Expense Category" }, { key: "amount", label: "Amount" }, { key: "gst", label: "GST" }]} rows={expenseTableRows(accounting)} /></div>
+          </details>
+          <details id="bookkeeping-income" className="rounded-xl border border-slate-200 p-4"><summary className="cursor-pointer text-lg font-black text-exodus-navy">Income &amp; Sales — View entries</summary><div className="mt-3"><AccountingTable title="Income" columns={[{ key: "date", label: "Date" }, { key: "source", label: "Payer / Company" }, { key: "amount", label: "Amount" }, { key: "gst", label: "GST" }, { key: "status", label: "Status" }]} rows={incomeTableRows(accounting)} /></div></details>
+          <details id="bookkeeping-expenses" className="rounded-xl border border-slate-200 p-4"><summary className="cursor-pointer text-lg font-black text-exodus-navy">Expenses &amp; Purchases — View entries</summary><div className="mt-3"><AccountingTable title="Expenses by Category" columns={[{ key: "date", label: "Date" }, { key: "paidTo", label: "Supplier" }, { key: "what", label: "Description" }, { key: "type", label: "Expense Category" }, { key: "amount", label: "Amount" }, { key: "gst", label: "GST" }]} rows={expenseTableRows(accounting)} /></div></details>
           <details id="bookkeeping-payroll-expenses" className="rounded-md border border-slate-200 p-4">
             <summary className="cursor-pointer text-lg font-black text-exodus-navy">Payroll Expenses — View payments and PDF paystubs</summary>
 
@@ -246,10 +256,10 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
             <summary className="cursor-pointer text-lg font-black text-exodus-navy">Chart of Accounts · Accounts Receivable · Accounts Payable</summary>
             <div className="mt-3"><AccountingFoundation clientId={client.id} taxYear={taxYear} /></div>
           </details>
-          <div id="bookkeeping-general-ledger"><GeneralLedgerTable data={accounting} /></div>
-          <div id="bookkeeping-trial-balance"><p className="font-bold text-exodus-navy">Trial Balance</p><p className="text-sm text-exodus-slate">Use the Trial Balance export above for the selected client and year.</p></div>
-          <div id="bookkeeping-financial-statements"><p className="font-bold text-exodus-navy">Financial Statements</p><AccountingSummary data={accounting} /></div>
-          <div id="bookkeeping-gst"><GstSummaryTable data={accounting} /></div>
+          <details id="bookkeeping-general-ledger" className="rounded-xl border border-slate-200 p-4"><summary className="cursor-pointer text-lg font-black text-exodus-navy">General Ledger — View entries</summary><div className="mt-3"><GeneralLedgerTable data={accounting} /></div></details>
+          <details id="bookkeeping-trial-balance" className="rounded-xl border border-slate-200 p-4"><summary className="cursor-pointer text-lg font-black text-exodus-navy">Trial Balance</summary><p className="mt-3 text-sm text-exodus-slate">Payroll trial balance is available under Payroll General Ledger. The full posted company trial balance requires journal posting setup.</p></details>
+          <details id="bookkeeping-financial-statements" className="rounded-xl border border-slate-200 p-4"><summary className="cursor-pointer text-lg font-black text-exodus-navy">Financial Statements</summary><div className="mt-3"><AccountingSummary data={accounting} /></div></details>
+          <details id="bookkeeping-gst" className="rounded-xl border border-slate-200 p-4"><summary className="cursor-pointer text-lg font-black text-exodus-navy">GST Summary</summary><div className="mt-3"><GstSummaryTable data={accounting} /></div></details>
         </section>
       ) : null}
 
