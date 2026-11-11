@@ -1,5 +1,6 @@
 import { AccountingFoundation } from "./accounting-foundation";
 import { PayrollLedger } from "./payroll-ledger";
+import { GstAmountFields } from "./gst-amount-fields";
 import { saveClientBookkeepingEntry, uploadAdminClientDocument } from "./bookkeeping-actions";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
@@ -216,7 +217,7 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
                 <label className="grid gap-1 text-sm">{kind === "income" ? "Payer / company name" : "Supplier / payee"}<input className="field" name="party" required/></label>
                 {kind === "expense" ? <label className="grid gap-1 text-sm">Expense category<select className="field" name="category">{["Advertising","Automobile & Fuel","Bank Charges","Contract Labour","Insurance","Meals","Office Expenses","Professional Fees","Rent","Repairs","Salaries & Wages","Supplies","Telephone & Internet","Travel","Utilities","Other"].map(item => <option key={item} value={item}>{item}</option>)}</select></label> : <><label className="grid gap-1 text-sm">Payer address<input className="field" name="address"/></label><label className="grid gap-1 text-sm">Invoice number<input className="field" name="invoice"/></label></>}
                 <label className="grid gap-1 text-sm">Description<input className="field" name="description"/></label>
-                <div className="grid grid-cols-2 gap-2"><label className="grid gap-1 text-sm">Amount ($)<input className="field" name="amount" type="number" step="0.01" min="0.01" required/></label><label className="grid gap-1 text-sm">GST ($)<input className="field" name="gst" type="number" step="0.01" min="0" defaultValue="0"/></label></div>
+                <GstAmountFields />
                 <label className="grid gap-1 text-sm">Notes<input className="field" name="notes"/></label>
                 <button type="submit" className="rounded-md bg-exodus-navy px-4 py-3 text-sm font-bold text-white">Save {kind} as draft</button>
               </form>
