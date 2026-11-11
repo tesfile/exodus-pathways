@@ -40,7 +40,7 @@ export async function saveClientBookkeepingEntry(formData: FormData) {
   if (possibleDuplicates?.length) {
     redirect(`/admin/clients/${clientId}?tab=bookkeeping&year=${year}&bookkeepingNotice=duplicate#bookkeeping-entry`);
   }
-  const { error } = await db.from(kind === "expense" ? "expense_entries" : "income_entries").insert(payload);
+  // Keep each table insert in its own branch so generated Supabase types match the payload.\n  const { error } = kind === "expense"\n    ? await db.from("expense_entries").insert({ client_id: clientId, tax_year: year, expense_date: date, vendor: party, category, description: String(formData.get("description") || ""), amount, gst_hst_amount: gst, status: "draft", notes })\n    : await db.from("income_entries").insert({ client_id: clientId, tax_year: year, entry_date: date, source: party, invoice_number: String(formData.get("invoice") || ""), amount, gst_hst_amount: gst, status: "draft", notes });
   if (error) throw new Error("Unable to save bookkeeping entry: " + error.message);
   revalidatePath(`/admin/clients/${clientId}`);
   redirect(`/admin/clients/${clientId}?tab=bookkeeping&year=${year}&bookkeepingNotice=saved#bookkeeping-entry`);
