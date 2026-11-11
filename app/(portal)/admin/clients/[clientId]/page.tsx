@@ -206,6 +206,8 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
               </a>
             ))}
           </nav>
+          {firstParam(query?.bookkeepingNotice) === "saved" ? <p role="status" className="rounded-lg border border-green-200 bg-green-50 p-3 font-bold text-green-900">Entry saved successfully as a draft. You can view it under Income or Expenses.</p> : null}
+          {firstParam(query?.bookkeepingNotice) === "duplicate" ? <p role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-3 font-bold text-amber-950">Possible duplicate: an entry with the same client, date, supplier or payer, amount and category/invoice number already exists. Nothing new was saved.</p> : null}
           <details id="bookkeeping-entry" className="rounded-xl border border-blue-200 bg-blue-50/50 p-4">
             <summary className="cursor-pointer text-lg font-black text-exodus-navy">+ Enter income or expense · Draft entry</summary>
             <p className="my-3 text-sm text-slate-700">Save transactions for review. Drafts do not automatically post to the ledger or update A/R and A/P yet. For an unpaid invoice or supplier bill, use the Accounts section below.</p>
