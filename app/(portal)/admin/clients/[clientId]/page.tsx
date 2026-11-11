@@ -208,12 +208,12 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
               </a>
             ))}
           </nav>
-          {firstParam(query?.bookkeepingNotice) === "saved" ? <p role="status" className="rounded-lg border border-green-200 bg-green-50 p-3 font-bold text-green-900">Entry saved successfully as a draft. You can view it under Income or Expenses.</p> : null}
+          {firstParam(query?.bookkeepingNotice) === "saved" ? <p role="status" className="rounded-lg border border-green-200 bg-green-50 p-3 font-bold text-green-900">Entry saved for review. To include it in official accounting reports, use Review &amp; Post Transactions below.</p> : null}
           {firstParam(query?.bookkeepingNotice) === "posted" ? <p role="status" className="rounded-lg border border-green-200 bg-green-50 p-3 font-bold text-green-900">Transaction posted to the accounting journal. Review the posted reports below.</p> : null}
           {firstParam(query?.bookkeepingNotice) === "duplicate" ? <p role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-3 font-bold text-amber-950">Possible duplicate: an entry with the same client, date, supplier or payer, amount and category/invoice number already exists. Nothing new was saved.</p> : null}
           <details id="bookkeeping-entry" className="rounded-xl border border-blue-200 bg-blue-50/50 p-4">
-            <summary className="cursor-pointer text-lg font-black text-exodus-navy">+ Enter income or expense · Draft entry</summary>
-            <p className="my-3 text-sm text-slate-700">Save transactions for review. Drafts do not automatically post to the ledger or update A/R and A/P yet. For an unpaid invoice or supplier bill, use the Accounts section below.</p>
+            <summary className="cursor-pointer text-lg font-black text-exodus-navy">+ Enter income or expense</summary>
+            <p className="my-3 text-sm text-slate-700">Enter the transaction, then complete the payment status and posting step below. Only posted entries appear in official accounting reports.</p>
           <div className="grid gap-4 lg:grid-cols-2">
             {(["income", "expense"] as const).map(kind => (
               <form id={`bookkeeping-add-${kind}`} key={kind} action={saveClientBookkeepingEntry} className="grid gap-3 rounded-md border border-slate-200 p-4">
@@ -225,7 +225,7 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
                 <label className="grid gap-1 text-sm">Description<input className="field" name="description"/></label>
                 <GstAmountFields />
                 <label className="grid gap-1 text-sm">Notes<input className="field" name="notes"/></label>
-                <button type="submit" className="rounded-md bg-exodus-navy px-4 py-3 text-sm font-bold text-white">Save {kind} as draft</button>
+                <button type="submit" className="rounded-md bg-exodus-navy px-4 py-3 text-sm font-bold text-white">Save {kind} and continue to posting</button>
               </form>
             ))}
           </div>
@@ -298,9 +298,9 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
           </div>
           <label className="grid gap-1 text-sm font-bold">Camera scan or upload PDF, Excel, CSV, image or Word<input className="field" name="file" type="file" accept="image/*,.pdf,.jpg,.jpeg,.png,.webp,.heic,.tif,.tiff,.doc,.docx,.xls,.xlsx,.csv" required/></label>
           <details className="rounded-md border border-slate-200 p-3">
-            <summary className="cursor-pointer font-bold text-exodus-navy">Receipt → Create categorized expense draft</summary>
-            <p className="mt-2 text-xs text-exodus-slate">Select Expense receipt above. Enter the receipt details to save a draft under the chosen expense category. Check before submitting; no automatic OCR is used.</p>
-            <label className="mt-3 flex items-center gap-2 text-sm"><input type="checkbox" name="createExpense" value="yes"/> Also create an expense draft</label>
+            <summary className="cursor-pointer font-bold text-exodus-navy">Receipt → Create categorized expense</summary>
+            <p className="mt-2 text-xs text-exodus-slate">Select Expense receipt above. Enter the receipt details to save an entry under the chosen expense category. Check before submitting; no automatic OCR is used.</p>
+            <label className="mt-3 flex items-center gap-2 text-sm"><input type="checkbox" name="createExpense" value="yes"/> Also create an expense entry</label>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <label className="grid gap-1 text-sm">Supplier<input name="vendor" className="field"/></label>
               <label className="grid gap-1 text-sm">Expense date<input name="expenseDate" type="date" className="field"/></label>
