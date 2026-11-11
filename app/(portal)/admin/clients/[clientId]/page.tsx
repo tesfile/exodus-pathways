@@ -2,6 +2,7 @@ import { AccountingFoundation } from "./accounting-foundation";
 import { PayrollLedger } from "./payroll-ledger";
 import { UnifiedAccountingPreview } from "./unified-accounting-preview";
 import { PostingWorkspace } from "./posting-workspace";
+import { PostedAccountingReports } from "./posted-accounting-reports";
 import { GstAmountFields } from "./gst-amount-fields";
 import { saveClientBookkeepingEntry, uploadAdminClientDocument } from "./bookkeeping-actions";
 import Link from "next/link";
@@ -263,6 +264,7 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
             <div className="mt-3"><AccountingFoundation clientId={client.id} taxYear={taxYear} /></div>
           </details>
           <PostingWorkspace accounting={accounting} clientId={client.id} taxYear={taxYear} />
+          <PostedAccountingReports clientId={client.id} taxYear={taxYear} />
           <UnifiedAccountingPreview accounting={accounting} payroll={workersPayments} />
           <details id="bookkeeping-gst" className="rounded-xl border border-slate-200 p-4"><summary className="cursor-pointer text-lg font-black text-exodus-navy">GST Summary</summary><div className="mt-3"><GstSummaryTable data={accounting} /></div></details>
         </section>
