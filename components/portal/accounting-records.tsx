@@ -104,13 +104,13 @@ function YearSelect({ selectedYear }: { selectedYear: number }) {
   );
 }
 
-export function AccountingSummary({ data }: { data: AccountingData }) {
+export function AccountingSummary({ data, postedAssets }: { data: AccountingData; postedAssets?: number | null }) {
   const cards = [
     { label: "Income", value: formatMoney(data.totals.income) },
     { label: "Expenses", value: formatMoney(data.totals.expenses) },
     { label: "GST Net", value: formatMoney(data.totals.gstNet) },
     { label: "Payroll", value: formatMoney(data.totals.payrollGross) },
-    { label: "Assets", value: formatMoney(data.totals.assets) },
+    { label: postedAssets === undefined ? "Assets (register)" : "Posted Assets", value: postedAssets === undefined ? formatMoney(data.totals.assets) : postedAssets === null ? "Unavailable" : formatMoney(postedAssets) },
     { label: "Year Status", value: data.accountingYear?.status ?? "No year record" }
   ];
 
