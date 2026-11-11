@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient, requireRole } from "@/lib/supabase/server";
 
-const categories = ["Advertising","Automobile & Fuel","Bank Charges","Contract Labour","Insurance","Meals","Office Expenses","Professional Fees","Rent","Repairs","Salaries & Wages","Supplies","Telephone & Internet","Travel","Utilities","Other"];
+const categories = ["Advertising","Vehicle Purchase","Equipment Purchase","Furniture Purchase","Vehicle Fuel","Vehicle Repairs & Maintenance","Automobile & Fuel","Bank Charges","Contract Labour","Insurance","Meals","Office Expenses","Office Supplies","Professional Fees","Rent","Repairs","Salaries & Wages","Supplies","Telephone & Internet","Travel","Utilities","Other"];
 
 export async function saveClientBookkeepingEntry(formData: FormData) {
   await requireRole(["admin"]);
