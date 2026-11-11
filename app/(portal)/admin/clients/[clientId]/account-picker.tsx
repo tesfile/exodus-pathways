@@ -22,7 +22,7 @@ export function AccountPicker() {
       <select className="field" name="type" value={type} onChange={e=>{const next=e.target.value as AccountType;setType(next);setChoice(catalog[next][0][0]);}}>
         <option value="asset">Assets — what the business owns</option>
         <option value="liability">Liabilities — what the business owes</option>
-        <option value="equity">Equity — owners' interest</option>
+        <option value="equity">Equity — owners&apos; interest</option>
         <option value="income">Income — money earned</option>
         <option value="expense">Expenses — business costs</option>
       </select>
