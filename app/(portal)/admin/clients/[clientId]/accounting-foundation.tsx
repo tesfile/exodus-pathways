@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { addAccount, addOpenItem } from "./accounting-actions";
+import { AccountPicker } from "./account-picker";
 
 export async function AccountingFoundation({clientId,taxYear}:{clientId:string;taxYear:number}) {
  const db=await createServerSupabaseClient();
@@ -14,12 +15,11 @@ export async function AccountingFoundation({clientId,taxYear}:{clientId:string;t
  return <div className="grid gap-5">
    <section id="bookkeeping-chart-of-accounts" className="rounded-md border border-slate-200 p-4">
      <h3 className="text-lg font-black text-exodus-navy">Chart of Accounts</h3>
-     <form action={addAccount} className="mt-3 grid gap-3 sm:grid-cols-4">
+     <p className="mt-2 text-sm text-slate-600">Choose a category, then select an account. The code and account name fill automatically. You can also create a custom account.</p>
+     <form action={addAccount} className="mt-3 grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
        <input type="hidden" name="clientId" value={clientId}/>
-       <label className="grid gap-1 text-sm">Account code<input className="field" name="code" placeholder="1000" required/></label>
-       <label className="grid gap-1 text-sm">Account name<input className="field" name="name" placeholder="Bank" required/></label>
-       <label className="grid gap-1 text-sm">Type<select name="type" className="field">{["asset","liability","equity","income","expense"].map(x=><option key={x} value={x}>{x}</option>)}</select></label>
-       <button className="self-end rounded-md bg-exodus-navy px-3 py-3 text-sm font-bold text-white">Add Account</button>
+       <AccountPicker/>
+       <button className="rounded-lg bg-exodus-navy px-4 py-3 text-sm font-bold text-white">Add selected account</button>
      </form>
      <div className="mt-3 grid gap-1 text-sm">{accounts.length?accounts.map(a=><div key={a.id} className="flex justify-between border-b py-2"><span>{a.code} — {a.name}</span><span className="capitalize text-slate-600">{a.type}</span></div>):<p>No accounts yet. Start with Bank, Accounts Receivable, Accounts Payable, Sales, Expenses and Owner Equity.</p>}</div>
    </section>
