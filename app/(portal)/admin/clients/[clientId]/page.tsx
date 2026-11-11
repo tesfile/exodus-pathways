@@ -1,3 +1,4 @@
+import { createClient } from "@supabase/supabase-js";
 import { AccountingFoundation } from "./accounting-foundation";
 import { PayrollLedger } from "./payroll-ledger";
 import { UnifiedAccountingPreview } from "./unified-accounting-preview";
@@ -139,6 +140,7 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
   ]);
 
   const company = accounting.companies[0];
+  const postedAssets = activeTab === "profile" ? await getPostedAssetBalance(client.id, taxYear) : undefined;
 
   return (
     <div className="grid gap-6">
@@ -290,7 +292,7 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
       {activeTab === "profile" ? (
         <>
           <YearEndPackagePanel data={accounting} adminHref={`/admin/year-end-package?clientId=${client.id}&year=${taxYear}`} />
-          <AccountingSummary data={accounting} />
+          <AccountingSummary data={accounting} postedAssets={postedAssets} />
         </>
       ) : null}
 
@@ -542,6 +544,33 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
       </section>
     </div>
   );
+}
+
+// Read-only balance from the same posted journals and account types as the official trial balance.
+// A missing configuration or query failure must not be displayed as a misleading $0.
+async function getPostedAssetBalance(clientId: string, taxYear: number): Promise<number | null> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const secret = process.env.SUPABASE_SECRET_KEY;
+  if (!url || !secret) return null;
+  const db = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
+  const { data: journals, error: journalError } = await db.from("kal_journals")
+    .select("id").eq("client_id", clientId).eq("status", "posted")
+    .gte("entry_date", `${taxYear}-01-01`).lt("entry_date", `${taxYear + 1}-01-01`);
+  if (journalError) return null;
+  if (!journals?.length) return 0;
+  const { data: accounts, error: accountError } = await db.from("kal_accounts")
+    .select("id,type").eq("client_id", clientId).eq("type", "asset");
+  if (accountError) return null;
+  const assetIds = new Set((accounts ?? []).map(account => account.id));
+  if (!assetIds.size) return 0;
+  const { data: lines, error: lineError } = await db.from("kal_journal_lines")
+    .select("account_id,debit,credit").eq("client_id", clientId)
+    .in("journal_id", journals.map(journal => journal.id));
+  if (lineError) return null;
+  const balanceInCents = (lines ?? []).reduce((sum, line) => assetIds.has(line.account_id)
+    ? sum + Math.round(Number(line.debit || 0) * 100) - Math.round(Number(line.credit || 0) * 100)
+    : sum, 0);
+  return balanceInCents / 100;
 }
 
 function parseClientDetailTab(value: string | string[] | undefined): ClientDetailTab {
