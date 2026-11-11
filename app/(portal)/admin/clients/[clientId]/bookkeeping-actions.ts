@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createServerSupabaseClient, requireRole } from "@/lib/supabase/server";
 
 const categories = ["Advertising","Automobile & Fuel","Bank Charges","Contract Labour","Insurance","Meals","Office Expenses","Professional Fees","Rent","Repairs","Salaries & Wages","Supplies","Telephone & Internet","Travel","Utilities","Other"];
@@ -25,9 +26,24 @@ export async function saveClientBookkeepingEntry(formData: FormData) {
   const payload = kind === "expense"
     ? { client_id: clientId, tax_year: year, expense_date: date, vendor: party, category, description: String(formData.get("description") || ""), amount, gst_hst_amount: gst, status: "draft", notes }
     : { client_id: clientId, tax_year: year, entry_date: date, source: party, invoice_number: String(formData.get("invoice") || ""), amount, gst_hst_amount: gst, status: "draft", notes };
+  // Compare against existing records for this client and tax year before inserting.
+  // Do not use vendor and amount alone: recurring bills can legitimately match.
+  const table = kind === "expense" ? "expense_entries" : "income_entries";
+  const base = db.from(table).select("id").eq("client_id", clientId).eq("tax_year", year)
+    .eq(kind === "expense" ? "expense_date" : "entry_date", date)
+    .eq(kind === "expense" ? "vendor" : "source", party)
+    .eq("amount", amount).eq("gst_hst_amount", gst);
+  const { data: possibleDuplicates, error: duplicateError } = kind === "expense"
+    ? await base.eq("category", category).limit(1)
+    : await base.eq("invoice_number", String(formData.get("invoice") || "")).limit(1);
+  if (duplicateError) throw new Error("Could not check for duplicate entries: " + duplicateError.message);
+  if (possibleDuplicates?.length) {
+    redirect(`/admin/clients/${clientId}?tab=bookkeeping&year=${year}&bookkeepingNotice=duplicate#bookkeeping-entry`);
+  }
   const { error } = await db.from(kind === "expense" ? "expense_entries" : "income_entries").insert(payload);
   if (error) throw new Error("Unable to save bookkeeping entry: " + error.message);
   revalidatePath(`/admin/clients/${clientId}`);
+  redirect(`/admin/clients/${clientId}?tab=bookkeeping&year=${year}&bookkeepingNotice=saved#bookkeeping-entry`);
 }
 
 export async function uploadAdminClientDocument(formData: FormData) {
