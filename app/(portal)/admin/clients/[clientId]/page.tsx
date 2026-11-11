@@ -263,9 +263,9 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
             <summary className="cursor-pointer text-lg font-black text-exodus-navy">Chart of Accounts · Accounts Receivable · Accounts Payable</summary>
             <div className="mt-3"><AccountingFoundation clientId={client.id} taxYear={taxYear} /></div>
           </details>
-          <PostingWorkspace accounting={accounting} clientId={client.id} taxYear={taxYear} />
+          <div id="bookkeeping-posting"><PostingWorkspace accounting={accounting} clientId={client.id} taxYear={taxYear} /></div>
           <PostedAccountingReports clientId={client.id} taxYear={taxYear} />
-          <UnifiedAccountingPreview accounting={accounting} payroll={workersPayments} />
+          <details className="rounded-xl border border-amber-200 p-4"><summary className="cursor-pointer font-bold text-amber-950">Unposted transaction preview — for review only</summary><UnifiedAccountingPreview accounting={accounting} payroll={workersPayments} /></details>
           <details id="bookkeeping-gst" className="rounded-xl border border-slate-200 p-4"><summary className="cursor-pointer text-lg font-black text-exodus-navy">GST Summary</summary><div className="mt-3"><GstSummaryTable data={accounting} /></div></details>
         </section>
       ) : null}
