@@ -1,6 +1,7 @@
 import { AccountingFoundation } from "./accounting-foundation";
 import { PayrollLedger } from "./payroll-ledger";
 import { UnifiedAccountingPreview } from "./unified-accounting-preview";
+import { PostingWorkspace } from "./posting-workspace";
 import { GstAmountFields } from "./gst-amount-fields";
 import { saveClientBookkeepingEntry, uploadAdminClientDocument } from "./bookkeeping-actions";
 import Link from "next/link";
@@ -207,6 +208,7 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
             ))}
           </nav>
           {firstParam(query?.bookkeepingNotice) === "saved" ? <p role="status" className="rounded-lg border border-green-200 bg-green-50 p-3 font-bold text-green-900">Entry saved successfully as a draft. You can view it under Income or Expenses.</p> : null}
+          {firstParam(query?.bookkeepingNotice) === "posted" ? <p role="status" className="rounded-lg border border-green-200 bg-green-50 p-3 font-bold text-green-900">Transaction posted to the accounting journal. Review the posted reports below.</p> : null}
           {firstParam(query?.bookkeepingNotice) === "duplicate" ? <p role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-3 font-bold text-amber-950">Possible duplicate: an entry with the same client, date, supplier or payer, amount and category/invoice number already exists. Nothing new was saved.</p> : null}
           <details id="bookkeeping-entry" className="rounded-xl border border-blue-200 bg-blue-50/50 p-4">
             <summary className="cursor-pointer text-lg font-black text-exodus-navy">+ Enter income or expense · Draft entry</summary>
@@ -260,6 +262,7 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
             <summary className="cursor-pointer text-lg font-black text-exodus-navy">Chart of Accounts · Accounts Receivable · Accounts Payable</summary>
             <div className="mt-3"><AccountingFoundation clientId={client.id} taxYear={taxYear} /></div>
           </details>
+          <PostingWorkspace accounting={accounting} clientId={client.id} taxYear={taxYear} />
           <UnifiedAccountingPreview accounting={accounting} payroll={workersPayments} />
           <details id="bookkeeping-gst" className="rounded-xl border border-slate-200 p-4"><summary className="cursor-pointer text-lg font-black text-exodus-navy">GST Summary</summary><div className="mt-3"><GstSummaryTable data={accounting} /></div></details>
         </section>
