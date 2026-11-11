@@ -64,7 +64,7 @@ const clientDetailTabs = [
   { key: "reports", label: "Reports" }
 ] as const;
 
-type ClientDetailTab = (typeof clientDetailTabs)[number]["key"];
+type ClientDetailTab = (typeof clientDetailTabs)[number]["key"] | "income" | "expenses" | "gst";
 
 async function reviewDocumentAction(formData: FormData) {
   "use server";
