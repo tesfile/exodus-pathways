@@ -1,5 +1,6 @@
 import { AccountingFoundation } from "./accounting-foundation";
 import { PayrollLedger } from "./payroll-ledger";
+import { UnifiedAccountingPreview } from "./unified-accounting-preview";
 import { GstAmountFields } from "./gst-amount-fields";
 import { saveClientBookkeepingEntry, uploadAdminClientDocument } from "./bookkeeping-actions";
 import Link from "next/link";
@@ -193,9 +194,9 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
               { label: "Expenses & Purchases", id: "bookkeeping-expenses", detail: "Suppliers, bills and receipts", icon: "↙" },
               { label: "Chart of Accounts", id: "bookkeeping-accounts", detail: "Assets, liabilities and equity", icon: "▦" },
               { label: "Payroll", id: "bookkeeping-payroll-expenses", detail: "Wages, paystubs and payroll ledger", icon: "◷" },
-              { label: "General Ledger", id: "bookkeeping-general-ledger", detail: "Transactions and journal entries", icon: "≡" },
-              { label: "Trial Balance", id: "bookkeeping-trial-balance", detail: "Review debits and credits", icon: "⚖" },
-              { label: "Financial Statements", id: "bookkeeping-financial-statements", detail: "Income and balance reports", icon: "▥" },
+              { label: "General Ledger", id: "unified-general-ledger", detail: "Transactions and journal entries", icon: "≡" },
+              { label: "Trial Balance", id: "unified-trial-balance", detail: "Review debits and credits", icon: "⚖" },
+              { label: "Financial Statements", id: "unified-financial-statements", detail: "Income and balance reports", icon: "▥" },
               { label: "GST", id: "bookkeeping-gst", detail: "Tax collected and paid", icon: "%" }
             ].map(item => (
               <a key={item.id} href={`#${item.id}`} className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 transition hover:border-blue-400 hover:bg-blue-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600">
@@ -257,9 +258,7 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
             <summary className="cursor-pointer text-lg font-black text-exodus-navy">Chart of Accounts · Accounts Receivable · Accounts Payable</summary>
             <div className="mt-3"><AccountingFoundation clientId={client.id} taxYear={taxYear} /></div>
           </details>
-          <details id="bookkeeping-general-ledger" className="rounded-xl border border-slate-200 p-4"><summary className="cursor-pointer text-lg font-black text-exodus-navy">General Ledger — View entries</summary><div className="mt-3"><GeneralLedgerTable data={accounting} /></div></details>
-          <details id="bookkeeping-trial-balance" className="rounded-xl border border-slate-200 p-4"><summary className="cursor-pointer text-lg font-black text-exodus-navy">Trial Balance</summary><p className="mt-3 text-sm text-exodus-slate">Payroll trial balance is available under Payroll General Ledger. The full posted company trial balance requires journal posting setup.</p></details>
-          <details id="bookkeeping-financial-statements" className="rounded-xl border border-slate-200 p-4"><summary className="cursor-pointer text-lg font-black text-exodus-navy">Financial Statements</summary><div className="mt-3"><AccountingSummary data={accounting} /></div></details>
+          <UnifiedAccountingPreview accounting={accounting} payroll={workersPayments} />
           <details id="bookkeeping-gst" className="rounded-xl border border-slate-200 p-4"><summary className="cursor-pointer text-lg font-black text-exodus-navy">GST Summary</summary><div className="mt-3"><GstSummaryTable data={accounting} /></div></details>
         </section>
       ) : null}
