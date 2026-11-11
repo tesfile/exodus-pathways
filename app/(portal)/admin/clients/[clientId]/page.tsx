@@ -272,13 +272,18 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
       ) : null}
 
       <section id="profile" className={tabSectionClass(activeTab, "profile", "scroll-mt-24 rounded-md border border-slate-200 bg-white p-5 shadow-sm")}>
-        <h2 className="text-xl font-black text-exodus-navy">Profile</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xl font-black text-exodus-navy">Profile</h2>
+          <Link href={`/admin/clients/${client.id}/edit`} className="rounded-lg bg-exodus-navy px-4 py-2 text-sm font-black text-white">Edit Business Profile</Link>
+        </div>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <ProfileItem label="Client" value={client.companyName} />
           <ProfileItem label="Email" value={client.email} />
           <ProfileItem label="Contact" value={client.name} />
           <ProfileItem label="Company" value={company?.legal_name ?? client.companyName} />
           <ProfileItem label="Business Number" value={company?.business_number ?? "-"} />
+          <ProfileItem label="Corporation Number" value={company?.corporation_number ?? "-"} />
+          <ProfileItem label="Address" value={company?.address ?? "-"} />
         </div>
       </section>
 
