@@ -47,7 +47,7 @@ export function UnifiedAccountingPreview({ accounting, payroll }: { accounting: 
   }
   const expenseGroups = new Map<string, typeof accounting.expenses>();
   for (const item of accounting.expenses) {
-    const signature = [item.expense_date, item.vendor.trim().toLowerCase(), cent(item.amount), cent(item.gst_hst_amount), item.category.trim().toLowerCase()].join("|");
+    const signature = [item.expense_date, (item.vendor || "").trim().toLowerCase(), cent(item.amount), cent(item.gst_hst_amount), (item.category || "").trim().toLowerCase()].join("|");
     expenseGroups.set(signature, [...(expenseGroups.get(signature) || []), item]);
   }
   for (const entries of expenseGroups.values()) {
