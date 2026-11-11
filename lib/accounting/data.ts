@@ -343,8 +343,8 @@ export async function getAccountingData(client: ClientOption, taxYear: number): 
       .maybeSingle()
   ]);
 
-  const income = (incomeResult.data ?? []) as IncomeRow[];
-  const expenses = (expensesResult.data ?? []) as ExpenseRow[];
+  const income = ((incomeResult.data ?? []) as IncomeRow[]).filter(row => row.status !== "void");
+  const expenses = ((expensesResult.data ?? []) as ExpenseRow[]).filter(row => row.status !== "void");
   const payroll = (payrollResult.data ?? []) as PayrollRow[];
   const assets = (assetsResult.data ?? []) as AssetRow[];
   const incomeGst = income.reduce((sum, row) => sum + toNumber(row.gst_hst_amount), 0);
