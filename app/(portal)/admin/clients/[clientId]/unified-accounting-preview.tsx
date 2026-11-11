@@ -11,6 +11,27 @@ const groups: Record<string, string> = {
   "EI Payable — Employee": "Liability", "EI Payable — Employer": "Liability", "Payroll Income Tax Payable": "Liability",
   "Wages Expense": "Expense", "Employer CPP/EI Expense": "Expense"
 };
+// Only explicit capital-asset categories become assets. Ambiguous legacy labels
+// must remain flagged for review, never silently capitalized.
+const classify = (category: string): { account: string; type: string; review: boolean } => {
+  const key = category.trim().toLowerCase();
+  const known: Record<string, [string,string]> = {
+    "vehicle purchase": ["Vehicles — Fixed Asset","Asset"],
+    "vehicles — fixed asset": ["Vehicles — Fixed Asset","Asset"],
+    "equipment purchase": ["Equipment — Fixed Asset","Asset"],
+    "furniture purchase": ["Furniture — Fixed Asset","Asset"],
+    "vehicle fuel": ["Vehicle Fuel Expense","Expense"],
+    "vehicle repairs & maintenance": ["Vehicle Repairs & Maintenance","Expense"],
+    "professional fees": ["Professional Fees","Expense"],
+    "office supplies": ["Office Supplies","Expense"],
+    "rent": ["Rent Expense","Expense"],
+    "insurance": ["Insurance Expense","Expense"],
+    "utilities": ["Utilities Expense","Expense"]
+  };
+  const matched = known[key];
+  if (matched) return { account: matched[0], type: matched[1], review: false };
+  return { account: category || "Uncategorized Expense", type: "Expense / review", review: true };
+};
 export function UnifiedAccountingPreview({ accounting, payroll }: { accounting: AccountingData; payroll: WorkersPaymentsData }) {
   const lines: Line[] = [];
   const warnings: string[] = [];
@@ -24,10 +45,20 @@ export function UnifiedAccountingPreview({ accounting, payroll }: { accounting: 
     add(item.entry_date, item.id.slice(0, 8), "Income · " + item.status, "Sales Revenue", 0, amount);
     add(item.entry_date, item.id.slice(0, 8), "Income · " + item.status, "GST Collected", 0, gst);
   }
+  const expenseGroups = new Map<string, typeof accounting.expenses>();
+  for (const item of accounting.expenses) {
+    const signature = [item.expense_date, item.vendor.trim().toLowerCase(), cent(item.amount), cent(item.gst_hst_amount), item.category.trim().toLowerCase()].join("|");
+    expenseGroups.set(signature, [...(expenseGroups.get(signature) || []), item]);
+  }
+  for (const entries of expenseGroups.values()) {
+    if (entries.length > 1) warnings.push(`Possible duplicate: ${entries.length} matching entries for ${entries[0].vendor} on ${entries[0].expense_date} (${fmt(cent(entries[0].amount))} before GST). Review before posting; none were removed.`);
+  }
   for (const item of accounting.expenses) {
     const amount = cent(item.amount), gst = cent(item.gst_hst_amount);
     if (amount <= 0) continue;
-    add(item.expense_date, item.id.slice(0, 8), "Expense · " + item.status, item.category || "Uncategorized Expense", amount, 0);
+    const classification = classify(item.category || "");
+    if (classification.review) warnings.push(`Review classification for ${item.category || "uncategorized"} (${item.id.slice(0,8)}): verify expense versus capital asset before posting.`);
+    add(item.expense_date, item.id.slice(0, 8), "Purchase · " + item.status, classification.account, amount, 0);
     add(item.expense_date, item.id.slice(0, 8), "Expense · " + item.status, "GST Recoverable (subject to eligibility)", gst, 0);
     add(item.expense_date, item.id.slice(0, 8), "Expense · " + item.status, "Unclassified Expense Clearing", 0, amount + gst);
   }
@@ -54,15 +85,15 @@ export function UnifiedAccountingPreview({ accounting, payroll }: { accounting: 
     const a = accounts.get(line.account) || { debit: 0, credit: 0 };
     a.debit += line.debit; a.credit += line.credit; accounts.set(line.account, a);
   }
-  const trial = [...accounts].map(([account, totals]) => ({ account, type: groups[account] || "Expense / review", debit: Math.max(0, totals.debit - totals.credit), credit: Math.max(0, totals.credit - totals.debit) }));
+  const trial = [...accounts].map(([account, totals]) => ({ account, type: groups[account] || (accounting.expenses.map(x => classify(x.category || "")).find(x => x.account === account)?.type ?? "Expense / review"), debit: Math.max(0, totals.debit - totals.credit), credit: Math.max(0, totals.credit - totals.debit) }));
   const sumDebit = trial.reduce((n, a) => n + a.debit, 0), sumCredit = trial.reduce((n, a) => n + a.credit, 0);
   const revenue = cent(accounting.totals.income);
-  const expenses = accounting.expenses.reduce((n, item) => n + cent(item.amount), 0);
+  const expenses = accounting.expenses.filter(item => classify(item.category || "").type !== "Asset").reduce((n, item) => n + cent(item.amount), 0);
   const wages = payroll.payments.filter(p => p.admin_classification === "T4 Employee" && cent(p.gross_pay) === cent(p.net_pay) + cent(p.cpp) + cent(p.ei) + cent(p.income_tax_deducted)).reduce((n, p) => n + cent(p.gross_pay), 0);
   const employer = payroll.payments.filter(p => p.admin_classification === "T4 Employee" && cent(p.gross_pay) === cent(p.net_pay) + cent(p.cpp) + cent(p.ei) + cent(p.income_tax_deducted)).reduce((n,p) => n + cent(p.payroll_calculator_employer_cpp) + cent(p.payroll_calculator_employer_ei), 0);
   return <div className="grid gap-4">
     <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950"><strong>Combined accounting preview — not posted financial books.</strong> This includes saved income/expense drafts and reconciled T4 payroll. Cash, bank, A/R and A/P are held in unclassified clearing accounts because payment status is not yet captured. Do not use this as a final financial statement or tax return. Payroll is included once, not duplicated as a manual expense.</p>
-    {warnings.map(w => <p key={w} className="text-sm text-red-800">{w}</p>)}
+    {warnings.map((w,i) => <p key={i} className="rounded-md border border-amber-200 bg-amber-50 p-2 text-sm text-amber-950">{w}</p>)}
     <details id="unified-general-ledger" className="rounded-lg border p-3"><summary className="cursor-pointer font-bold text-blue-950">General Ledger — All saved income, expenses and payroll ({lines.length} lines)</summary>
       <div className="mt-3 max-h-[480px] overflow-auto"><table className="w-full min-w-[750px] text-sm"><thead><tr className="border-b text-left"><th className="p-2">Date</th><th>Source</th><th>Reference</th><th>Account</th><th className="text-right">Debit</th><th className="text-right">Credit</th></tr></thead><tbody>{lines.map((line,i) => <tr key={i} className="border-b"><td className="p-2">{line.date}</td><td>{line.source}</td><td>{line.reference}</td><td>{line.account}</td><td className="text-right">{line.debit ? fmt(line.debit) : "—"}</td><td className="text-right">{line.credit ? fmt(line.credit) : "—"}</td></tr>)}</tbody></table></div>
     </details>
