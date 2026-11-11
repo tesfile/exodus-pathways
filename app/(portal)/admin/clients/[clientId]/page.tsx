@@ -3,6 +3,7 @@ import { PayrollLedger } from "./payroll-ledger";
 import { UnifiedAccountingPreview } from "./unified-accounting-preview";
 import { PostingWorkspace } from "./posting-workspace";
 import { PostedAccountingReports } from "./posted-accounting-reports";
+import { PayrollPostingPanel } from "./payroll-posting-panel";
 import { GstAmountFields } from "./gst-amount-fields";
 import { saveClientBookkeepingEntry, uploadAdminClientDocument } from "./bookkeeping-actions";
 import Link from "next/link";
@@ -263,7 +264,7 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
             <summary className="cursor-pointer text-lg font-black text-exodus-navy">Chart of Accounts · Accounts Receivable · Accounts Payable</summary>
             <div className="mt-3"><AccountingFoundation clientId={client.id} taxYear={taxYear} /></div>
           </details>
-          <div id="bookkeeping-posting"><PostingWorkspace accounting={accounting} clientId={client.id} taxYear={taxYear} /></div>
+          <div id="bookkeeping-posting" className="grid gap-3"><PostingWorkspace accounting={accounting} clientId={client.id} taxYear={taxYear} /><PayrollPostingPanel clientId={client.id} taxYear={taxYear} /></div>
           <PostedAccountingReports clientId={client.id} taxYear={taxYear} />
           <details className="rounded-xl border border-amber-200 p-4"><summary className="cursor-pointer font-bold text-amber-950">Unposted transaction preview — for review only</summary><UnifiedAccountingPreview accounting={accounting} payroll={workersPayments} /></details>
           <details id="bookkeeping-gst" className="rounded-xl border border-slate-200 p-4"><summary className="cursor-pointer text-lg font-black text-exodus-navy">GST Summary</summary><div className="mt-3"><GstSummaryTable data={accounting} /></div></details>
