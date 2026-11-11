@@ -22,7 +22,8 @@ export async function postClientBookkeepingEntry(form: FormData) {
   if (clientError || !client) throw new Error("Client not found.");
   const table = kind === "income" ? "income_entries" : "expense_entries";
   const { data: source, error: sourceError } = await db.from(table).select("id,tax_year,status").eq("id",sourceId).eq("client_id",clientId).eq("tax_year",year).maybeSingle();
-  if (sourceError || !source) throw new Error("Entry does not belong to this client and year.");
+  if (sourceError) throw new Error("Could not verify entry: " + sourceError.message);
+  if (!source) throw new Error("Entry does not belong to this client and year.");
   if (source.status !== "draft") throw new Error("This entry has already been posted or is not a draft.");
   const { error } = await db.rpc("kal_post_bookkeeping_entry", {
     p_client:clientId,p_kind:kind,p_source:sourceId,p_settlement:settlement,p_gst_verified:gstVerified
