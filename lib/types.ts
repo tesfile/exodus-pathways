@@ -1,4 +1,4 @@
-export type PortalRole = "admin" | "employee" | "client";
+export type PortalRole = "admin" | "accountant" | "employee" | "client";
 export type ClientType = "individual" | "business";
 
 export type PortalUser = {
