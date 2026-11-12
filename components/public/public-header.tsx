@@ -16,6 +16,7 @@ export function PublicHeader() {
         </Link>
         <nav className="flex flex-wrap items-center gap-2" aria-label="Account navigation">
           <Link href="/login" className="focus-ring rounded-md px-3 py-2 text-sm font-bold text-exodus-navy hover:bg-exodus-light">Client Login</Link>
+          <Link href="/login" className="focus-ring rounded-md px-3 py-2 text-sm font-bold text-exodus-navy hover:bg-exodus-light">Staff Login</Link>
           <Link href="/signup" className="focus-ring rounded-md bg-exodus-navy px-4 py-2.5 text-sm font-black text-white hover:bg-exodus-blue">Register</Link>
         </nav>
       </div>
