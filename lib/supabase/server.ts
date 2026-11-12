@@ -94,6 +94,24 @@ export function dashboardForRole(role: PortalRole) {
   return "/dashboard";
 }
 
+// Central permission rules for accounting staff. Do not grant accountant access to
+// deletion or role-management actions, even when both roles share a workspace.
+export type StaffPermission = "accounting:read" | "accounting:write" | "roles:manage" | "records:delete";
+
+export function hasStaffPermission(role: PortalRole, permission: StaffPermission): boolean {
+  if (role === "admin") return true;
+  if (role !== "accountant") return false;
+  return permission === "accounting:read" || permission === "accounting:write";
+}
+
+export async function requireStaffPermission(permission: StaffPermission) {
+  const user = await getCurrentUserRecord();
+  if (!hasStaffPermission(user.role, permission)) {
+    redirect(dashboardForRole(user.role));
+  }
+  return user;
+}
+
 export async function requireRole(allowedRoles: PortalRole[]) {
   const user = await getCurrentUserRecord();
 
