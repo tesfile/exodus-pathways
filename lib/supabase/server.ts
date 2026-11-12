@@ -83,7 +83,7 @@ export async function getCurrentUserRecord(): Promise<PortalUser> {
 }
 
 export function dashboardForRole(role: PortalRole) {
-  if (role === "admin") {
+  if (role === "admin" || role === "accountant") {
     return "/admin";
   }
 
