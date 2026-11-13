@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, BookOpen, FileText, LogOut, Menu, MessageSquareText, Receipt, Users, Wallet } from "lucide-react";
+import { ArrowLeft, BookOpen, CalendarDays, ClipboardCheck, FileText, Landmark, LogOut, Menu, MessageSquareText, Receipt, Settings, Users, Wallet } from "lucide-react";
 import { useState } from "react";
 import { adminNav, brand, clientNav, employeeNav } from "@/lib/constants";
 import type { PortalUser } from "@/lib/types";
@@ -25,11 +25,22 @@ export function PortalShell({ user, children }: PortalShellProps) {
   const { t } = useT();
   const selectedClientId = user.role === "admin" ? pathname.match(/^\/admin\/clients\/([^/]+)/)?.[1] : undefined;
   const clientBase = selectedClientId ? `/admin/clients/${selectedClientId}` : "";
+  const isPayrollWorkspace = Boolean(selectedClientId && pathname.startsWith(`${clientBase}/payroll`));
+  const payrollWorkspaceNav = isPayrollWorkspace ? [
+    { href: `${clientBase}/payroll`, label: "Overview", icon: Wallet },
+    { href: `${clientBase}/payroll?section=employees`, label: "Employees", icon: Users },
+    { href: `${clientBase}/payroll/run`, label: "Run Payroll", icon: CalendarDays },
+    { href: `${clientBase}/payroll?section=tax`, label: "Payroll Tax", icon: Landmark },
+    { href: `${clientBase}/payroll?section=compliance`, label: "Compliance", icon: ClipboardCheck },
+    { href: `${clientBase}/payroll/settings`, label: "Payroll Settings", icon: Settings },
+    { href: `${clientBase}?tab=bookkeeping`, label: "Back to KAL Accounting", icon: ArrowLeft },
+  ] : [];
+
   const clientWorkspaceNav = selectedClientId ? [
     { href: "/admin/clients", label: "Back to All Clients", icon: ArrowLeft },
     { href: clientBase, label: "Client Overview", icon: Users },
     { href: `${clientBase}?tab=bookkeeping`, label: "Bookkeeping", icon: BookOpen },
-    { href: `${clientBase}?tab=workers-payments`, label: "Payroll", icon: Wallet },
+    { href: `${clientBase}/payroll`, label: "Payroll", icon: Wallet },
     { href: `${clientBase}?tab=documents`, label: "Scan & Documents", icon: FileText },
     { href: `${clientBase}?tab=reports`, label: "Reports", icon: Receipt },
   ] : [];
@@ -48,7 +59,7 @@ export function PortalShell({ user, children }: PortalShellProps) {
   }
 
   const sidebar = (
-    <aside className="flex h-full flex-col bg-exodus-navy text-white">
+    <aside className={cn("flex h-full flex-col text-white", isPayrollWorkspace ? "bg-[#252525]" : "bg-exodus-navy")}>
       <div className="border-b border-white/10 p-5">
         <Link href="/" className="focus-ring flex items-center gap-3 rounded-md">
           <Image src="/images/kal-logo.png" alt="KAL Service Alliance logo" width={48} height={48} className="h-12 w-12 shrink-0 rounded bg-white object-contain p-0.5" priority />
@@ -63,8 +74,19 @@ export function PortalShell({ user, children }: PortalShellProps) {
       </div>
 
       <nav className="grid gap-1 overflow-y-auto p-3" aria-label="Portal navigation">
-        {selectedClientId ? <p className="px-3 pb-2 text-xs font-black uppercase tracking-widest text-amber-200">Selected Client Only</p> : null}
-        {selectedClientId ? clientWorkspaceNav.map((item) => {
+        {isPayrollWorkspace ? <p className="px-3 pb-2 text-xs font-black uppercase tracking-widest text-emerald-400">Company Payroll</p> :
+          selectedClientId ? <p className="px-3 pb-2 text-xs font-black uppercase tracking-widest text-amber-200">Selected Client Only</p> : null}
+        {isPayrollWorkspace ? payrollWorkspaceNav.map((item) => {
+          const Icon = item.icon;
+          const active = item.href.endsWith("/run") || item.href.endsWith("/settings")
+            ? pathname === item.href
+            : item.href === `${clientBase}/payroll` && pathname === `${clientBase}/payroll`;
+          return <Link key={item.href} href={item.href} onClick={() => setOpen(false)}
+            className={cn("focus-ring flex min-h-11 items-center gap-3 rounded-md border-l-4 border-transparent px-3 py-2 text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white",
+              active && "border-emerald-500 bg-white/10 text-white")}>
+            <Icon className="h-4 w-4" aria-hidden="true"/><span>{item.label}</span>
+          </Link>;
+        }) : selectedClientId ? clientWorkspaceNav.map((item) => {
           const Icon = item.icon;
           const active = item.href === clientBase ? pathname === clientBase : false;
           return <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className={cn("focus-ring flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm font-bold text-blue-50 hover:bg-white/10", active && "bg-white text-exodus-navy")}><Icon className="h-4 w-4" aria-hidden="true"/><span>{item.label}</span></Link>;
@@ -143,7 +165,7 @@ export function PortalShell({ user, children }: PortalShellProps) {
           </div>
         ) : null}
 
-        <main className={cn("mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8 lg:py-8", user.role === "client" && "pb-28 lg:pb-8")}>{children}</main>
+        <main className={cn("mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8 lg:py-8", user.role === "client" && "pb-28 lg:pb-8", isPayrollWorkspace && "max-w-none bg-[#f6f7f8]")}>{children}</main>
         {user.role === "client" ? <ClientBottomNav pathname={pathname} /> : null}
       </div>
     </div>
