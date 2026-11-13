@@ -66,8 +66,33 @@ export async function savePayrollEmployeeProfile(form: FormData) {
   const department = read(form, "department", 200);
   const scheduleName = read(form, "schedule_name", 100) || "Regular payroll";
   const defaultSchedule = form.get("default_schedule") === "on";
+  const payType = read(form, "pay_type", 20);
+  const hourlyRateText = read(form, "hourly_rate", 30);
+  const salaryAmountText = read(form, "salary_amount", 30);
+  const hoursPerDayText = read(form, "default_hours_per_day", 20);
+  const daysPerWeekText = read(form, "default_days_per_week", 20);
+  const overtimeMultiplierText = read(form, "overtime_multiplier", 20);
+  const vacationPercentText = read(form, "vacation_percent", 20);
+  const hourlyRate = hourlyRateText === "" ? null : Number(hourlyRateText);
+  const salaryAmount = salaryAmountText === "" ? null : Number(salaryAmountText);
+  const hoursPerDay = Number(hoursPerDayText);
+  const daysPerWeek = Number(daysPerWeekText);
+  const overtimeMultiplier = Number(overtimeMultiplierText);
+  const vacationPercent = Number(vacationPercentText);
 
   if (!name || !statuses.has(status) || !frequencies.has(frequency)) invalid("invalid_fields");
+  if (
+    !["hourly", "salary"].includes(payType) ||
+    (payType === "hourly" && (hourlyRate === null || hourlyRate <= 0)) ||
+    (payType === "salary" && (salaryAmount === null || salaryAmount <= 0)) ||
+    (hourlyRate !== null && (!Number.isFinite(hourlyRate) || hourlyRate < 0 || hourlyRate > 100000)) ||
+    (salaryAmount !== null && (!Number.isFinite(salaryAmount) || salaryAmount < 0 || salaryAmount > 10000000)) ||
+    !Number.isFinite(hoursPerDay) || hoursPerDay <= 0 || hoursPerDay > 24 ||
+    !Number.isInteger(daysPerWeek) || daysPerWeek < 1 || daysPerWeek > 7 ||
+    !Number.isFinite(overtimeMultiplier) || overtimeMultiplier < 1 || overtimeMultiplier > 4 ||
+    !Number.isFinite(vacationPercent) || vacationPercent < 0 || vacationPercent > 30
+  ) invalid("invalid_pay_settings");
+
   if (![birthDate, hireDate, terminationDate, periodEnd, payDate].every(isDate)) invalid("invalid_dates");
   if (birthDate && birthDate > new Date().toISOString().slice(0, 10)) invalid("invalid_birth_date");
   if (payDate && periodEnd && payDate < periodEnd) invalid("pay_date_before_period_end");
@@ -104,7 +129,7 @@ export async function savePayrollEmployeeProfile(form: FormData) {
     if (error) throw new Error("Unable to update default schedule.");
   }
 
-  const profile: Record<string, string | boolean | null> = {
+  const profile: Record<string, string | number | boolean | null> = {
     worker_id: workerId,
     client_id: clientId,
     birth_date: nullable(birthDate),
@@ -119,6 +144,13 @@ export async function savePayrollEmployeeProfile(form: FormData) {
     next_period_end: nullable(periodEnd),
     next_pay_date: nullable(payDate),
     default_schedule: defaultSchedule,
+    pay_type: payType,
+    hourly_rate: hourlyRate,
+    salary_amount: salaryAmount,
+    default_hours_per_day: hoursPerDay,
+    default_days_per_week: daysPerWeek,
+    overtime_multiplier: overtimeMultiplier,
+    vacation_percent: vacationPercent,
     updated_at: new Date().toISOString()
   };
   if (encryptedSin) {
