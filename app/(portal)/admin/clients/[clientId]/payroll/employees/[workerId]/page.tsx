@@ -38,7 +38,7 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
     db.from("workers").select("id,client_id,worker_type,worker_name,address,phone,email,status")
       .eq("id", workerId).eq("client_id", clientId).maybeSingle(),
     db.from("kal_payroll_employee_profiles")
-      .select("birth_date,hire_date,termination_date,employment_status,work_location,manager_name,department,schedule_name,pay_frequency,next_period_end,next_pay_date,default_schedule,sin_last4")
+      .select("birth_date,hire_date,termination_date,employment_status,work_location,manager_name,department,schedule_name,pay_frequency,next_period_end,next_pay_date,default_schedule,sin_last4,pay_type,hourly_rate,salary_amount,default_hours_per_day,default_days_per_week,overtime_multiplier,vacation_percent")
       .eq("worker_id", workerId).eq("client_id", clientId).maybeSingle()
   ]);
 
@@ -90,6 +90,23 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
         <Field label="Work location"><input className={fieldClass} name="work_location" maxLength={200} defaultValue={profile?.work_location ?? ""}/></Field>
         <Field label="Department"><input className={fieldClass} name="department" maxLength={200} defaultValue={profile?.department ?? ""}/></Field>
         <Field label="Manager"><input className={fieldClass} name="manager_name" maxLength={200} defaultValue={profile?.manager_name ?? ""}/></Field>
+
+        <section className="grid gap-4 rounded-xl border border-slate-200 bg-white p-5 md:col-span-2">
+          <div><h2 className="text-xl font-black text-slate-900">Pay rate and standard hours</h2>
+            <p className="mt-1 text-sm text-slate-600">Hourly employees default to 8 hours per day, 5 days per week. Set their hourly rate before running payroll.</p></div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Pay type"><select name="pay_type" className={fieldClass} defaultValue={profile?.pay_type ?? "hourly"}>
+              <option value="hourly">Hourly</option><option value="salary">Salary</option>
+            </select></Field>
+            <Field label="Hourly rate ($)"><input type="number" name="hourly_rate" min="0" max="100000" step="0.01" className={fieldClass} defaultValue={profile?.hourly_rate ?? ""} placeholder="Enter for hourly employees" /></Field>
+            <Field label="Salary amount per pay period ($)"><input type="number" name="salary_amount" min="0" max="10000000" step="0.01" className={fieldClass} defaultValue={profile?.salary_amount ?? ""} placeholder="Enter for salary employees" /></Field>
+            <Field label="Default hours each day"><input type="number" name="default_hours_per_day" min="0.25" max="24" step="0.25" required className={fieldClass} defaultValue={profile?.default_hours_per_day ?? 8} /></Field>
+            <Field label="Default days each week"><input type="number" name="default_days_per_week" min="1" max="7" step="1" required className={fieldClass} defaultValue={profile?.default_days_per_week ?? 5} /></Field>
+            <Field label="Overtime multiplier (reference only)"><input type="number" name="overtime_multiplier" min="1" max="4" step="0.25" required className={fieldClass} defaultValue={profile?.overtime_multiplier ?? 1.5} /></Field>
+            <Field label="Vacation pay percent (reference only)"><input type="number" name="vacation_percent" min="0" max="30" step="0.01" required className={fieldClass} defaultValue={profile?.vacation_percent ?? 4} /></Field>
+          </div>
+          <p className="text-xs text-slate-500">The payroll run uses regular hours and rate as a draft. Overtime and vacation pay must be reviewed separately under applicable employment standards.</p>
+        </section>
 
         <PayScheduleEditor
           scheduleName={profile?.schedule_name ?? "Regular payroll"}
