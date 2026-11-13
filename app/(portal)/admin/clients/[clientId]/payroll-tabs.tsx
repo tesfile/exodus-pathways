@@ -92,7 +92,7 @@ export function ClientPayrollTabs({
     `/admin/clients/${encodeURIComponent(clientId)}/payroll/employees/${encodeURIComponent(workerId)}?year=${taxYear}`;
 
   return (
-    <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 bg-white p-5 sm:p-7">
         <div>
           <p className="mb-1 text-xs font-extrabold uppercase tracking-[0.15em] text-emerald-700">KAL Accounting &amp; Tax · {taxYear}</p>
@@ -133,7 +133,7 @@ export function ClientPayrollTabs({
         ))}
       </nav>
 
-      <div className="grid gap-6 bg-[#f8fafb] p-4 sm:p-7">
+      <div className="grid gap-6 bg-white p-4 sm:p-7">
         {tab === "overview" ? (
           <>
             <div className="flex flex-wrap items-end justify-between gap-2">
