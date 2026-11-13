@@ -35,7 +35,7 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
   const db = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
 
   const [{ data: worker, error: workerError }, { data: profile, error: profileError }] = await Promise.all([
-    db.from("workers").select("id,client_id,worker_type,worker_name,address,phone,email,status")
+    db.from("workers").select("id,client_id,company_id,worker_type,worker_name,address,phone,email,status")
       .eq("id", workerId).eq("client_id", clientId).maybeSingle(),
     db.from("kal_payroll_employee_profiles")
       .select("birth_date,hire_date,termination_date,employment_status,work_location,manager_name,department,schedule_name,pay_frequency,next_period_end,next_pay_date,default_schedule,sin_last4,pay_type,hourly_rate,salary_amount,default_hours_per_day,default_days_per_week,overtime_multiplier,vacation_percent")
@@ -44,6 +44,13 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
 
   if (workerError || !worker || !/employee/i.test(worker.worker_type)) notFound();
   if (profileError) throw new Error("Employee payroll profiles are not set up in this database.");
+  const { data: companySettings, error: companyError } = worker.company_id
+    ? await db.from("kal_company_payroll_settings")
+      .select("default_hours_per_day,default_days_per_week,default_pay_frequency,overtime_multiplier,vacation_percent")
+      .eq("client_id", clientId).eq("company_id", worker.company_id).maybeSingle()
+    : { data: null, error: null };
+  if (companyError) throw new Error("Could not load company payroll defaults.");
+
   const back = `/admin/clients/${encodeURIComponent(clientId)}?year=${year}&tab=workers-payments`;
 
   return (
@@ -100,17 +107,17 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
             </select></Field>
             <Field label="Hourly rate ($)"><input type="number" name="hourly_rate" min="0" max="100000" step="0.01" className={fieldClass} defaultValue={profile?.hourly_rate ?? ""} placeholder="Enter for hourly employees" /></Field>
             <Field label="Salary amount per pay period ($)"><input type="number" name="salary_amount" min="0" max="10000000" step="0.01" className={fieldClass} defaultValue={profile?.salary_amount ?? ""} placeholder="Enter for salary employees" /></Field>
-            <Field label="Default hours each day"><input type="number" name="default_hours_per_day" min="0.25" max="24" step="0.25" required className={fieldClass} defaultValue={profile?.default_hours_per_day ?? 8} /></Field>
-            <Field label="Default days each week"><input type="number" name="default_days_per_week" min="1" max="7" step="1" required className={fieldClass} defaultValue={profile?.default_days_per_week ?? 5} /></Field>
-            <Field label="Overtime multiplier (reference only)"><input type="number" name="overtime_multiplier" min="1" max="4" step="0.25" required className={fieldClass} defaultValue={profile?.overtime_multiplier ?? 1.5} /></Field>
-            <Field label="Vacation pay percent (reference only)"><input type="number" name="vacation_percent" min="0" max="30" step="0.01" required className={fieldClass} defaultValue={profile?.vacation_percent ?? 4} /></Field>
+            <Field label="Default hours each day"><input type="number" name="default_hours_per_day" min="0.25" max="24" step="0.25" required className={fieldClass} defaultValue={profile?.default_hours_per_day ?? companySettings?.default_hours_per_day ?? 8} /></Field>
+            <Field label="Default days each week"><input type="number" name="default_days_per_week" min="1" max="7" step="1" required className={fieldClass} defaultValue={profile?.default_days_per_week ?? companySettings?.default_days_per_week ?? 5} /></Field>
+            <Field label="Overtime multiplier (reference only)"><input type="number" name="overtime_multiplier" min="1" max="4" step="0.25" required className={fieldClass} defaultValue={profile?.overtime_multiplier ?? companySettings?.overtime_multiplier ?? 1.5} /></Field>
+            <Field label="Vacation pay percent (reference only)"><input type="number" name="vacation_percent" min="0" max="30" step="0.01" required className={fieldClass} defaultValue={profile?.vacation_percent ?? companySettings?.vacation_percent ?? 4} /></Field>
           </div>
           <p className="text-xs text-slate-500">The payroll run uses regular hours and rate as a draft. Overtime and vacation pay must be reviewed separately under applicable employment standards.</p>
         </section>
 
         <PayScheduleEditor
           scheduleName={profile?.schedule_name ?? "Regular payroll"}
-          initialFrequency={profile?.pay_frequency ?? "biweekly"}
+          initialFrequency={profile?.pay_frequency ?? companySettings?.default_pay_frequency ?? "biweekly"}
           initialPeriodEnd={profile?.next_period_end ?? ""}
           initialPayDate={profile?.next_pay_date ?? ""}
           initialDefault={profile?.default_schedule ?? false}
