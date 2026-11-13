@@ -51,7 +51,7 @@ export async function saveEmployee(form: FormData) {
   }
 
   const workerType = field(form, "worker_type") === "Subcontractor" ? "Subcontractor" : "Employee";
-  const { error } = await db.from("workers").insert({
+  const { data: created, error } = await db.from("workers").insert({
     client_id: clientId,
     company_id: companyId,
     worker_name: name,
@@ -60,12 +60,32 @@ export async function saveEmployee(form: FormData) {
     phone: field(form, "phone") || null,
     address: field(form, "address") || null,
     notes: field(form, "notes") || null,
-  });
-  if (error) {
+  }).select("id").single();
+  if (error || !created) {
     console.error("Add employee database error:", error);
     redirect(errorUrl);
   }
+  if (workerType === "Employee") {
+    // Future hires inherit this client's chosen default schedule without
+    // overwriting the schedule of any existing employee.
+    const { data: defaults, error: defaultError } = await db.from("kal_payroll_employee_profiles")
+      .select("schedule_name,pay_frequency,next_period_end,next_pay_date")
+      .eq("client_id", clientId).eq("default_schedule", true).maybeSingle();
+    if (defaultError) {
+      console.error("Payroll default schedule lookup failed:", defaultError.message);
+    } else if (defaults) {
+      const { error: scheduleError } = await db.from("kal_payroll_employee_profiles").insert({
+        worker_id: created.id, client_id: clientId,
+        schedule_name: defaults.schedule_name, pay_frequency: defaults.pay_frequency,
+        next_period_end: defaults.next_period_end, next_pay_date: defaults.next_pay_date,
+        employment_status: "Active", default_schedule: false
+      });
+      if (scheduleError) console.error("New employee schedule inheritance failed:", scheduleError.message);
+    }
+  }
   revalidatePath("/admin/workers-payroll-review");
   revalidatePath(`/admin/clients/${clientId}`);
-  redirect(`/admin/workers-payroll-review?clientId=${encodeURIComponent(clientId)}&year=${year}&employeeAdded=1`);
+  redirect(workerType === "Employee"
+    ? `/admin/clients/${encodeURIComponent(clientId)}/payroll/employees/${encodeURIComponent(created.id)}?year=${year}`
+    : `/admin/workers-payroll-review?clientId=${encodeURIComponent(clientId)}&year=${year}&employeeAdded=1`);
 }
