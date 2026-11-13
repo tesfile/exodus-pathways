@@ -41,17 +41,20 @@ const money = (amount: number) =>
 const prettyDate = (date: string | null) => date || "—";
 
 export function ClientPayrollTabs({
-  clientId, taxYear, companies, employees: allEmployees, payments: allPayments, children
+  clientId, clientName, taxYear, initialTab = "overview", initialCompanyId, companies, employees: allEmployees, payments: allPayments, children
 }: {
   clientId: string;
+  clientName?: string;
   taxYear: number;
+  initialTab?: Tab;
+  initialCompanyId?: string;
   companies: { id: string; name: string }[];
   employees: PayrollEmployeeView[];
   payments: PayrollPaymentView[];
   children: ReactNode;
 }) {
-  const [tab, setTab] = useState<Tab>("overview");
-  const [companyId, setCompanyId] = useState(companies[0]?.id ?? "");
+  const [tab, setTab] = useState<Tab>(initialTab);
+  const [companyId, setCompanyId] = useState(initialCompanyId || companies[0]?.id || "");
   const employees = allEmployees.filter(employee => !companyId || employee.companyId === companyId);
   const payments = allPayments.filter(payment => !companyId || payment.companyId === companyId);
   const company = companies.find(item => item.id === companyId);
@@ -94,6 +97,7 @@ export function ClientPayrollTabs({
         <div>
           <p className="mb-1 text-xs font-extrabold uppercase tracking-[0.15em] text-emerald-700">KAL Accounting &amp; Tax · {taxYear}</p>
           <h2 className="text-3xl font-black tracking-tight text-slate-900">Payroll</h2>
+          {clientName ? <p className="mt-1 text-sm font-bold text-slate-800">{clientName}</p> : null}
           <p className="mt-2 text-sm text-slate-600">Employee payroll for this selected client and employer company only.</p>
         </div>
         <div className="flex flex-wrap gap-2">
