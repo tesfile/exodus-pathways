@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 
 export type RunPayrollEmployee = {
@@ -46,7 +46,6 @@ export function PayrollRunGrid({ clientId, companyId, year, companyName, frequen
   const [end, setEnd] = useState("");
   const [payDate, setPayDate] = useState("");
   const [overrides, setOverrides] = useState<Record<string, { hours?: string; rate?: string; overtimeHours?: string }>>({});
-  const [customized, setCustomized] = useState<Record<string, boolean>>({});
 
   const getValue = (employee: RunPayrollEmployee) => {
     const override = overrides[employee.id] ?? {};
@@ -64,15 +63,12 @@ export function PayrollRunGrid({ clientId, companyId, year, companyName, frequen
     return { hours, rate, overtimeHours, gross };
   };
   const update = (id: string, key: "hours" | "rate" | "overtimeHours", value: string) => {
-    setCustomized(prev => ({ ...prev, [id]: true }));
     setOverrides(prev => ({ ...prev, [id]: { ...prev[id], [key]: value } }));
   };
-  const resetHours = () => { setOverrides({}); setCustomized({}); };
+  const resetHours = () => setOverrides({});
   const rows = employees.map(employee => ({ employee, values: getValue(employee) }));
-  const previewTotal = useMemo(() =>
-    rows.reduce((sum, item) => sum + (validNumber(item.values.gross) ? item.values.gross : 0), 0),
-    // rows are recalculated from state every render; no cached payroll amounts are persisted here.
-    [rows]
+  const previewTotal = rows.reduce(
+    (sum, item) => sum + (validNumber(item.values.gross) ? item.values.gross : 0), 0
   );
   const datesOk = validDate(start) && validDate(end) && validDate(payDate) && start <= end && end <= payDate && payDate.slice(0, 4) === String(year);
   const settingsUrl = `/admin/clients/${encodeURIComponent(clientId)}/payroll/settings?companyId=${encodeURIComponent(companyId)}&year=${year}`;
