@@ -450,12 +450,14 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
         <ClientPayrollTabs
           clientId={client.id}
           taxYear={taxYear}
+          companies={workersPayments.companies}
           employees={workersPayments.workers
             .filter(worker => /employee/i.test(worker.worker_type))
             .map(worker => ({
               id: worker.id,
               name: worker.worker_name,
               company: worker.company_name,
+              companyId: worker.company_id ?? "",
               status: worker.status
             }))}
           payments={workersPayments.payments
@@ -464,6 +466,7 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
             .map(payment => ({
               id: payment.id,
               workerId: payment.worker_id,
+              companyId: payment.company_id ?? "",
               date: payment.payment_date,
               periodStart: payment.pay_period_start,
               periodEnd: payment.pay_period_end,
