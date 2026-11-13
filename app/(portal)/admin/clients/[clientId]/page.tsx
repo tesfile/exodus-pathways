@@ -447,7 +447,35 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
       </section>
 
       <section id="workers-payments" className={tabSectionClass(activeTab, "workers-payments", "scroll-mt-24 grid gap-6")}>
-        <ClientPayrollTabs clientId={client.id} taxYear={taxYear}>
+        <ClientPayrollTabs
+          clientId={client.id}
+          taxYear={taxYear}
+          employees={workersPayments.workers
+            .filter(worker => /employee/i.test(worker.worker_type))
+            .map(worker => ({
+              id: worker.id,
+              name: worker.worker_name,
+              company: worker.company_name,
+              status: worker.status
+            }))}
+          payments={workersPayments.payments
+            .filter(payment => workersPayments.workers.some(worker =>
+              worker.id === payment.worker_id && /employee/i.test(worker.worker_type)))
+            .map(payment => ({
+              id: payment.id,
+              workerId: payment.worker_id,
+              date: payment.payment_date,
+              periodStart: payment.pay_period_start,
+              periodEnd: payment.pay_period_end,
+              frequency: payment.pay_frequency,
+              gross: Number(payment.gross_pay) || 0,
+              cpp: Number(payment.cpp) || 0,
+              ei: Number(payment.ei) || 0,
+              incomeTax: Number(payment.income_tax_deducted) || 0,
+              employerCpp: Number(payment.payroll_calculator_employer_cpp) || 0,
+              employerEi: Number(payment.payroll_calculator_employer_ei) || 0,
+              net: Number(payment.net_pay) || 0
+            }))}>
         <WorkerReviewWorkspace
           data={workersPayments}
           clientId={client.id}
