@@ -9,11 +9,13 @@ export type PayrollEmployeeView = {
   id: string;
   name: string;
   company: string;
+  companyId: string;
   status: string;
 };
 export type PayrollPaymentView = {
   id: string;
   workerId: string;
+  companyId: string;
   date: string;
   periodStart: string | null;
   periodEnd: string | null;
@@ -39,15 +41,24 @@ const money = (amount: number) =>
 const prettyDate = (date: string | null) => date || "—";
 
 export function ClientPayrollTabs({
-  clientId, taxYear, employees, payments, children
+  clientId, taxYear, companies, employees: allEmployees, payments: allPayments, children
 }: {
   clientId: string;
   taxYear: number;
+  companies: { id: string; name: string }[];
   employees: PayrollEmployeeView[];
   payments: PayrollPaymentView[];
   children: ReactNode;
 }) {
   const [tab, setTab] = useState<Tab>("overview");
+  const [companyId, setCompanyId] = useState(companies[0]?.id ?? "");
+  const employees = allEmployees.filter(employee => !companyId || employee.companyId === companyId);
+  const payments = allPayments.filter(payment => !companyId || payment.companyId === companyId);
+  const company = companies.find(item => item.id === companyId);
+  const companyParams = `companyId=${encodeURIComponent(companyId)}&year=${taxYear}`;
+  const runHref = `/admin/clients/${encodeURIComponent(clientId)}/payroll/run?${companyParams}`;
+  const settingsHref = `/admin/clients/${encodeURIComponent(clientId)}/payroll/settings?${companyParams}`;
+
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
   const [search, setSearch] = useState("");
 
@@ -83,7 +94,7 @@ export function ClientPayrollTabs({
         <div>
           <p className="mb-1 text-xs font-extrabold uppercase tracking-[0.15em] text-emerald-700">KAL Accounting &amp; Tax · {taxYear}</p>
           <h2 className="text-3xl font-black tracking-tight text-slate-900">Payroll</h2>
-          <p className="mt-2 text-sm text-slate-600">Employee payroll for this selected client only.</p>
+          <p className="mt-2 text-sm text-slate-600">Employee payroll for this selected client and employer company only.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href={add} className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-bold text-slate-900 hover:bg-slate-50">
@@ -92,6 +103,18 @@ export function ClientPayrollTabs({
           <Link href={base} className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-bold text-white hover:bg-emerald-800">
             <Wallet className="h-4 w-4" aria-hidden="true"/> Review / record payroll
           </Link>
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-5 py-4 sm:px-7">
+        <label className="grid min-w-60 flex-1 gap-1 text-sm font-bold text-slate-800">Employer company
+          <select value={companyId} onChange={event => { setCompanyId(event.target.value); setSelectedEmployeeId(""); }}
+            className="max-w-lg rounded-lg border border-slate-300 px-3 py-2 font-normal text-slate-900">
+            {companies.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
+          </select>
+        </label>
+        <div className="flex flex-wrap gap-2">
+          <Link href={runHref} className="rounded-lg bg-emerald-700 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-800">Run Payroll</Link>
+          <Link href={settingsHref} className="rounded-lg border border-slate-300 px-4 py-3 text-sm font-bold text-slate-800">Payroll settings</Link>
         </div>
       </div>
       <nav aria-label="Payroll sections" className="flex flex-wrap gap-1 border-b border-slate-200 px-4 pt-2 sm:px-7">
@@ -112,7 +135,7 @@ export function ClientPayrollTabs({
             <div className="flex flex-wrap items-end justify-between gap-2">
               <div>
                 <h3 className="text-xl font-black text-slate-900">Payroll overview</h3>
-                <p className="mt-1 text-sm text-slate-600">Recorded employee pay information for {taxYear}. Figures are not a CRA remittance confirmation.</p>
+                <p className="mt-1 text-sm text-slate-600">Recorded employee pay information for {company?.name ?? "this employer"} in {taxYear}. Figures are not a CRA remittance confirmation.</p>
               </div>
               <span className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">CAD · {taxYear}</span>
             </div>
