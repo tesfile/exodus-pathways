@@ -74,6 +74,8 @@ export function ClientPayrollTabs({
 
   const employeeHref = (workerId: string) =>
     `${base}&workerId=${encodeURIComponent(workerId)}&workerTab=payroll`;
+  const profileHref = (workerId: string) =>
+    `/admin/clients/${encodeURIComponent(clientId)}/payroll/employees/${encodeURIComponent(workerId)}?year=${taxYear}`;
 
   return (
     <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -188,14 +190,14 @@ export function ClientPayrollTabs({
                         <td className="p-3">{employee.status || "—"}</td>
                         <td className="p-3">{prettyDate(latest?.date ?? null)}</td>
                         <td className="p-3">{latest?.frequency || "Not recorded"}</td>
-                        <td className="p-3"><Link href={employeeHref(employee.id)} className="font-bold text-emerald-700 hover:underline">Review / Edit payments</Link></td>
+                        <td className="p-3"><div className="flex flex-wrap gap-3"><Link href={profileHref(employee.id)} className="font-bold text-emerald-700 hover:underline">Edit profile &amp; schedule</Link><Link href={employeeHref(employee.id)} className="font-bold text-blue-800 hover:underline">Review paychecks</Link></div></td>
                       </tr>;
                     })}
                     {filteredEmployees.length === 0 ? <tr><td colSpan={5} className="p-7 text-center text-slate-500">No matching employees found.</td></tr> : null}
                   </tbody>
                 </table>
               </div>
-              <p className="mt-4 text-xs text-slate-500">SIN, date of birth and employee pay schedule editing are not available in this view. They require protected payroll profile storage.</p>
+              <p className="mt-4 text-xs text-slate-500">Employee profile and schedule settings open in a protected admin page. SIN is never displayed in this list.</p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-white p-5">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
