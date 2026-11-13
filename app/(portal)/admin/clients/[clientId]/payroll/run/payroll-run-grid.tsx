@@ -29,7 +29,7 @@ const validDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) && !Numbe
 
 function periodWorkingDays(start: string, end: string, daysPerWeek: number): number {
   if (!validDate(start) || !validDate(end) || end < start) return 0;
-  let date = new Date(start + "T00:00:00Z");
+  const date = new Date(start + "T00:00:00Z");
   const last = new Date(end + "T00:00:00Z");
   let count = 0;
   for (let i = 0; date <= last && i < 370; i++) {
