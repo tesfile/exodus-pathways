@@ -76,7 +76,7 @@ export function PayScheduleEditor({
       </div>
       <label className="flex items-start gap-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-800">
         <input name="default_schedule" type="checkbox" defaultChecked={initialDefault} className="mt-1 accent-emerald-700" />
-        <span><strong>Use this schedule for future employees</strong><span className="mt-0.5 block text-xs text-slate-600">Keep one default schedule per client. Existing employees' schedules will not be changed.</span></span>
+        <span><strong>Use this schedule for future employees</strong><span className="mt-0.5 block text-xs text-slate-600">Keep one default schedule per client. Existing employee schedules will not be changed.</span></span>
       </label>
       <div className="rounded-lg border border-slate-200">
         <h3 className="border-b border-slate-200 px-4 py-3 text-sm font-bold text-slate-900">Upcoming pay periods — preview</h3>
