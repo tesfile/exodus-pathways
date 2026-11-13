@@ -172,7 +172,7 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
         {clientDetailTabs.map((tab) => (
           <Link
             key={tab.key}
-            href={`/admin/clients/${client.id}?year=${taxYear}&tab=${tab.key}`}
+            href={tab.key === "workers-payments" ? `/admin/clients/${client.id}/payroll?year=${taxYear}` : `/admin/clients/${client.id}?year=${taxYear}&tab=${tab.key}`}
             className={`focus-ring rounded-md px-3 py-2 text-xs font-black ${
               activeTab === tab.key ? "bg-exodus-navy text-white" : "bg-exodus-light text-exodus-navy"
             }`}
@@ -191,7 +191,7 @@ export default async function AdminClientDetailPage({ params, searchParams }: Pa
             <div className="mt-5 flex flex-wrap gap-2">
               <a href="#bookkeeping-entry" className="rounded-lg bg-white px-4 py-2.5 text-sm font-bold text-slate-900">+ New transaction</a>
               <a href={`/admin/clients/${client.id}?year=${taxYear}&tab=documents`} className="rounded-lg border border-white/40 px-4 py-2.5 text-sm font-bold text-white">Upload receipt or invoice</a>
-              <a href={`/admin/clients/${client.id}?year=${taxYear}&tab=workers-payments`} className="rounded-lg border border-white/40 px-4 py-2.5 text-sm font-bold text-white">Manage payroll</a>
+              <a href={`/admin/clients/${client.id}/payroll?year=${taxYear}`} className="rounded-lg border border-white/40 px-4 py-2.5 text-sm font-bold text-white">Manage payroll</a>
             </div>
           </div>
           <nav className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-label="Bookkeeping sections">
