@@ -5,10 +5,10 @@ import { requireRole } from "@/lib/supabase/server";
 import { RecordPayrollForm } from "@/components/portal/record-payroll-form";
 
 export const dynamic = "force-dynamic";
-type Props = { searchParams: Promise<{ clientId?: string; workerId?: string }> };
+type Props = { searchParams: Promise<{ clientId?: string; workerId?: string; payFrequency?: string; periodStart?: string; periodEnd?: string; payDate?: string; hours?: string; rate?: string }> };
 export default async function RecordPaymentPage({ searchParams }: Props) {
   await requireRole(["admin"]);
-  const { clientId, workerId } = await searchParams;
+  const { clientId, workerId, payFrequency, periodStart, periodEnd, payDate, hours, rate } = await searchParams;
   if (!clientId || !workerId) notFound();
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const secret = process.env.SUPABASE_SECRET_KEY;
@@ -29,13 +29,30 @@ export default async function RecordPaymentPage({ searchParams }: Props) {
     Math.round(priorPayments.reduce((total, p) => total + Number(p[field] ?? 0), 0) * 100) / 100;
   const priorYtd = { cpp: sum("cpp"), cpp2: 0, ei: sum("ei"), pensionableEarnings: sum("t4_box26_cpp_pensionable_earnings") };
   const today = new Date().toISOString().slice(0, 10);
+  const validDate = (value: string | undefined) => Boolean(value && /^\d{4}-\d{2}-\d{2}$/.test(value));
+  const validAmount = (value: string | undefined) => {
+    const amount = value === undefined ? NaN : Number(value);
+    return Number.isFinite(amount) && amount >= 0 && amount <= 100000;
+  };
+  const initialHours = validAmount(hours) ? Number(hours) : undefined;
+  const initialHourlyRate = validAmount(rate) ? Number(rate) : undefined;
+  const initialFrequency = ["weekly", "biweekly", "semi-monthly", "monthly"].includes(payFrequency ?? "")
+    ? payFrequency : payFrequency === "semimonthly" ? "semi-monthly" : undefined;
+  const initialPeriodStart = validDate(periodStart) ? periodStart : undefined;
+  const initialPeriodEnd = validDate(periodEnd) ? periodEnd : undefined;
+  const initialPayDate = validDate(payDate) ? payDate : undefined;
   const back = "/admin/clients/" + encodeURIComponent(clientId) + "?tab=workers-payments&year=" + year + "&workerId=" + encodeURIComponent(workerId) + "&workerTab=payroll";
   return (
     <main className="mx-auto grid max-w-4xl gap-5">
       <Link href={back} className="font-bold text-blue-800">← Back to Client Payroll</Link>
       <div><h1 className="text-3xl font-bold text-blue-950">Record {isEmployee ? "Payroll" : "Contractor Payment"}</h1>
         <p className="text-slate-600">{worker.worker_name} · {worker.worker_type}</p></div>
-      <RecordPayrollForm clientId={clientId} workerId={workerId} today={today} initialClassification={isEmployee ? "T4 Employee" : "T5018 Subcontractor"} priorYtd={priorYtd} priorPaymentCount={priorPayments.length} />
+      <RecordPayrollForm clientId={clientId} workerId={workerId} today={today}
+        initialClassification={isEmployee ? "T4 Employee" : "T5018 Subcontractor"}
+        priorYtd={priorYtd} priorPaymentCount={priorPayments.length}
+        initialHours={initialHours} initialHourlyRate={initialHourlyRate}
+        initialFrequency={initialFrequency} initialPeriodStart={initialPeriodStart}
+        initialPeriodEnd={initialPeriodEnd} initialPayDate={initialPayDate} />
     </main>
   );
 }
