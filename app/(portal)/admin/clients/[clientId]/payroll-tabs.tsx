@@ -104,8 +104,8 @@ export function ClientPayrollTabs({
           <Link href={add} className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-bold text-slate-900 hover:bg-slate-50">
             <Plus className="h-4 w-4" aria-hidden="true"/> Add employee
           </Link>
-          <Link href={base} className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-bold text-white hover:bg-emerald-800">
-            <Wallet className="h-4 w-4" aria-hidden="true"/> Review / record payroll
+          <Link href={runHref} className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-bold text-white hover:bg-emerald-800">
+            <Wallet className="h-4 w-4" aria-hidden="true"/> Run Payroll
           </Link>
         </div>
       </div>
@@ -263,11 +263,23 @@ export function ClientPayrollTabs({
               <SummaryCard label="Income tax" value={money(totals.incomeTax)} icon={<Landmark className="h-5 w-5"/>} detail="Withheld from employees" />
               <SummaryCard label="Combined recorded amounts" value={money(totals.cpp + totals.employerCpp + totals.ei + totals.employerEi + totals.incomeTax)} icon={<ClipboardList className="h-5 w-5"/>} detail="Not reconciled to CRA" />
             </div>
-            <div className="rounded-xl border border-amber-200 bg-white p-5">
+            <section className="grid gap-3 rounded-xl border border-slate-200 bg-white p-5">
+              <h4 className="text-base font-black uppercase tracking-wide text-slate-900">Filed recently</h4>
+              <div className="rounded-lg border border-slate-200 px-4 py-7 text-center text-sm text-slate-500">No filed payroll tax forms are recorded in this workspace yet.</div>
+              <p className="text-xs text-slate-500">This is not confirmation that CRA has received no filings. Verify against your CRA account.</p>
+            </section>
+            <section className="grid gap-4 rounded-xl border border-slate-200 bg-white p-5">
+              <h4 className="text-base font-black uppercase tracking-wide text-slate-900">Filing resources</h4>
+              <div className="grid gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2">
+                <div><h5 className="font-bold text-slate-900">Record of employment</h5><p className="mt-1 text-sm text-slate-600">Review employee details and pay history before preparing ROEs.</p><button type="button" onClick={() => setTab("employees")} className="mt-2 text-sm font-bold text-emerald-700 hover:underline">Review employees</button></div>
+                <div><h5 className="font-bold text-slate-900">Archived forms and filings</h5><p className="mt-1 text-sm text-slate-600">View saved payroll records and prepare year-end forms.</p><button type="button" onClick={() => setTab("compliance")} className="mt-2 text-sm font-bold text-emerald-700 hover:underline">Open compliance</button></div>
+              </div>
+            </section>
+            <section className="rounded-xl border border-amber-200 bg-white p-5">
               <h4 className="font-black text-slate-900">CRA remittances and CPP2</h4>
-              <p className="mt-2 text-sm text-slate-600">CRA payment history, remittance reconciliation and CPP2 are not separately verified by this screen. Do not treat the displayed amounts as an amount due without checking CRA and the payroll period records.</p>
-              <Link href={base} className="mt-3 inline-block text-sm font-bold text-emerald-700 hover:underline">Open payroll calculation and deduction review</Link>
-            </div>
+              <p className="mt-2 text-sm text-slate-600">CRA payment history, remittance reconciliation and CPP2 are not separately verified here. Do not treat displayed totals as an amount due without checking CRA and payroll records.</p>
+              <Link href={base} className="mt-3 inline-block text-sm font-bold text-emerald-700 hover:underline">Open existing payroll deduction review</Link>
+            </section>
           </>
         ) : null}
 
