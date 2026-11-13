@@ -6,16 +6,19 @@ import { savePayrollEntry } from "@/app/(portal)/admin/workers-payroll-review/re
 import { calculateAlbertaRegularPayroll2026 } from "@/lib/payroll/alberta-regular-2026";
 
 type Classification = "T4 Employee" | "T4A Contractor" | "T5018 Subcontractor";
-export function RecordPayrollForm({ clientId, workerId, today, initialClassification, priorYtd, priorPaymentCount }: {
+export function RecordPayrollForm({ clientId, workerId, today, initialClassification, priorYtd, priorPaymentCount, initialHours, initialHourlyRate, initialFrequency, initialPeriodStart, initialPeriodEnd, initialPayDate }: {
   clientId: string; workerId: string; today: string; initialClassification: Classification; priorYtd: { cpp: number; cpp2: number; ei: number; pensionableEarnings: number }; priorPaymentCount: number;
+  initialHours?: number; initialHourlyRate?: number; initialFrequency?: string;
+  initialPeriodStart?: string; initialPeriodEnd?: string; initialPayDate?: string;
 }) {
   const [classification, setClassification] = useState<Classification>(initialClassification);
-  const [gross, setGross] = useState("");
-  const [frequency, setFrequency] = useState("biweekly");
-  const [hoursWorked, setHoursWorked] = useState("");
-  const [insurableHours, setInsurableHours] = useState("");
+  const [gross, setGross] = useState(initialHours !== undefined && initialHourlyRate !== undefined ? (initialHours * initialHourlyRate).toFixed(2) : "");
+  const [hourlyRate, setHourlyRate] = useState(initialHourlyRate !== undefined ? String(initialHourlyRate) : "");
+  const [frequency, setFrequency] = useState(initialFrequency ?? "biweekly");
+  const [hoursWorked, setHoursWorked] = useState(initialHours !== undefined ? String(initialHours) : "");
+  const [insurableHours, setInsurableHours] = useState(initialHours !== undefined ? String(initialHours) : "");
   const [hoursCustomized, setHoursCustomized] = useState(false);
-  const [payDate, setPayDate] = useState(today);
+  const [payDate, setPayDate] = useState(initialPayDate ?? today);
   const [calculated, setCalculated] = useState(false);
   const [prior, setPrior] = useState({ cpp: String(priorYtd.cpp), cpp2: String(priorYtd.cpp2), ei: String(priorYtd.ei), pensionableEarnings: String(priorYtd.pensionableEarnings) });
   const [hasPriorPayroll, setHasPriorPayroll] = useState(false);
@@ -61,14 +64,31 @@ export function RecordPayrollForm({ clientId, workerId, today, initialClassifica
     </div>
     <label className="grid gap-1">Pay date<input required name="payment_date" type="date" value={payDate} onChange={(e) => { setPayDate(e.target.value); autoCalculate(gross, frequency, e.target.value); }} className="rounded border p-3"/></label>
     <label className="grid gap-1">Pay frequency<select name="pay_frequency" value={frequency} onChange={(e) => { setFrequency(e.target.value); autoCalculate(gross, e.target.value, payDate); }} className="rounded border p-3"><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="semi-monthly">Semi-monthly</option><option value="monthly">Monthly</option></select></label>
-    <label className="grid gap-1">Period start<input required name="pay_period_start" type="date" defaultValue={today} className="rounded border p-3"/></label>
-    <label className="grid gap-1">Period end<input required name="pay_period_end" type="date" defaultValue={today} className="rounded border p-3"/></label>
+    <label className="grid gap-1">Period start<input required name="pay_period_start" type="date" defaultValue={initialPeriodStart ?? today} className="rounded border p-3"/></label>
+    <label className="grid gap-1">Period end<input required name="pay_period_end" type="date" defaultValue={initialPeriodEnd ?? today} className="rounded border p-3"/></label>
     <label className="grid gap-1">{isEmployee ? "Gross pay" : "Amount before GST"} ($)
       <input required name="gross" type="number" min="0.01" step="0.01" value={gross} onChange={(e) => { setGross(e.target.value); autoCalculate(e.target.value, frequency, payDate); }} className="rounded border p-3"/>
     </label>
     {isEmployee ? <>
+      {initialHourlyRate !== undefined ? <label className="grid gap-1">Hourly rate from draft ($)
+        <input type="number" min="0" step="0.01" value={hourlyRate} onChange={e => {
+          setHourlyRate(e.target.value);
+          const nextGross = (Number(hoursWorked) * Number(e.target.value)).toFixed(2);
+          setGross(nextGross);
+          autoCalculate(nextGross, frequency, payDate);
+        }} className="rounded border p-3" />
+        <span className="text-xs text-slate-600">Draft rate only. Update the employee profile to change the saved rate.</span>
+      </label> : null}
       <label className="grid gap-1">Hours worked this pay period
-        <input required name="hours_worked" type="number" min="0" max="1000" step="0.01" value={hoursWorked} onChange={e => { setHoursWorked(e.target.value); if (!hoursCustomized) setInsurableHours(e.target.value); }} className="rounded border p-3" />
+        <input required name="hours_worked" type="number" min="0" max="1000" step="0.01" value={hoursWorked} onChange={e => {
+          setHoursWorked(e.target.value);
+          if (!hoursCustomized) setInsurableHours(e.target.value);
+          if (initialHourlyRate !== undefined) {
+            const nextGross = (Number(e.target.value) * Number(hourlyRate)).toFixed(2);
+            setGross(nextGross);
+            autoCalculate(nextGross, frequency, payDate);
+          }
+        }} className="rounded border p-3" />
       </label>
       <label className="grid gap-1">EI insurable hours (for ROE)
         <input required name="insurable_hours" type="number" min="0" max="1000" step="0.01" value={insurableHours} onChange={e => { setInsurableHours(e.target.value); setHoursCustomized(true); }} className="rounded border p-3" />
