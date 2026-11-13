@@ -111,6 +111,7 @@ export function PayrollRunGrid({ clientId, companyId, year, companyName, frequen
       </div>
       <p className="mt-3 text-xs text-slate-500">Weekly hours default to 40 and biweekly hours to 80 for an 8-hour, 5-day employee. Twice-monthly and monthly hours use the dates and configured workdays. Review statutory holidays, leave and overtime manually.</p>
     </div>
+    {year !== 2026 ? <p className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-950">The existing automated payroll calculator currently supports 2026 only. Review the draft hours, but do not save a paycheck for another year until the correct year\u0027s CRA rules are available.</p> : null}
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 p-5">
         <div><h3 className="text-lg font-black text-slate-900">Employee regular hours</h3><p className="text-sm text-slate-500">Click an hours cell to change it before preparing the paycheck.</p></div>
@@ -124,7 +125,7 @@ export function PayrollRunGrid({ clientId, companyId, year, companyName, frequen
           </tr></thead>
           <tbody className="divide-y divide-slate-100">
             {rows.map(({ employee, values }) => {
-              const ready = datesOk && employee.payType === "hourly" && validNumber(values.hours) && values.hours <= 1000
+              const ready = year === 2026 && datesOk && employee.payType === "hourly" && validNumber(values.hours) && values.hours <= 1000
                 && values.rate > 0 && validNumber(values.rate) && values.overtimeHours === 0 && values.gross > 0;
               return <tr key={employee.id}>
                 <td className="px-4 py-4"><span className="font-bold text-slate-900">{employee.name}</span>
