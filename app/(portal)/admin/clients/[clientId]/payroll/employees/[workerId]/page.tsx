@@ -8,7 +8,7 @@ import { PayScheduleEditor } from "./pay-schedule-editor";
 export const dynamic = "force-dynamic";
 type Props = {
   params: Promise<{ clientId: string; workerId: string }>;
-  searchParams?: Promise<{ year?: string; saved?: string; error?: string }>;
+  searchParams?: Promise<{ year?: string; saved?: string; error?: string; created?: string }>;
 };
 
 const statuses = [
@@ -64,6 +64,7 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
         </div>
       </div>
 
+      {query?.created === "1" ? <p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-900">Employee created. Birthdate is saved in the protected payroll profile; any SIN provided was encrypted. Review the pay rate and schedule below before running payroll.</p> : null}
       {query?.saved === "1" ? <p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-900">Employee profile and pay schedule saved.</p> : null}
       {query?.error ? <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-900">Please check the employee details and dates. No changes were saved for the invalid fields.</p> : null}
 
