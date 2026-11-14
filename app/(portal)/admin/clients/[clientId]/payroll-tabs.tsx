@@ -125,6 +125,23 @@ export function ClientPayrollTabs({
         </div>
       </div>
 
+      <nav aria-label="Payroll sections" className="flex flex-wrap items-end gap-1 border-b border-slate-200 bg-white px-5 sm:px-7">
+        {([
+          { id: "overview", label: "Overview" },
+          { id: "employees", label: "Employees" },
+          { id: "tax", label: "Payroll tax" },
+          { id: "compliance", label: "Compliance" }
+        ] as const).map(item => (
+          <button key={item.id} type="button" onClick={() => navigateToTab(item.id)}
+            aria-current={tab === item.id ? "page" : undefined}
+            className={tab === item.id
+              ? "min-h-12 border-b-4 border-emerald-600 px-4 py-3 text-sm font-bold text-slate-950"
+              : "min-h-12 border-b-4 border-transparent px-4 py-3 text-sm font-semibold text-slate-600 transition hover:border-emerald-200 hover:text-slate-900"}>
+            {item.label}
+          </button>
+        ))}
+      </nav>
+
       <div className="grid gap-6 bg-white p-4 sm:p-7">
         {tab === "overview" ? (
           <>
@@ -254,16 +271,33 @@ export function ClientPayrollTabs({
               <SummaryCard label="Income tax" value={money(totals.incomeTax)} icon={<Landmark className="h-5 w-5"/>} detail="Withheld from employees" />
               <SummaryCard label="Combined recorded amounts" value={money(totals.cpp + totals.employerCpp + totals.ei + totals.employerEi + totals.incomeTax)} icon={<ClipboardList className="h-5 w-5"/>} detail="Not reconciled to CRA" />
             </div>
-            <section className="grid gap-3 rounded-xl border border-slate-200 bg-white p-5">
-              <h4 className="text-base font-black uppercase tracking-wide text-slate-900">Filed recently</h4>
-              <div className="rounded-lg border border-slate-200 px-4 py-7 text-center text-sm text-slate-500">No filed payroll tax forms are recorded in this workspace yet.</div>
-              <p className="text-xs text-slate-500">This is not confirmation that CRA has received no filings. Verify against your CRA account.</p>
+            <section className="grid gap-4">
+              <h4 className="text-sm font-black uppercase tracking-widest text-slate-900">Filed recently</h4>
+              <div className="grid min-h-28 place-items-center rounded-2xl border border-slate-200 bg-white px-6 py-8 text-center">
+                <p className="font-semibold text-slate-500">Nothing recorded here yet.</p>
+              </div>
+              <p className="text-xs leading-5 text-slate-500">This workspace does not yet record official CRA filing confirmations. Check CRA My Business Account for completed filings.</p>
             </section>
-            <section className="grid gap-4 rounded-xl border border-slate-200 bg-white p-5">
-              <h4 className="text-base font-black uppercase tracking-wide text-slate-900">Filing resources</h4>
-              <div className="grid gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2">
-                <div><h5 className="font-bold text-slate-900">Record of employment</h5><p className="mt-1 text-sm text-slate-600">Review employee details and pay history before preparing ROEs.</p><button type="button" onClick={() => navigateToTab("employees")} className="mt-2 text-sm font-bold text-emerald-700 hover:underline">Review employees</button></div>
-                <div><h5 className="font-bold text-slate-900">Archived forms and filings</h5><p className="mt-1 text-sm text-slate-600">View saved payroll records and prepare year-end forms.</p><button type="button" onClick={() => navigateToTab("compliance")} className="mt-2 text-sm font-bold text-emerald-700 hover:underline">Open compliance</button></div>
+            <section className="grid gap-5 border-t border-slate-200 pt-6">
+              <h4 className="text-sm font-black uppercase tracking-widest text-slate-900">Filing resources</h4>
+              <div className="grid gap-6">
+                <div>
+                  <h5 className="text-base font-bold text-slate-950">Record of employment</h5>
+                  <p className="mt-1 text-sm text-slate-600">Review employee details and pay history before preparing an ROE.</p>
+                  <button type="button" onClick={() => navigateToTab("employees")} className="mt-2 text-sm font-bold text-emerald-700 hover:underline">Review employees</button>
+                </div>
+                <div>
+                  <h5 className="text-base font-bold text-slate-950">Archived forms and filings</h5>
+                  <p className="mt-1 text-sm text-slate-600">Review year-end payroll records and T4 preparation.</p>
+                  <button type="button" onClick={() => navigateToTab("compliance")} className="mt-2 text-sm font-bold text-emerald-700 hover:underline">Open compliance</button>
+                </div>
+                <div>
+                  <h5 className="text-base font-bold text-slate-950">All filing resources</h5>
+                  <p className="mt-1 text-sm text-slate-600">Official CRA payroll deductions, remittances, T4 and Service Canada ROE information.</p>
+                  <a href="https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/payroll.html"
+                    target="_blank" rel="noopener noreferrer"
+                    className="mt-2 inline-block text-sm font-bold text-emerald-700 hover:underline">CRA payroll resources</a>
+                </div>
               </div>
             </section>
             <section className="rounded-xl border border-amber-200 bg-white p-5">
