@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CalendarDays, ClipboardList, FileCheck2, Landmark, Plus, UsersRound, Wallet } from "lucide-react";
 
 /** Safe payroll display data only. Do not pass SINs, birthdates or complete worker rows to this client component. */
@@ -30,18 +31,12 @@ export type PayrollPaymentView = {
 };
 
 type Tab = "overview" | "employees" | "tax" | "compliance";
-const tabs: { id: Tab; label: string }[] = [
-  { id: "overview", label: "Overview" },
-  { id: "employees", label: "Employees" },
-  { id: "tax", label: "Payroll Tax" },
-  { id: "compliance", label: "Compliance" }
-];
 const money = (amount: number) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(amount);
 const prettyDate = (date: string | null) => date || "—";
 
 export function ClientPayrollTabs({
-  clientId, clientName, taxYear, initialTab = "overview", initialCompanyId, companies, employees: allEmployees, payments: allPayments, children
+  clientId, clientName, taxYear, initialTab = "overview", initialCompanyId, companies, employees: allEmployees, payments: allPayments
 }: {
   clientId: string;
   clientName?: string;
@@ -51,8 +46,8 @@ export function ClientPayrollTabs({
   companies: { id: string; name: string }[];
   employees: PayrollEmployeeView[];
   payments: PayrollPaymentView[];
-  children: ReactNode;
 }) {
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>(initialTab);
   const [companyId, setCompanyId] = useState(initialCompanyId || companies[0]?.id || "");
   const employees = allEmployees.filter(employee => !companyId || employee.companyId === companyId);
@@ -61,6 +56,14 @@ export function ClientPayrollTabs({
   const companyParams = `companyId=${encodeURIComponent(companyId)}&year=${taxYear}`;
   const runHref = `/admin/clients/${encodeURIComponent(clientId)}/payroll/run?${companyParams}`;
   const settingsHref = `/admin/clients/${encodeURIComponent(clientId)}/payroll/settings?${companyParams}`;
+  const sectionHref = (section: Tab, selectedCompany = companyId) =>
+    `/admin/clients/${encodeURIComponent(clientId)}/payroll?year=${taxYear}&companyId=${encodeURIComponent(selectedCompany)}&section=${section}`;
+  const navigateToTab = (section: Tab) => {
+    setTab(section);
+    setSelectedEmployeeId("");
+    router.replace(sectionHref(section), { scroll: false });
+  };
+
 
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
   const [search, setSearch] = useState("");
@@ -95,10 +98,10 @@ export function ClientPayrollTabs({
     <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 bg-white p-5 sm:p-7">
         <div>
-          <p className="mb-1 text-xs font-extrabold uppercase tracking-[0.15em] text-emerald-700">KAL Accounting &amp; Tax · {taxYear}</p>
+          <p className="mb-1 text-xs font-extrabold uppercase tracking-[0.15em] text-emerald-700">KAL PAYROLL · {taxYear}</p>
           <h2 className="text-3xl font-black tracking-tight text-slate-900">Payroll</h2>
           {clientName ? <p className="mt-1 text-sm font-bold text-slate-800">{clientName}</p> : null}
-          <p className="mt-2 text-sm text-slate-600">Employee payroll for this selected client and employer company only.</p>
+          <p className="mt-2 text-sm text-slate-600">Manage employees, paychecks, and CRA payroll records for the selected employer.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href={add} className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-bold text-slate-900 hover:bg-slate-50">
@@ -111,7 +114,7 @@ export function ClientPayrollTabs({
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-5 py-4 sm:px-7">
         <label className="grid min-w-60 flex-1 gap-1 text-sm font-bold text-slate-800">Employer company
-          <select value={companyId} onChange={event => { setCompanyId(event.target.value); setSelectedEmployeeId(""); }}
+          <select value={companyId} onChange={event => { const selected = event.target.value; setCompanyId(selected); setSelectedEmployeeId(""); router.replace(sectionHref(tab, selected), { scroll: false }); }}
             className="max-w-lg rounded-lg border border-slate-300 px-3 py-2 font-normal text-slate-900">
             {companies.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
           </select>
@@ -121,17 +124,6 @@ export function ClientPayrollTabs({
           <Link href={settingsHref} className="rounded-lg border border-slate-300 px-4 py-3 text-sm font-bold text-slate-800">Payroll settings</Link>
         </div>
       </div>
-      <nav aria-label="Payroll sections" className="flex flex-wrap gap-1 border-b border-slate-200 px-4 pt-2 sm:px-7">
-        {tabs.map(item => (
-          <button key={item.id} type="button" aria-current={tab === item.id ? "page" : undefined}
-            onClick={() => { setTab(item.id); setSelectedEmployeeId(""); }}
-            className={`min-h-12 border-b-[3px] px-4 py-2 text-sm font-bold transition ${tab === item.id
-              ? "border-emerald-700 text-emerald-800"
-              : "border-transparent text-slate-600 hover:border-slate-200 hover:text-slate-900"}`}>
-            {item.label}
-          </button>
-        ))}
-      </nav>
 
       <div className="grid gap-6 bg-white p-4 sm:p-7">
         {tab === "overview" ? (
@@ -171,23 +163,18 @@ export function ClientPayrollTabs({
                     </tbody>
                   </table>
                 </div>
-                <button onClick={() => setTab("employees")} type="button" className="mt-4 text-sm font-bold text-emerald-700 hover:underline">View employees and paychecks</button>
+                <button onClick={() => navigateToTab("employees")} type="button" className="mt-4 text-sm font-bold text-emerald-700 hover:underline">View employees and paychecks</button>
               </article>
               <article className="rounded-xl border border-slate-200 bg-white p-5">
                 <h4 className="text-lg font-black text-slate-900">Payroll tasks</h4>
                 <p className="mb-4 text-sm text-slate-500">Keep your payroll records organized.</p>
                 <div className="grid gap-3">
                   <Link href={base} className="flex items-center gap-3 rounded-lg border border-slate-200 p-4 font-semibold text-slate-900 hover:bg-slate-50"><ClipboardList className="h-5 w-5 text-emerald-700"/> Record or review a paycheck <span className="ml-auto">›</span></Link>
-                  <button onClick={() => setTab("tax")} type="button" className="flex items-center gap-3 rounded-lg border border-slate-200 p-4 text-left font-semibold text-slate-900 hover:bg-slate-50"><Landmark className="h-5 w-5 text-emerald-700"/> Review payroll deductions <span className="ml-auto">›</span></button>
-                  <button onClick={() => setTab("compliance")} type="button" className="flex items-center gap-3 rounded-lg border border-slate-200 p-4 text-left font-semibold text-slate-900 hover:bg-slate-50"><FileCheck2 className="h-5 w-5 text-emerald-700"/> Year-end T4 records <span className="ml-auto">›</span></button>
+                  <button onClick={() => navigateToTab("tax")} type="button" className="flex items-center gap-3 rounded-lg border border-slate-200 p-4 text-left font-semibold text-slate-900 hover:bg-slate-50"><Landmark className="h-5 w-5 text-emerald-700"/> Review payroll deductions <span className="ml-auto">›</span></button>
+                  <button onClick={() => navigateToTab("compliance")} type="button" className="flex items-center gap-3 rounded-lg border border-slate-200 p-4 text-left font-semibold text-slate-900 hover:bg-slate-50"><FileCheck2 className="h-5 w-5 text-emerald-700"/> Year-end T4 records <span className="ml-auto">›</span></button>
                 </div>
               </article>
             </div>
-            <details className="rounded-xl border border-slate-200 bg-white p-5">
-              <summary className="cursor-pointer text-base font-black text-slate-900">Detailed payroll records and existing calculations</summary>
-              <p className="my-3 text-sm text-slate-600">The original worker review, payroll entries, paystub and calculations remain available here.</p>
-              <div className="grid gap-5">{children}</div>
-            </details>
           </>
         ) : null}
 
@@ -271,8 +258,8 @@ export function ClientPayrollTabs({
             <section className="grid gap-4 rounded-xl border border-slate-200 bg-white p-5">
               <h4 className="text-base font-black uppercase tracking-wide text-slate-900">Filing resources</h4>
               <div className="grid gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2">
-                <div><h5 className="font-bold text-slate-900">Record of employment</h5><p className="mt-1 text-sm text-slate-600">Review employee details and pay history before preparing ROEs.</p><button type="button" onClick={() => setTab("employees")} className="mt-2 text-sm font-bold text-emerald-700 hover:underline">Review employees</button></div>
-                <div><h5 className="font-bold text-slate-900">Archived forms and filings</h5><p className="mt-1 text-sm text-slate-600">View saved payroll records and prepare year-end forms.</p><button type="button" onClick={() => setTab("compliance")} className="mt-2 text-sm font-bold text-emerald-700 hover:underline">Open compliance</button></div>
+                <div><h5 className="font-bold text-slate-900">Record of employment</h5><p className="mt-1 text-sm text-slate-600">Review employee details and pay history before preparing ROEs.</p><button type="button" onClick={() => navigateToTab("employees")} className="mt-2 text-sm font-bold text-emerald-700 hover:underline">Review employees</button></div>
+                <div><h5 className="font-bold text-slate-900">Archived forms and filings</h5><p className="mt-1 text-sm text-slate-600">View saved payroll records and prepare year-end forms.</p><button type="button" onClick={() => navigateToTab("compliance")} className="mt-2 text-sm font-bold text-emerald-700 hover:underline">Open compliance</button></div>
               </div>
             </section>
             <section className="rounded-xl border border-amber-200 bg-white p-5">
