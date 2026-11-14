@@ -51,7 +51,7 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
     : { data: null, error: null };
   if (companyError) throw new Error("Could not load company payroll defaults.");
 
-  const back = `/admin/clients/${encodeURIComponent(clientId)}?year=${year}&tab=workers-payments`;
+  const back = `/admin/clients/${encodeURIComponent(clientId)}/payroll?year=${year}`;
 
   return (
     <main className="mx-auto grid max-w-5xl gap-5">
