@@ -116,6 +116,7 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
         </section>
 
         <PayScheduleEditor
+          employeeName={worker.worker_name}
           scheduleName={profile?.schedule_name ?? "Regular payroll"}
           initialFrequency={profile?.pay_frequency ?? companySettings?.default_pay_frequency ?? "biweekly"}
           initialPeriodEnd={profile?.next_period_end ?? ""}
