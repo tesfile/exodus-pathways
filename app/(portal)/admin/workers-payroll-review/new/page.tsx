@@ -30,7 +30,13 @@ export default async function AddEmployeePage({ searchParams }: Props) {
         <h1 className="mt-4 text-3xl font-black text-slate-950">Add an employee</h1>
         <p className="mt-2 text-slate-600">QuickBooks-style employee setup for {profile.full_name}. Enter SIN and birthdate securely when creating an employee, then finish pay schedule details.</p>
       </div>
-      {error ? <p role="alert" className="rounded-lg border border-red-300 bg-red-50 p-4 text-red-800">Please check the employee information. Verify the birthdate and SIN, then try again.</p> : null}
+      {error ? <p role="alert" className="rounded-lg border border-red-300 bg-red-50 p-4 text-red-800">{
+        error === "invalid_sin" ? "Check the nine-digit SIN. It did not pass validation. You may leave SIN blank until the employee provides it." :
+        error === "invalid_birthdate" ? "Enter a valid employee birthdate that is not in the future." :
+        error === "invalid_pay" ? "Check the hourly or salary amount. Enter a positive amount or leave it blank until pay setup." :
+        error === "invalid_name" ? "Enter the employee's legal first and last names." :
+        "Employee information could not be saved. Review the details and try again."
+      }</p> : null}
         <form action={saveEmployee} autoComplete="off" className="grid gap-6">
           <input type="hidden" name="client_id" value={clientId}/>
           <input type="hidden" name="year" value={year ?? String(new Date().getFullYear())}/>
@@ -50,7 +56,7 @@ export default async function AddEmployeePage({ searchParams }: Props) {
               <label className="grid gap-2 font-semibold">Last name *<input name="last_name" required maxLength={80} className="rounded-lg border border-slate-300 p-3"/></label>
               <label className="grid gap-2 font-semibold">Birthdate *<input name="birth_date" type="date" required max={new Date().toISOString().slice(0, 10)} className="rounded-lg border border-slate-300 p-3"/><span className="text-xs font-normal text-slate-500">Required for accurate payroll and CPP eligibility.</span></label>
               <label className="grid gap-2 font-semibold lg:col-span-2">Social Insurance Number (SIN)
-                <input name="sin" type="password" inputMode="numeric" autoComplete="new-password" maxLength={20} placeholder="Nine-digit SIN" className="rounded-lg border border-slate-300 p-3"/>
+                <input name="sin" type="password" inputMode="numeric" autoComplete="off" maxLength={20} placeholder="Nine-digit SIN" className="rounded-lg border border-slate-300 p-3"/>
                 <span className="text-xs font-normal leading-5 text-slate-600">Securely encrypted on the server; only the last four digits appear later. If not yet available, leave blank and enter after hiring. For SINs beginning with 9, verify work authorization and expiry.</span>
               </label>
               <label className="grid gap-2 font-semibold">Email<input name="email" type="email" maxLength={254} className="rounded-lg border border-slate-300 p-3"/></label>
