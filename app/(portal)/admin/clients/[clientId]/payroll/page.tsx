@@ -58,28 +58,15 @@ export default async function KalClientPayrollPage({ params, searchParams }: Pag
   return (
     <div className="grid gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="text-sm text-slate-500">
-          <Link href={`/admin/clients/${clientId}`} className="font-semibold text-slate-600 hover:text-emerald-700">
-            {client.companyName}
-          </Link>
-          <span className="mx-2">/</span>
-          <span className="font-bold text-slate-900">Payroll</span>
-        </div>
-        <Link href={`/admin/clients/${clientId}?year=${year}&tab=bookkeeping`}
-          className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-800 hover:bg-slate-50">
-          Return to KAL Accounting
+        <Link href="/admin/payroll" className="text-sm font-bold text-emerald-800 hover:underline">
+          ← All payroll companies
         </Link>
+        <span className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">Payroll workspace · {year}</span>
       </div>
       <ClientPayrollTabs key={`${year}:${section}:${initialCompanyId}`}
         clientId={client.id} clientName={client.companyName} taxYear={year}
         initialTab={section} initialCompanyId={initialCompanyId}
-        companies={companies} employees={relevantEmployees} payments={employeePayments}>
-        <p className="text-sm text-slate-600">
-          The original payroll review and verified payment-entry workflow remain available.
-        </p>
-        <Link href={`/admin/workers-payroll-review?clientId=${encodeURIComponent(client.id)}&year=${year}`}
-          className="font-bold text-emerald-700 hover:underline">Open original payroll record review</Link>
-      </ClientPayrollTabs>
+        companies={companies} employees={relevantEmployees} payments={employeePayments} />
     </div>
   );
 }
