@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
-import { ArrowLeft, BookOpen, CalendarDays, ClipboardCheck, FileText, Landmark, LogOut, Menu, MessageSquareText, Receipt, Settings, Users, Wallet } from "lucide-react";
+import { CalendarDays, ClipboardCheck, FileText, Landmark, LogOut, Menu, MessageSquareText, Settings, Users, Wallet } from "lucide-react";
 import { useState } from "react";
 import { brand, clientNav, employeeNav } from "@/lib/constants";
 import type { PortalUser } from "@/lib/types";
@@ -44,14 +44,6 @@ export function PortalShell({ user, children }: PortalShellProps) {
       { href: `${clientBase}/payroll/settings?${contextQuery}`, label: "Payroll Settings", icon: Settings },
     ] : []),
   ];
-  const clientWorkspaceNav = selectedClientId ? [
-    { href: "/admin/clients", label: "Back to All Clients", icon: ArrowLeft },
-    { href: clientBase, label: "Client Overview", icon: Users },
-    { href: `${clientBase}?tab=bookkeeping`, label: "Bookkeeping", icon: BookOpen },
-    { href: `${clientBase}/payroll`, label: "Payroll", icon: Wallet },
-    { href: `${clientBase}?tab=documents`, label: "Scan & Documents", icon: FileText },
-    { href: `${clientBase}?tab=reports`, label: "Reports", icon: Receipt },
-  ] : [];
   const nav = user.role === "employee" ? employeeNav : clientNav;
 
   async function signOut() {
@@ -98,10 +90,6 @@ export function PortalShell({ user, children }: PortalShellProps) {
               active && "border-emerald-500 bg-white/10 text-white")}>
             <Icon className="h-4 w-4" aria-hidden="true"/><span>{item.label}</span>
           </Link>;
-        }) : selectedClientId ? clientWorkspaceNav.map((item) => {
-          const Icon = item.icon;
-          const active = item.href === clientBase ? pathname === clientBase : false;
-          return <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className={cn("focus-ring flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm font-bold text-blue-50 hover:bg-white/10", active && "bg-white text-exodus-navy")}><Icon className="h-4 w-4" aria-hidden="true"/><span>{item.label}</span></Link>;
         }) : nav.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href;
