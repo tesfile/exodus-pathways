@@ -34,7 +34,7 @@ export default async function CompanyPayrollSettingsPage({ params, searchParams 
     : { data: null, error: null };
   if (error) throw new Error("Unable to read company payroll settings.");
 
-  const back = `/admin/clients/${encodeURIComponent(clientId)}?year=${year}&tab=workers-payments`;
+  const back = `/admin/clients/${encodeURIComponent(clientId)}/payroll?year=${year}`;
   return <main className="mx-auto grid max-w-4xl gap-6">
     <div>
       <Link href={back} className="text-sm font-bold text-emerald-700 hover:underline">← Back to Client Payroll</Link>
