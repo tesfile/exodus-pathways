@@ -120,7 +120,6 @@ export function ClientPayrollTabs({
           </select>
         </label>
         <div className="flex flex-wrap gap-2">
-          <Link href={runHref} className="rounded-lg bg-emerald-700 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-800">Run Payroll</Link>
           <Link href={settingsHref} className="rounded-lg border border-slate-300 px-4 py-3 text-sm font-bold text-slate-800">Payroll settings</Link>
         </div>
       </div>
