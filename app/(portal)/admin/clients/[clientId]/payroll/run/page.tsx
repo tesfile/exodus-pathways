@@ -25,7 +25,7 @@ export default async function RunPayrollPage({ params, searchParams }: Props) {
     .select("id,legal_name,trade_name").eq("client_id", clientId).order("legal_name");
   if (companyError) throw new Error("Unable to load client companies.");
   const selected = companies?.find(c => c.id === query?.companyId) ?? companies?.[0];
-  const back = `/admin/clients/${encodeURIComponent(clientId)}?year=${year}&tab=workers-payments`;
+  const back = `/admin/clients/${encodeURIComponent(clientId)}/payroll?year=${year}`;
   if (!selected) return <main className="grid gap-5"><Link href={back} className="font-semibold text-emerald-700">← Back to Payroll</Link>
     <h1 className="text-2xl font-black">Run Payroll</h1><p>No company is configured for this client yet. Set up the employer company first.</p></main>;
 
