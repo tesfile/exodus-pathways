@@ -93,7 +93,7 @@ export function PayScheduleEditor({
   const firstPayDate = parseDate(payDate);
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm md:col-span-2 sm:p-7">
+    <section id="pay-schedule" className="scroll-mt-24 rounded-xl border border-slate-200 bg-white p-5 shadow-sm md:col-span-2 sm:p-7">
       <div className="mb-7 flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-5">
         <div>
           <p className="mb-2 text-xs font-black uppercase tracking-[0.16em] text-emerald-700">Employee payroll setup</p>
