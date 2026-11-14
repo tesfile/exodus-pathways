@@ -21,12 +21,12 @@ export default async function AddEmployeePage({ searchParams }: Props) {
   const { data: companies, error: companiesError } = await db.from("companies").select("id,legal_name,trade_name").eq("client_id", clientId).order("legal_name");
   if (profileError || companiesError) throw new Error("Unable to load client companies.");
   if (!profile || profile.role !== "client") notFound();
-  const back = `/admin/clients/${encodeURIComponent(clientId)}?year=${encodeURIComponent(year ?? String(new Date().getFullYear()))}&tab=workers-payments`;
+  const back = `/admin/clients/${encodeURIComponent(clientId)}/payroll?section=employees&year=${encodeURIComponent(year ?? String(new Date().getFullYear()))}`;
 
   return (
     <main className="mx-auto grid max-w-3xl gap-6">
       <div>
-        <Link href={back} className="font-semibold text-blue-800 hover:underline">← Workers & Payments</Link>
+        <Link href={back} className="font-semibold text-blue-800 hover:underline">← Payroll employees</Link>
         <h1 className="mt-4 text-3xl font-bold text-blue-950">Add Employee</h1>
         <p className="mt-2 text-slate-600">Client: {profile.full_name}. Add employees directly to this client.</p>
       </div>
