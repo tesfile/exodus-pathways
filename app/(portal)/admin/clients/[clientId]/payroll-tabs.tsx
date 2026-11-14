@@ -36,7 +36,7 @@ const money = (amount: number) =>
 const prettyDate = (date: string | null) => date || "—";
 
 export function ClientPayrollTabs({
-  clientId, clientName, taxYear, initialTab = "overview", initialCompanyId, companies, employees: allEmployees, payments: allPayments
+  clientId, clientName, taxYear, initialTab = "overview", initialCompanyId, companies, employees: allEmployees, payments: allPayments, children
 }: {
   clientId: string;
   clientName?: string;
@@ -46,6 +46,7 @@ export function ClientPayrollTabs({
   companies: { id: string; name: string }[];
   employees: PayrollEmployeeView[];
   payments: PayrollPaymentView[];
+  children?: ReactNode;
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>(initialTab);
@@ -174,6 +175,10 @@ export function ClientPayrollTabs({
                 </div>
               </article>
             </div>
+            {children ? <details className="rounded-xl border border-slate-200 bg-white p-5">
+              <summary className="cursor-pointer text-sm font-black text-slate-900">Additional payroll review</summary>
+              <div className="mt-4 grid gap-5">{children}</div>
+            </details> : null}
           </>
         ) : null}
 
