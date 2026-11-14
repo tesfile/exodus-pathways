@@ -225,7 +225,7 @@ export function ClientPayrollTabs({
                         <td className="p-3">{employee.status || "—"}</td>
                         <td className="p-3">{prettyDate(latest?.date ?? null)}</td>
                         <td className="p-3">{latest?.frequency || "Not recorded"}</td>
-                        <td className="p-3"><div className="flex flex-wrap gap-3"><Link href={profileHref(employee.id)} className="font-bold text-emerald-700 hover:underline">Edit profile &amp; schedule</Link><Link href={employeeHref(employee.id)} className="font-bold text-blue-800 hover:underline">Review paychecks</Link></div></td>
+                        <td className="p-3"><div className="flex flex-wrap gap-3"><Link href={profileHref(employee.id)} className="font-bold text-emerald-700 hover:underline">Edit profile</Link><Link href={`${profileHref(employee.id)}#pay-schedule`} className="font-bold text-emerald-700 hover:underline">Pay schedule</Link><Link href={employeeHref(employee.id)} className="font-bold text-blue-800 hover:underline">Review paychecks</Link></div></td>
                       </tr>;
                     })}
                     {filteredEmployees.length === 0 ? <tr><td colSpan={5} className="p-7 text-center text-slate-500">No matching employees found.</td></tr> : null}
