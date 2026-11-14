@@ -60,10 +60,10 @@ export function PortalShell({ user, children }: PortalShellProps) {
         <Link href={isPayrollWorkspace ? "/admin/payroll" : "/"} className="focus-ring flex items-center gap-3 rounded-md">
           <Image src="/images/kal-logo.png" alt="KAL Service Alliance logo" width={48} height={48} className="h-12 w-12 shrink-0 rounded bg-white object-contain p-0.5" priority />
           <span className="min-w-0">
-            <span className="block text-sm font-black leading-5">{brand.name}</span>
+            <span className="block text-sm font-black leading-5">{isPayrollWorkspace ? "KAL PAYROLL" : brand.name}</span>
             <span className="block text-[0.65rem] font-semibold leading-4 text-amber-100">{brand.tagline}</span>
             <span className="block text-xs font-semibold text-blue-100">
-              {user.role === "admin" ? t("common.adminAccess") : user.role === "employee" ? t("common.employeeAccess") : t("common.yourRecordsOnly")}
+              {user.role === "admin" ? "Payroll administrator" : user.role === "employee" ? t("common.employeeAccess") : t("common.yourRecordsOnly")}
             </span>
           </span>
         </Link>
@@ -147,7 +147,7 @@ export function PortalShell({ user, children }: PortalShellProps) {
             </button>
             <Link href={isPayrollWorkspace ? "/admin/payroll" : "/portal/documents"} className="flex items-center gap-2 font-black text-exodus-navy">
               <Image src="/images/kal-logo.png" alt="" width={36} height={36} className="h-9 w-9 object-contain" />
-              <span className="text-xs">{brand.name}</span>
+              <span className="text-xs">{isPayrollWorkspace ? "KAL PAYROLL" : brand.name}</span>
             </Link>
             <LanguageSwitcher />
           </div>
