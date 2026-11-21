@@ -71,7 +71,7 @@ export async function calculatePayrollPreview2026(input:Input):Promise<PayrollCa
  const [{data:workers,error:workerError},{data:profiles,error:profileError},{data:payments,error:paymentError},{data:payItems,error:itemError}]=await Promise.all([
   db.from("workers").select("id,worker_name,worker_type").eq("client_id",input.clientId).eq("company_id",input.companyId).in("id",ids),
   db.from("kal_payroll_employee_profiles").select(
-   "worker_id,pay_type,salary_amount,employment_status,birth_date,hire_date,termination_date,contract_end_date,"+
+   "worker_id,pay_type,salary_amount,pay_frequency,employment_status,birth_date,hire_date,termination_date,contract_end_date,"+
    "td1_federal_claim,td1_provincial_claim,additional_income_tax,cpp_exempt,ei_exempt,federal_income_tax_exempt,overtime_multiplier,work_location"
   ).eq("client_id",input.clientId).in("worker_id",ids),
   db.from("worker_payments").select(
@@ -82,6 +82,7 @@ export async function calculatePayrollPreview2026(input:Input):Promise<PayrollCa
     .eq("client_id",input.clientId).in("worker_id",ids).eq("active",true)
  ]);
  if(workerError||profileError||paymentError||itemError)throw new Error("Unable to load required historical payroll records.");
+ if((payments??[]).length>=3000)throw new Error("Too many historical transactions for a complete year-to-date calculation. Reconcile in payroll history first.");
  const workerById=new Map((workers??[]).map(w=>[w.id,w]));
  const profileById=new Map((profiles??[]).map(p=>[p.worker_id,p]));
  type PriorPayment=NonNullable<typeof payments>[number];
@@ -102,6 +103,10 @@ export async function calculatePayrollPreview2026(input:Input):Promise<PayrollCa
     (profile.termination_date&&profile.termination_date<input.periodStart)||
     (profile.contract_end_date&&profile.contract_end_date<input.periodEnd))
    return blocked("Employment dates or contract end require a partial-period review.");
+  if(profile.pay_frequency&&profile.pay_frequency!==input.frequency)
+    return blocked("Employee pay frequency differs from this company run. Select the correct pay schedule before calculating income tax.");
+  if(profile.hire_date&&profile.hire_date>input.periodStart)
+    return blocked("Employee was hired during this pay period. Confirm prorated working hours and special first-pay rules.");
   if(profile.pay_type==="commission")return blocked("Commission-only pay requires the CRA commission calculation method.");
   if(profile.pay_type==="salary"&&line.overtimeHours>0)
     return blocked("Overtime for salaried employees requires review.");
