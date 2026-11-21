@@ -7,7 +7,7 @@ import { PayrollRunGrid, type RunPayrollEmployee } from "./payroll-run-grid";
 export const dynamic = "force-dynamic";
 type Props = {
   params: Promise<{ clientId: string }>;
-  searchParams?: Promise<{ companyId?: string; year?: string }>;
+  searchParams?: Promise<{ companyId?: string; year?: string; draftId?: string }>;
 };
 const uuid = /^[0-9a-f]{8}-[0-9a-f-]{27}$/i;
 const numeric = (value: unknown, fallback = 0) => value === null || value === undefined ? fallback : Number(value);
@@ -29,22 +29,44 @@ export default async function RunPayrollPage({ params, searchParams }: Props) {
   if (!selected) return <main className="grid gap-5"><Link href={back} className="font-semibold text-emerald-700">← Back to Payroll</Link>
     <h1 className="text-2xl font-black">Run Payroll</h1><p>No company is configured for this client yet. Set up the employer company first.</p></main>;
 
-  const [{ data: settings, error: settingsError }, { data: workers, error: workersError }, { data: profiles, error: profilesError }] = await Promise.all([
-    db.from("kal_company_payroll_settings").select("default_hours_per_day,default_days_per_week,default_pay_frequency")
+  const [{ data: settings, error: settingsError }, { data: workers, error: workersError }, { data: profiles, error: profilesError }, { data: draftRuns, error: draftsError }] = await Promise.all([
+    db.from("kal_company_payroll_settings").select("default_hours_per_day,default_days_per_week,default_pay_frequency,schedule_name,next_period_end,next_pay_date,auto_prepare_enabled")
       .eq("company_id", selected.id).eq("client_id", clientId).maybeSingle(),
     db.from("workers").select("id,worker_name,worker_type,status")
       .eq("client_id", clientId).eq("company_id", selected.id).order("worker_name"),
-    db.from("kal_payroll_employee_profiles").select("worker_id,pay_type,hourly_rate,salary_amount,default_hours_per_day,default_days_per_week,pay_frequency,employment_status")
-      .eq("client_id", clientId)
+    db.from("kal_payroll_employee_profiles").select("worker_id,pay_type,hourly_rate,salary_amount,default_hours_per_day,default_days_per_week,pay_frequency,employment_status,hire_date,termination_date,contract_end_date,auto_include")
+      .eq("client_id", clientId),
+    db.from("kal_payroll_draft_runs")
+      .select("id,period_start,period_end,pay_date,frequency,status")
+      .eq("client_id",clientId).eq("company_id",selected.id).gte("pay_date",`${year}-01-01`).lte("pay_date",`${year}-12-31`)
+      .order("pay_date",{ascending:true}).limit(40)
   ]);
-  if (settingsError || workersError || profilesError) throw new Error("Unable to load company payroll data.");
+  if (settingsError || workersError || profilesError || draftsError) throw new Error("Unable to load company payroll data.");
 
   const profileMap = new Map((profiles ?? []).map(profile => [profile.worker_id, profile]));
+  const selectedDraft = draftRuns?.find(draft => draft.id === query?.draftId) ??
+    (draftRuns ?? []).find(draft => draft.status === "draft") ?? null;
+  const currentPeriodStart = selectedDraft?.period_start ?? (settings?.next_period_end
+    ? (() => {
+      const d = new Date(settings.next_period_end + "T00:00:00Z");
+      if (settings.default_pay_frequency === "weekly") d.setUTCDate(d.getUTCDate()-6);
+      else if (settings.default_pay_frequency === "biweekly") d.setUTCDate(d.getUTCDate()-13);
+      else if (settings.default_pay_frequency === "semimonthly") d.setUTCDate(d.getUTCDate() <= 15 ? 1 : 16);
+      else d.setUTCDate(1);
+      return d.toISOString().slice(0,10);
+    })() : "");
+  const currentPeriodEnd = selectedDraft?.period_end ?? settings?.next_period_end ?? "";
+
   const employees: RunPayrollEmployee[] = (workers ?? [])
     .filter(worker => /employee/i.test(worker.worker_type))
     .filter(worker => {
-      const status = profileMap.get(worker.id)?.employment_status ?? worker.status;
-      return !["Terminated", "Deceased", "Not on payroll", "Paid leave of absence", "Unpaid leave of absence"].includes(status);
+      const profile = profileMap.get(worker.id);
+      const status = profile?.employment_status ?? worker.status;
+      return !["Terminated", "Deceased", "Not on payroll", "Paid leave of absence", "Unpaid leave of absence"].includes(status)
+        && profile?.auto_include !== false
+        && (!profile?.hire_date || !currentPeriodEnd || profile.hire_date <= currentPeriodEnd)
+        && (!profile?.termination_date || !currentPeriodStart || profile.termination_date >= currentPeriodStart)
+        && (!profile?.contract_end_date || !currentPeriodStart || profile.contract_end_date >= currentPeriodStart);
     })
     .map(worker => {
       const profile = profileMap.get(worker.id);
@@ -73,7 +95,14 @@ export default async function RunPayrollPage({ params, searchParams }: Props) {
     </form>
     <PayrollRunGrid clientId={clientId} companyId={selected.id} year={year}
       companyName={selected.trade_name || selected.legal_name}
-      frequency={settings?.default_pay_frequency ?? "biweekly"}
+      frequency={selectedDraft?.frequency ?? settings?.default_pay_frequency ?? "biweekly"}
+      initialPeriodStart={currentPeriodStart}
+      initialPeriodEnd={currentPeriodEnd}
+      initialPayDate={selectedDraft?.pay_date ?? settings?.next_pay_date ?? ""}
+      drafts={(draftRuns ?? []).map(draft => ({
+        id: draft.id, periodStart: draft.period_start, periodEnd: draft.period_end,
+        payDate: draft.pay_date, frequency: draft.frequency, status: draft.status
+      }))}
       employees={employees}/>
   </main>;
 }
