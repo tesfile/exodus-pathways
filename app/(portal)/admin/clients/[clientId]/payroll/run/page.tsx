@@ -7,7 +7,7 @@ import { PayrollRunGrid, type RunPayrollEmployee } from "./payroll-run-grid";
 export const dynamic = "force-dynamic";
 type Props = {
   params: Promise<{ clientId: string }>;
-  searchParams?: Promise<{ companyId?: string; year?: string; draftId?: string }>;
+  searchParams?: Promise<{ companyId?: string; year?: string; draftId?: string; saved?: string }>;
 };
 const uuid = /^[0-9a-f]{8}-[0-9a-f-]{27}$/i;
 const numeric = (value: unknown, fallback = 0) => value === null || value === undefined ? fallback : Number(value);
@@ -34,7 +34,7 @@ export default async function RunPayrollPage({ params, searchParams }: Props) {
       .eq("company_id", selected.id).eq("client_id", clientId).maybeSingle(),
     db.from("workers").select("id,worker_name,worker_type,status")
       .eq("client_id", clientId).eq("company_id", selected.id).order("worker_name"),
-    db.from("kal_payroll_employee_profiles").select("worker_id,pay_type,hourly_rate,salary_amount,default_hours_per_day,default_days_per_week,pay_frequency,employment_status,hire_date,termination_date,contract_end_date,auto_include")
+    db.from("kal_payroll_employee_profiles").select("worker_id,pay_type,hourly_rate,salary_amount,default_hours_per_day,default_days_per_week,pay_frequency,employment_status,hire_date,termination_date,contract_end_date,auto_include,payment_method,vacation_percent")
       .eq("client_id", clientId),
     db.from("kal_payroll_draft_runs")
       .select("id,period_start,period_end,pay_date,frequency,status")
@@ -82,9 +82,24 @@ export default async function RunPayrollPage({ params, searchParams }: Props) {
         daysPerWeek: numeric(profile?.default_days_per_week, numeric(settings?.default_days_per_week, 5)),
         frequency: profile?.pay_frequency ?? settings?.default_pay_frequency ?? "biweekly",
         status: profile?.employment_status ?? worker.status,
-        contractEndDate: profile?.contract_end_date ?? null
+        contractEndDate: profile?.contract_end_date ?? null,
+        paymentMethod: profile?.payment_method ?? "paper_cheque",
+        vacationPercent: numeric(profile?.vacation_percent,4)
       };
     });
+  const [{data:savedLines,error:linesError},{data:previousPayments,error:paymentsError}]=await Promise.all([
+    selectedDraft ? db.from("kal_payroll_draft_lines")
+      .select("worker_id,regular_hours,hourly_rate,overtime_hours,vacation_pay,stat_holiday_pay,memo,payment_method")
+      .eq("client_id",clientId).eq("run_id",selectedDraft.id) : Promise.resolve({data:[],error:null}),
+    db.from("worker_payments").select("worker_id,gross_pay,payment_date")
+      .eq("client_id",clientId).eq("company_id",selected.id)
+      .order("payment_date",{ascending:false}).limit(300)
+  ]);
+  if(linesError||paymentsError) throw new Error("Could not load payroll draft records.");
+  const priorGross=new Map<string,{gross:number;date:string}>();
+  for(const payment of previousPayments??[]){
+    if(!priorGross.has(payment.worker_id)) priorGross.set(payment.worker_id,{gross:Number(payment.gross_pay)||0,date:payment.payment_date});
+  }
   return <main className="mx-auto grid max-w-7xl gap-5">
     <Link href={back} className="w-fit text-sm font-bold text-emerald-700 hover:underline">← Back to Client Payroll</Link>
     <form method="get" className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-4">
@@ -110,12 +125,21 @@ export default async function RunPayrollPage({ params, searchParams }: Props) {
         </Link>)}
       </div> : <p className="mt-4 rounded-lg bg-slate-50 p-4 text-sm text-slate-600">No recurring drafts yet. Enable automatic draft preparation in Company Settings. The daily scheduler creates the future periods. You can use the prefilled dates below immediately.</p>}
     </section>
+    {query?.saved==="1" ? <p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-900">Payroll draft saved. No payments or CRA filings have been issued.</p> : null}
     <PayrollRunGrid clientId={clientId} companyId={selected.id} year={year}
       companyName={selected.trade_name || selected.legal_name}
       frequency={selectedDraft?.frequency ?? settings?.default_pay_frequency ?? "biweekly"}
       initialPeriodStart={currentPeriodStart}
       initialPeriodEnd={currentPeriodEnd}
       initialPayDate={selectedDraft?.pay_date ?? settings?.next_pay_date ?? ""}
+      draftId={selectedDraft?.id ?? ""}
+      savedLines={(savedLines??[]).map(line=>({
+        workerId:line.worker_id,regularHours:Number(line.regular_hours),hourlyRate:Number(line.hourly_rate),
+        overtimeHours:Number(line.overtime_hours),vacationPay:Number(line.vacation_pay),
+        statHolidayPay:Number(line.stat_holiday_pay),memo:line.memo??"",
+        paymentMethod:line.payment_method
+      }))}
+      priorPay={Object.fromEntries(priorGross)}
       employees={employees}/>
   </main>;
 }
