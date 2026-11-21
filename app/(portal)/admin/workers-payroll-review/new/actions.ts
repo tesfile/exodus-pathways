@@ -56,9 +56,12 @@ export async function saveEmployee(form: FormData) {
 
   const birthDate = field(form, "birth_date");
   const hireDate = field(form, "hire_date");
+  const contractEndDate = field(form, "contract_end_date");
+  const autoInclude = form.get("auto_include") === "on";
   const sin = field(form, "sin").replace(/[ -]/g, "");
   if (!isValidDate(birthDate) || birthDate > new Date().toISOString().slice(0, 10)) invalid("invalid_birthdate");
   if (hireDate && !isValidDate(hireDate)) invalid("invalid_dates");
+  if (contractEndDate && (!isValidDate(contractEndDate) || (hireDate && contractEndDate < hireDate))) invalid("invalid_dates");
   if (sin && !validSin(sin)) invalid("invalid_sin");
   const encryptedSin = sin ? encryptSin(sin) : null;
 
@@ -139,6 +142,8 @@ export async function saveEmployee(form: FormData) {
     client_id: clientId,
     birth_date: birthDate,
     hire_date: optional(hireDate),
+    contract_end_date: optional(contractEndDate),
+    auto_include: autoInclude,
     employment_status: employmentStatus,
     work_location: optional(field(form, "work_location").slice(0, 200)),
     department: optional(field(form, "department").slice(0, 200)),
