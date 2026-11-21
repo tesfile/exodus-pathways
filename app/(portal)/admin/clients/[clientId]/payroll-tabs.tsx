@@ -71,6 +71,7 @@ export function ClientPayrollTabs({
 
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
   const [search, setSearch] = useState("");
+  const [taxCentreView, setTaxCentreView] = useState<"payments" | "filings">("payments");
 
   const base = `/admin/workers-payroll-review?clientId=${encodeURIComponent(clientId)}&year=${taxYear}`;
   const add = `/admin/workers-payroll-review/new?clientId=${encodeURIComponent(clientId)}&year=${taxYear}`;
@@ -280,49 +281,52 @@ export function ClientPayrollTabs({
 
         {tab === "tax" ? (
           <>
-            <div><h3 className="text-xl font-black text-slate-900">Payroll Tax</h3><p className="mt-1 text-sm text-slate-600">Year-to-date amounts from saved employee payroll records. These are not proof of payment to CRA.</p></div>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              <SummaryCard label="Employee CPP" value={money(totals.cpp)} icon={<Landmark className="h-5 w-5"/>} detail="Recorded deduction" />
-              <SummaryCard label="Employer CPP" value={money(totals.employerCpp)} icon={<Landmark className="h-5 w-5"/>} detail="Recorded employer portion" />
-              <SummaryCard label="Employee EI" value={money(totals.ei)} icon={<Landmark className="h-5 w-5"/>} detail="Recorded premium" />
-              <SummaryCard label="Employer EI" value={money(totals.employerEi)} icon={<Landmark className="h-5 w-5"/>} detail="Recorded employer portion" />
-              <SummaryCard label="Income tax" value={money(totals.incomeTax)} icon={<Landmark className="h-5 w-5"/>} detail="Withheld from employees" />
-              <SummaryCard label="Combined recorded amounts" value={money(totals.cpp + totals.employerCpp + totals.ei + totals.employerEi + totals.incomeTax)} icon={<ClipboardList className="h-5 w-5"/>} detail="Not reconciled to CRA" />
+            <div>
+              <h3 className="text-2xl font-black text-slate-950">Payroll Tax Centre</h3>
+              <p className="mt-2 text-sm text-slate-600">Recorded payroll tax withholdings for {company?.name ?? "this company"}. CRA remittances must be verified separately.</p>
             </div>
-            <section className="grid gap-4">
-              <h4 className="text-sm font-black uppercase tracking-widest text-slate-900">Filed recently</h4>
-              <div className="grid min-h-28 place-items-center rounded-2xl border border-slate-200 bg-white px-6 py-8 text-center">
-                <p className="font-semibold text-slate-500">Nothing recorded here yet.</p>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-5">
+              <div className="inline-flex overflow-hidden rounded-lg border border-slate-300 bg-slate-100 p-1">
+                <button type="button" onClick={() => setTaxCentreView("payments")} aria-pressed={taxCentreView === "payments"} className={taxCentreView === "payments" ? "rounded-md border border-emerald-700 bg-white px-5 py-2 text-sm font-bold text-emerald-800" : "px-5 py-2 text-sm font-semibold text-slate-600"}>Payments</button>
+                <button type="button" onClick={() => setTaxCentreView("filings")} aria-pressed={taxCentreView === "filings"} className={taxCentreView === "filings" ? "rounded-md border border-emerald-700 bg-white px-5 py-2 text-sm font-bold text-emerald-800" : "px-5 py-2 text-sm font-semibold text-slate-600"}>Filings</button>
               </div>
-              <p className="text-xs leading-5 text-slate-500">This workspace does not yet record official CRA filing confirmations. Check CRA My Business Account for completed filings.</p>
-            </section>
-            <section className="grid gap-5 border-t border-slate-200 pt-6">
-              <h4 className="text-sm font-black uppercase tracking-widest text-slate-900">Filing resources</h4>
-              <div className="grid gap-6">
-                <div>
-                  <h5 className="text-base font-bold text-slate-950">Record of employment</h5>
-                  <p className="mt-1 text-sm text-slate-600">Review employee details and pay history before preparing an ROE.</p>
-                  <button type="button" onClick={() => navigateToTab("employees")} className="mt-2 text-sm font-bold text-emerald-700 hover:underline">Review employees</button>
-                </div>
-                <div>
-                  <h5 className="text-base font-bold text-slate-950">Archived forms and filings</h5>
-                  <p className="mt-1 text-sm text-slate-600">Review year-end payroll records and T4 preparation.</p>
-                  <button type="button" onClick={() => navigateToTab("compliance")} className="mt-2 text-sm font-bold text-emerald-700 hover:underline">Open compliance</button>
-                </div>
-                <div>
-                  <h5 className="text-base font-bold text-slate-950">All filing resources</h5>
-                  <p className="mt-1 text-sm text-slate-600">Official CRA payroll deductions, remittances, T4 and Service Canada ROE information.</p>
-                  <a href="https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/payroll.html"
-                    target="_blank" rel="noopener noreferrer"
-                    className="mt-2 inline-block text-sm font-bold text-emerald-700 hover:underline">CRA payroll resources</a>
-                </div>
+              <div className="flex flex-wrap gap-4 text-sm font-semibold">
+                <button type="button" onClick={() => window.print()} className="text-slate-700 hover:underline">Print</button>
+                <a href="https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/payroll.html" target="_blank" rel="noopener noreferrer" className="text-emerald-700 hover:underline">CRA resources</a>
+                <Link href={base} className="text-emerald-700 hover:underline">Payment records</Link>
               </div>
-            </section>
-            <section className="rounded-xl border border-amber-200 bg-white p-5">
-              <h4 className="font-black text-slate-900">CRA remittances and CPP2</h4>
-              <p className="mt-2 text-sm text-slate-600">CRA payment history, remittance reconciliation and CPP2 are not separately verified here. Do not treat displayed totals as an amount due without checking CRA and payroll records.</p>
-              <Link href={base} className="mt-3 inline-block text-sm font-bold text-emerald-700 hover:underline">Open existing payroll deduction review</Link>
-            </section>
+            </div>
+            {taxCentreView === "payments" ? <>
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <SummaryCard label="Employee CPP withheld" value={money(totals.cpp)} icon={<Landmark className="h-5 w-5"/>} detail="From saved employee paycheques" />
+                <SummaryCard label="Employer CPP" value={money(totals.employerCpp)} icon={<Landmark className="h-5 w-5"/>} detail="From saved employee paycheques" />
+                <SummaryCard label="Employee EI withheld" value={money(totals.ei)} icon={<Landmark className="h-5 w-5"/>} detail="From saved employee paycheques" />
+                <SummaryCard label="Employer EI" value={money(totals.employerEi)} icon={<Landmark className="h-5 w-5"/>} detail="From saved employee paycheques" />
+                <SummaryCard label="Income tax withheld" value={money(totals.incomeTax)} icon={<Landmark className="h-5 w-5"/>} detail="From saved employee paycheques" />
+                <SummaryCard label="Total recorded deductions & contributions" value={money(totals.cpp + totals.employerCpp + totals.ei + totals.employerEi + totals.incomeTax)} icon={<ClipboardList className="h-5 w-5"/>} detail="NOT a CRA balance owing" />
+              </div>
+              <h4 className="text-sm font-black uppercase tracking-widest text-slate-900">Recorded payroll deductions</h4>
+              {orderedPayments.length ? <div className="grid gap-3">
+                {orderedPayments.slice(0, 30).map(payment => <div key={payment.id} className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-5">
+                  <div><p className="font-bold text-slate-900">{employeeById.get(payment.workerId)?.name ?? "Employee"} · Payroll deductions</p><p className="mt-1 text-sm text-slate-600">Pay date: {prettyDate(payment.date)} · Recorded payroll, not CRA remittance</p></div>
+                  <div className="flex items-center gap-5"><strong className="text-base text-slate-950">{money(payment.cpp + payment.ei + payment.incomeTax + payment.employerCpp + payment.employerEi)}</strong><Link href={employeeHref(payment.workerId)} className="text-sm font-bold text-emerald-700 hover:underline">Review</Link></div>
+                </div>)}
+              </div> : <div className="rounded-xl border border-slate-200 p-8 text-center text-slate-600">No payroll tax deductions have been recorded for this company in {taxYear}.</div>}
+              <p className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">KAL has not reconciled these figures against CRA payments, filing history, or CPP2. Past-due amounts and Pay &amp; File actions are intentionally not displayed until real remittance data is connected. Use CRA My Business Account to check actual balances and make payments.</p>
+            </> : <>
+              <section className="grid gap-4">
+                <h4 className="text-sm font-black uppercase tracking-widest text-slate-900">Filed recently</h4>
+                <div className="grid min-h-28 place-items-center rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-600">No confirmed CRA filings recorded in KAL yet.</div>
+              </section>
+              <section className="rounded-xl border border-slate-200 bg-white p-6">
+                <h4 className="text-lg font-black text-slate-900">Filing resources</h4>
+                <div className="mt-4 grid gap-5">
+                  <div><p className="font-bold text-slate-950">Record of Employment (ROE)</p><p className="mt-1 text-sm text-slate-600">Review employee records before creating or submitting an ROE with Service Canada.</p><button type="button" onClick={() => navigateToTab("employees")} className="mt-2 text-sm font-bold text-emerald-700 hover:underline">Review employees</button></div>
+                  <div><p className="font-bold text-slate-950">T4 slips and annual filings</p><p className="mt-1 text-sm text-slate-600">Prepare and verify T4 values, including Box 45 dental-benefits access codes.</p><button type="button" onClick={() => navigateToTab("compliance")} className="mt-2 text-sm font-bold text-emerald-700 hover:underline">Open compliance</button></div>
+                  <div><p className="font-bold text-slate-950">CRA payroll forms and remittances</p><a href="https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/payroll.html" target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-sm font-bold text-emerald-700 hover:underline">Official CRA payroll resources</a></div>
+                </div>
+              </section>
+            </>}
           </>
         ) : null}
 
