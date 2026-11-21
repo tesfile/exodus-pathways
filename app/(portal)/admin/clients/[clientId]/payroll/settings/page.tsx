@@ -83,7 +83,7 @@ export default async function CompanyPayrollSettingsPage({ params, searchParams 
               <option value="YT">Yukon (calculation not yet supported)</option>
             </select>
           </Input>
-          <p className="mt-2 text-xs leading-5 text-slate-600">Confirm the employee&apos;s province of employment, not simply their home address. KAL's first CRA calculation preview currently supports Alberta 2026 regular payroll.</p>
+          <p className="mt-2 text-xs leading-5 text-slate-600">Confirm the employee&apos;s province of employment, not simply their home address. KAL&apos;s first CRA calculation preview currently supports Alberta 2026 regular payroll.</p>
         </div>
         <CompanyScheduleFields
           name={settings?.schedule_name ?? "Regular payroll"}
