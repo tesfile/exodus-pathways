@@ -20,8 +20,8 @@ export async function saveCompanyPayrollSettings(form: FormData) {
   const vacation = Number(read(form, "vacation_percent"));
   const frequency = read(form, "default_pay_frequency");
   const scheduleName = read(form, "schedule_name").slice(0, 100) || "Regular payroll";
-  const periodEnd = read(form, "next_period_end");
   const payDate = read(form, "next_pay_date");
+  const periodEnd = form.get("same_day_pay_period_end") === "on" ? payDate : (read(form, "next_period_end") || payDate);
   const autoPrepare = form.get("auto_prepare_enabled") === "on";
   const goodDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(value + "T00:00:00Z").valueOf()) && new Date(value + "T00:00:00Z").toISOString().slice(0,10)===value;
   if ((periodEnd && !goodDate(periodEnd)) || (payDate && !goodDate(payDate)) || (periodEnd && payDate && payDate < periodEnd) || (autoPrepare && (!periodEnd || !payDate))) {
