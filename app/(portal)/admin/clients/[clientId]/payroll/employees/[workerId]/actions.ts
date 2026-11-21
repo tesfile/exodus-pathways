@@ -107,7 +107,7 @@ export async function savePayrollEmployeeProfile(form: FormData) {
 
   if (!name || !statuses.has(status) || !frequencies.has(frequency) || (firstName && !lastName) || (!firstName && lastName)) invalid("invalid_fields");
   if (
-    !["hourly", "salary"].includes(payType) ||
+    !["hourly", "salary", "commission"].includes(payType) ||
     (payType === "hourly" && (hourlyRate === null || hourlyRate <= 0)) ||
     (payType === "salary" && (salaryAmount === null || salaryAmount <= 0)) ||
     (hourlyRate !== null && (!Number.isFinite(hourlyRate) || hourlyRate < 0 || hourlyRate > 100000)) ||
