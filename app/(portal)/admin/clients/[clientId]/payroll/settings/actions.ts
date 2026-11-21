@@ -23,6 +23,7 @@ export async function saveCompanyPayrollSettings(form: FormData) {
   const payDate = read(form, "next_pay_date");
   const periodEnd = form.get("same_day_pay_period_end") === "on" ? payDate : (read(form, "next_period_end") || payDate);
   const autoPrepare = form.get("auto_prepare_enabled") === "on";
+  const province = read(form,"province").toUpperCase();
   const goodDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(value + "T00:00:00Z").valueOf()) && new Date(value + "T00:00:00Z").toISOString().slice(0,10)===value;
   if ((periodEnd && !goodDate(periodEnd)) || (payDate && !goodDate(payDate)) || (periodEnd && payDate && payDate < periodEnd) || (autoPrepare && (!periodEnd || !payDate))) {
     redirect(`/admin/clients/${encodeURIComponent(clientId)}/payroll/settings?companyId=${encodeURIComponent(companyId)}&year=${year}&error=pay_dates`);
@@ -33,7 +34,8 @@ export async function saveCompanyPayrollSettings(form: FormData) {
     !Number.isInteger(days) || days < 1 || days > 7 ||
     !Number.isFinite(multiplier) || multiplier < 1 || multiplier > 4 ||
     !Number.isFinite(vacation) || vacation < 0 || vacation > 30 ||
-    !["weekly", "biweekly", "semimonthly", "monthly"].includes(frequency)
+    !["weekly", "biweekly", "semimonthly", "monthly"].includes(frequency) ||
+    !["AB","BC","SK","MB","ON","QC","NB","NS","PE","NL","NT","NU","YT"].includes(province)
   ) throw new Error("Invalid company payroll settings.");
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -44,6 +46,9 @@ export async function saveCompanyPayrollSettings(form: FormData) {
     .select("id").eq("id", companyId).eq("client_id", clientId).maybeSingle();
   if (lookupError || !company) throw new Error("Company does not belong to this client.");
 
+  const {error:provinceError}=await db.from("companies").update({province})
+    .eq("id",companyId).eq("client_id",clientId);
+  if(provinceError)throw new Error("Could not save employer province of employment.");
   const { error } = await db.from("kal_company_payroll_settings").upsert({
     company_id: companyId,
     client_id: clientId,
