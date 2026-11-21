@@ -39,12 +39,14 @@ export default async function RunPayrollPage({ params, searchParams }: Props) {
     db.from("kal_payroll_draft_runs")
       .select("id,period_start,period_end,pay_date,frequency,status")
       .eq("client_id",clientId).eq("company_id",selected.id).gte("pay_date",`${year}-01-01`).lte("pay_date",`${year}-12-31`)
-      .order("pay_date",{ascending:true}).limit(40)
+      .order("pay_date",{ascending:true}).limit(70)
   ]);
   if (settingsError || workersError || profilesError || draftsError) throw new Error("Unable to load company payroll data.");
 
   const profileMap = new Map((profiles ?? []).map(profile => [profile.worker_id, profile]));
+  const today = new Date().toISOString().slice(0,10);
   const selectedDraft = draftRuns?.find(draft => draft.id === query?.draftId) ??
+    (draftRuns ?? []).find(draft => draft.status === "draft" && draft.pay_date >= today) ??
     (draftRuns ?? []).find(draft => draft.status === "draft") ?? null;
   const currentPeriodStart = selectedDraft?.period_start ?? (settings?.next_period_end
     ? (() => {
