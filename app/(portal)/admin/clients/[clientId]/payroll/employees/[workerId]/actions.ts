@@ -59,6 +59,8 @@ export async function savePayrollEmployeeProfile(form: FormData) {
   const birthDate = read(form, "birth_date", 10);
   const hireDate = read(form, "hire_date", 10);
   const terminationDate = read(form, "termination_date", 10);
+  const contractEndDate = read(form, "contract_end_date", 10);
+  const autoInclude = form.get("auto_include") === "on";
   const periodEnd = read(form, "next_period_end", 10);
   const payDate = read(form, "next_pay_date", 10);
   const workLocation = read(form, "work_location", 200);
@@ -93,10 +95,11 @@ export async function savePayrollEmployeeProfile(form: FormData) {
     !Number.isFinite(vacationPercent) || vacationPercent < 0 || vacationPercent > 30
   ) invalid("invalid_pay_settings");
 
-  if (![birthDate, hireDate, terminationDate, periodEnd, payDate].every(isDate)) invalid("invalid_dates");
+  if (![birthDate, hireDate, terminationDate, contractEndDate, periodEnd, payDate].every(isDate)) invalid("invalid_dates");
   if (birthDate && birthDate > new Date().toISOString().slice(0, 10)) invalid("invalid_birth_date");
   if (payDate && periodEnd && payDate < periodEnd) invalid("pay_date_before_period_end");
   if (terminationDate && hireDate && terminationDate < hireDate) invalid("invalid_termination_date");
+  if (contractEndDate && hireDate && contractEndDate < hireDate) invalid("invalid_contract_date");
 
   const sinEntry = read(form, "sin", 20);
   const sin = sinEntry.replace(/[ -]/g, "");
@@ -135,6 +138,8 @@ export async function savePayrollEmployeeProfile(form: FormData) {
     birth_date: nullable(birthDate),
     hire_date: nullable(hireDate),
     termination_date: nullable(terminationDate),
+    contract_end_date: nullable(contractEndDate),
+    auto_include: autoInclude,
     employment_status: status,
     work_location: nullable(workLocation),
     manager_name: nullable(managerName),
