@@ -64,12 +64,10 @@ export function ClientPayrollTabs({
     `/admin/clients/${encodeURIComponent(clientId)}/payroll?year=${taxYear}&companyId=${encodeURIComponent(selectedCompany)}&section=${section}`;
   const navigateToTab = (section: Tab) => {
     setTab(section);
-    setSelectedEmployeeId("");
     router.replace(sectionHref(section), { scroll: false });
   };
 
 
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
   const [search, setSearch] = useState("");
   const [taxCentreView, setTaxCentreView] = useState<"payments" | "filings">("payments");
 
@@ -89,10 +87,6 @@ export function ClientPayrollTabs({
   const employeeById = useMemo(() => new Map(employees.map(employee => [employee.id, employee])), [employees]);
   const filteredEmployees = employees.filter(employee =>
     `${employee.name} ${employee.company}`.toLowerCase().includes(search.toLowerCase()));
-  const selectedEmployee = employeeById.get(selectedEmployeeId);
-  const visiblePayments = selectedEmployeeId
-    ? orderedPayments.filter(payment => payment.workerId === selectedEmployeeId)
-    : orderedPayments;
 
   const employeeHref = (workerId: string) =>
     `${base}&workerId=${encodeURIComponent(workerId)}&workerTab=payroll`;
@@ -119,7 +113,7 @@ export function ClientPayrollTabs({
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-5 py-4 sm:px-7">
         <label className="grid min-w-60 flex-1 gap-1 text-sm font-bold text-slate-800">Employer company
-          <select value={companyId} onChange={event => { const selected = event.target.value; setCompanyId(selected); setSelectedEmployeeId(""); router.replace(sectionHref(tab, selected), { scroll: false }); }}
+          <select value={companyId} onChange={event => { const selected = event.target.value; setCompanyId(selected); router.replace(sectionHref(tab, selected), { scroll: false }); }}
             className="max-w-lg rounded-lg border border-slate-300 px-3 py-2 font-normal text-slate-900">
             {companies.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
           </select>
