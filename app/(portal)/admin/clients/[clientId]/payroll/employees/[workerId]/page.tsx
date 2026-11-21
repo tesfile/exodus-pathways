@@ -40,7 +40,7 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
     db.from("workers").select("id,client_id,company_id,worker_type,worker_name,address,phone,email,status")
       .eq("id", workerId).eq("client_id", clientId).maybeSingle(),
     db.from("kal_payroll_employee_profiles")
-      .select("birth_date,hire_date,termination_date,contract_end_date,auto_include,employment_status,work_location,manager_name,department,schedule_name,pay_frequency,next_period_end,next_pay_date,default_schedule,sin_last4,pay_type,hourly_rate,salary_amount,default_hours_per_day,default_days_per_week,overtime_multiplier,vacation_percent,legal_first_name,legal_middle_name,legal_last_name,preferred_first_name,home_phone,work_phone,mobile_phone,job_title,employee_code,base_pay_effective_date,td1_federal_claim,td1_provincial_claim,additional_income_tax,cpp_exempt,ei_exempt,payment_method")
+      .select("birth_date,hire_date,termination_date,contract_end_date,auto_include,employment_status,work_location,manager_name,department,schedule_name,pay_frequency,next_period_end,next_pay_date,default_schedule,sin_last4,pay_type,hourly_rate,salary_amount,default_hours_per_day,default_days_per_week,overtime_multiplier,vacation_percent,legal_first_name,legal_middle_name,legal_last_name,preferred_first_name,home_phone,work_phone,mobile_phone,job_title,employee_code,base_pay_effective_date,td1_federal_claim,td1_provincial_claim,additional_income_tax,cpp_exempt,ei_exempt,payment_method,gender,mailing_same_as_home,mailing_address,emergency_contact_name,emergency_contact_relationship,emergency_contact_phone,roe_reason_code,vacation_policy,sick_pay_policy,sick_balance_hours,unpaid_time_off_policy")
       .eq("worker_id", workerId).eq("client_id", clientId).maybeSingle()
   ]);
 
@@ -91,6 +91,11 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
               <div><dt className="text-slate-500">SIN</dt><dd className="font-bold text-slate-900">{profile?.sin_last4 ? `Protected · ending ${profile.sin_last4}` : "Not provided"}</dd></div>
               <div><dt className="text-slate-500">Birthdate</dt><dd className="font-bold text-slate-900">{profile?.birth_date ?? "Not recorded"}</dd></div>
               <div><dt className="text-slate-500">Email</dt><dd className="break-all font-semibold text-slate-900">{worker.email || "Not provided"}</dd></div>
+              <div><dt className="text-slate-500">Preferred first name</dt><dd className="font-semibold text-slate-900">{profile?.preferred_first_name || "Not provided"}</dd></div>
+              <div><dt className="text-slate-500">Phone</dt><dd className="font-semibold text-slate-900">{worker.phone || profile?.mobile_phone || "Not provided"}</dd></div>
+              <div className="sm:col-span-2"><dt className="text-slate-500">Home address</dt><dd className="font-semibold text-slate-900">{worker.address || "Not provided"}</dd></div>
+              <div><dt className="text-slate-500">Mailing address</dt><dd className="font-semibold text-slate-900">{profile?.mailing_same_as_home !== false ? "Same as home" : profile?.mailing_address || "Not provided"}</dd></div>
+              <div><dt className="text-slate-500">Gender</dt><dd className="font-semibold capitalize text-slate-900">{profile?.gender?.replaceAll("_"," ") || "Not provided"}</dd></div>
             </dl>
           </article>
           <article className="rounded-xl border border-slate-200 bg-white p-5">
@@ -100,6 +105,10 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
               <div><dt className="text-slate-500">Hire date</dt><dd className="font-bold text-slate-900">{profile?.hire_date || "Not set"}</dd></div>
               <div><dt className="text-slate-500">Department</dt><dd className="font-bold text-slate-900">{profile?.department || "Not set"}</dd></div>
               <div><dt className="text-slate-500">Pay schedule</dt><dd className="font-bold text-slate-900">{profile?.schedule_name || "Regular payroll"}</dd></div>
+              <div><dt className="text-slate-500">Work location</dt><dd className="font-semibold text-slate-900">{profile?.work_location || "Not set"}</dd></div>
+              <div><dt className="text-slate-500">Manager</dt><dd className="font-semibold text-slate-900">{profile?.manager_name || "Not set"}</dd></div>
+              <div><dt className="text-slate-500">Job title</dt><dd className="font-semibold text-slate-900">{profile?.job_title || "Not set"}</dd></div>
+              <div><dt className="text-slate-500">Employee ID</dt><dd className="font-semibold text-slate-900">{profile?.employee_code || "Not set"}</dd></div>
             </dl>
           </article>
         </div>
@@ -109,6 +118,8 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
             <div><dt className="text-slate-500">Pay type</dt><dd className="mt-1 font-bold capitalize text-slate-900">{profile?.pay_type || "hourly"}</dd></div>
             <div><dt className="text-slate-500">Rate</dt><dd className="mt-1 font-bold text-slate-900">{profile?.pay_type === "salary" ? (profile.salary_amount == null ? "Not set" : `${Number(profile.salary_amount).toLocaleString("en-CA", {style:"currency",currency:"CAD"})}/period`) : (profile?.hourly_rate == null ? "Not set" : `${Number(profile.hourly_rate).toLocaleString("en-CA",{style:"currency",currency:"CAD"})}/hour`)}</dd></div>
             <div><dt className="text-slate-500">Default working hours</dt><dd className="mt-1 font-bold text-slate-900">{Number(profile?.default_hours_per_day ?? 8) * Number(profile?.default_days_per_week ?? 5)} hours/week</dd></div>
+            <div><dt className="text-slate-500">Effective date</dt><dd className="mt-1 font-semibold text-slate-900">{profile?.base_pay_effective_date || "Not set"}</dd></div>
+            <div><dt className="text-slate-500">Vacation policy</dt><dd className="mt-1 font-semibold text-slate-900">{profile?.vacation_policy === "accrued" ? "Accrued" : profile?.vacation_policy === "none" ? "Not configured" : `${Number(profile?.vacation_percent ?? 4).toFixed(2)}% Paid out each pay period`}</dd></div>
           </dl>
           <p className="mt-3 text-xs text-slate-600">Vacation and overtime settings are editable below; calculation and statutory entitlements require review before finalizing payroll.</p>
         </article>
@@ -134,6 +145,7 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
         <a href="#base-pay" className="border-b-2 border-transparent px-4 py-3 text-sm font-bold text-slate-700 hover:border-emerald-600 hover:text-emerald-800">Base pay</a>
         <a href="#pay-schedule" className="border-b-2 border-transparent px-4 py-3 text-sm font-bold text-slate-700 hover:border-emerald-600 hover:text-emerald-800">Pay schedule</a>
         <a href="#tax-withholdings" className="border-b-2 border-transparent px-4 py-3 text-sm font-bold text-slate-700 hover:border-emerald-600 hover:text-emerald-800">Tax &amp; Payment</a>
+        <a href="#time-off" className="border-b-2 border-transparent px-4 py-3 text-sm font-bold text-slate-700 hover:border-emerald-600 hover:text-emerald-800">Time off</a>
         <a href="#payroll-items" className="border-b-2 border-transparent px-4 py-3 text-sm font-bold text-slate-700 hover:border-emerald-600 hover:text-emerald-800">Pay items &amp; deductions</a>
         <a href="#deductions" className="border-b-2 border-transparent px-4 py-3 text-sm font-bold text-slate-700 hover:border-emerald-600 hover:text-emerald-800">Deductions &amp; T4</a>
       </nav>
@@ -153,12 +165,27 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
         <Field label="Full legal display name *"><input className={fieldClass} name="worker_name" required maxLength={200} defaultValue={worker.worker_name}/></Field>
         <Field label="Preferred first name"><input className={fieldClass} name="preferred_first_name" maxLength={80} defaultValue={profile?.preferred_first_name ?? ""}/></Field>
         <Field label="Birthdate"><input className={fieldClass} name="birth_date" type="date" defaultValue={profile?.birth_date ?? ""}/></Field>
+        <Field label="Gender (optional)">
+          <select name="gender" defaultValue={profile?.gender ?? ""} className={fieldClass}>
+            <option value="">Not provided</option><option value="female">Female</option><option value="male">Male</option><option value="non_binary">Non-binary</option><option value="another">Another description</option><option value="prefer_not_to_say">Prefer not to say</option>
+          </select>
+        </Field>
         <Field label="Email"><input className={fieldClass} name="email" type="email" maxLength={254} defaultValue={worker.email ?? ""}/></Field>
         <Field label="Primary phone"><input className={fieldClass} name="phone" type="tel" maxLength={50} defaultValue={worker.phone ?? ""}/></Field>
         <Field label="Home phone"><input className={fieldClass} name="home_phone" type="tel" maxLength={50} defaultValue={profile?.home_phone ?? ""}/></Field>
         <Field label="Work phone"><input className={fieldClass} name="work_phone" type="tel" maxLength={50} defaultValue={profile?.work_phone ?? ""}/></Field>
         <Field label="Mobile phone"><input className={fieldClass} name="mobile_phone" type="tel" maxLength={50} defaultValue={profile?.mobile_phone ?? ""}/></Field>
         <div className="md:col-span-2"><Field label="Home address"><textarea name="address" rows={2} maxLength={500} className={fieldClass} defaultValue={worker.address ?? ""}/></Field></div>
+        <div className="md:col-span-2 grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <label className="flex items-center gap-3 text-sm font-semibold text-slate-800"><input type="checkbox" name="mailing_same_as_home" defaultChecked={profile?.mailing_same_as_home !== false} className="h-5 w-5 accent-emerald-700"/>Mailing address is the same as home address</label>
+          <Field label="Different mailing address (optional)"><textarea name="mailing_address" rows={2} maxLength={500} className={fieldClass} defaultValue={profile?.mailing_address ?? ""}/></Field>
+        </div>
+        <div className="md:col-span-2 grid gap-4 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-3">
+          <h3 className="text-lg font-black text-slate-950 sm:col-span-3">Emergency contact</h3>
+          <Field label="Contact name"><input name="emergency_contact_name" maxLength={150} className={fieldClass} defaultValue={profile?.emergency_contact_name ?? ""}/></Field>
+          <Field label="Relationship"><input name="emergency_contact_relationship" maxLength={80} className={fieldClass} defaultValue={profile?.emergency_contact_relationship ?? ""}/></Field>
+          <Field label="Contact telephone"><input name="emergency_contact_phone" type="tel" maxLength={50} className={fieldClass} defaultValue={profile?.emergency_contact_phone ?? ""}/></Field>
+        </div>
 
         <div className="md:col-span-2 rounded-xl border border-amber-200 bg-amber-50 p-4">
           <Field label="Social Insurance Number (SIN)">
@@ -174,6 +201,25 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
         </select></Field>
         <Field label="Hire date"><input className={fieldClass} type="date" name="hire_date" defaultValue={profile?.hire_date ?? ""}/></Field>
         <Field label="Termination date"><input className={fieldClass} type="date" name="termination_date" defaultValue={profile?.termination_date ?? ""}/></Field>
+        <Field label="Reason for status change (ROE reference only)">
+          <select name="roe_reason_code" defaultValue={profile?.roe_reason_code ?? ""} className={fieldClass}>
+            <option value="">Select one if applicable</option>
+            <option value="A00">A00 — Shortage of work / End of contract</option>
+            <option value="A01">A01 — Employer bankruptcy or receivership</option>
+            <option value="B00">B00 — Strike or lockout</option>
+            <option value="D00">D00 — Illness or injury</option>
+            <option value="E00">E00 — Quit</option>
+            <option value="F00">F00 — Maternity</option>
+            <option value="G00">G00 — Retirement</option>
+            <option value="H00">H00 — Work-sharing</option>
+            <option value="J00">J00 — Apprentice training</option>
+            <option value="K00">K00 — Other</option>
+            <option value="M00">M00 — Dismissal</option>
+            <option value="N00">N00 — Leave of absence</option>
+            <option value="P00">P00 — Parental</option>
+            <option value="Z00">Z00 — Compassionate care / family caregiver</option>
+          </select>
+        </Field>
         <Field label="Contract end date (optional)"><input className={fieldClass} type="date" name="contract_end_date" min={profile?.hire_date || undefined} defaultValue={profile?.contract_end_date ?? ""}/></Field>
         <div className="md:col-span-2 rounded-lg border border-emerald-200 bg-emerald-50/40 p-4">
           <label className="flex items-start gap-3 text-sm font-semibold text-slate-900">
@@ -207,6 +253,23 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
           <p className="text-xs text-slate-500">The payroll run uses regular hours and rate as a draft. Overtime and vacation pay must be reviewed separately under applicable employment standards.</p>
         </section>
 
+        
+        <section id="time-off" className="scroll-mt-24 grid gap-4 rounded-xl border border-slate-200 bg-white p-5 md:col-span-2">
+          <div><h2 className="text-xl font-black text-slate-950">Time off and vacation policy</h2><p className="mt-1 text-sm text-slate-600">Store time-off rules separately from actual vacation/sick pay calculation.</p></div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Vacation policy"><select name="vacation_policy" className={fieldClass} defaultValue={profile?.vacation_policy ?? "paid_each_period"}>
+              <option value="paid_each_period">Pay out each pay period</option><option value="accrued">Accumulate vacation pay</option><option value="none">Not configured — needs review</option>
+            </select></Field>
+            <Field label="Sick pay policy"><select name="sick_pay_policy" className={fieldClass} defaultValue={profile?.sick_pay_policy ?? "none"}>
+              <option value="none">No sick pay policy recorded</option><option value="hours_bank">Hours balance tracked manually</option><option value="manual">Manual sick pay review</option>
+            </select></Field>
+            <Field label="Sick pay hours balance"><input name="sick_balance_hours" type="number" min="0" max="10000" step="0.25" className={fieldClass} defaultValue={profile?.sick_balance_hours ?? 0}/></Field>
+            <Field label="Unpaid time off"><select name="unpaid_time_off_policy" defaultValue={profile?.unpaid_time_off_policy ?? "none"} className={fieldClass}>
+              <option value="none">No policy recorded</option><option value="manual">Review unpaid leave manually</option>
+            </select></Field>
+          </div>
+          <p className="text-xs text-slate-600">Applicable employment standards determine entitlements. These stored preferences are not a verified statutory accrual engine.</p>
+        </section>
         <PayScheduleEditor
           employeeName={worker.worker_name}
           scheduleName={profile?.schedule_name ?? "Regular payroll"}
