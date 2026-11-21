@@ -47,7 +47,7 @@ export default async function KalClientPayrollPage({ params, searchParams }: Pag
       company: worker.company_name,
       companyId: worker.company_id ?? "",
       status: rates.get(worker.id)?.employment_status ?? worker.status,
-      payRateLabel: rates.get(worker.id)?.pay_type === "salary"
+      payRateLabel: rates.get(worker.id)?.pay_type === "commission" ? "Commission only · manual review" : rates.get(worker.id)?.pay_type === "salary"
         ? rates.get(worker.id)?.salary_amount == null ? "Not set" : `${money(Number(rates.get(worker.id)!.salary_amount))}/pay period`
         : rates.get(worker.id)?.hourly_rate == null ? "Not set" : `${money(Number(rates.get(worker.id)!.hourly_rate))}/hour`,
       payMethodLabel: rates.get(worker.id)?.payment_method === "manual_bank_transfer" ? "Manual transfer" : rates.get(worker.id)?.payment_method === "external_direct_deposit" ? "External direct deposit" : "Paper cheque",
