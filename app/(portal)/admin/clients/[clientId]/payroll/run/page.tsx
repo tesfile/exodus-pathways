@@ -34,7 +34,7 @@ export default async function RunPayrollPage({ params, searchParams }: Props) {
       .eq("company_id", selected.id).eq("client_id", clientId).maybeSingle(),
     db.from("workers").select("id,worker_name,worker_type,status")
       .eq("client_id", clientId).eq("company_id", selected.id).order("worker_name"),
-    db.from("kal_payroll_employee_profiles").select("worker_id,pay_type,hourly_rate,salary_amount,default_hours_per_day,default_days_per_week,pay_frequency,employment_status,hire_date,termination_date,contract_end_date,auto_include,payment_method,vacation_percent,vacation_policy")
+    db.from("kal_payroll_employee_profiles").select("worker_id,pay_type,hourly_rate,salary_amount,default_hours_per_day,default_days_per_week,pay_frequency,employment_status,hire_date,termination_date,contract_end_date,auto_include,payment_method,vacation_percent,vacation_policy,overtime_multiplier")
       .eq("client_id", clientId),
     db.from("kal_payroll_draft_runs")
       .select("id,period_start,period_end,pay_date,frequency,status")
@@ -86,7 +86,8 @@ export default async function RunPayrollPage({ params, searchParams }: Props) {
         contractEndDate: profile?.contract_end_date ?? null,
         paymentMethod: profile?.payment_method ?? "paper_cheque",
         vacationPercent: numeric(profile?.vacation_percent,4),
-        vacationPolicy: profile?.vacation_policy ?? "paid_each_period"
+        vacationPolicy: profile?.vacation_policy ?? "paid_each_period",
+        overtimeMultiplier: numeric(profile?.overtime_multiplier,1.5)
       };
     });
   const [{data:savedLines,error:linesError},{data:previousPayments,error:paymentsError}]=await Promise.all([
