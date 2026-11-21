@@ -33,7 +33,7 @@ export default async function KalClientPayrollPage({ params, searchParams }: Pag
   const db = createClient(supabaseUrl, supabaseSecret, { auth: { persistSession: false, autoRefreshToken: false } });
   // Protected profiles are read on the server. Only non-sensitive pay display fields are sent to the browser.
   const { data: rateProfiles, error: rateError } = await db.from("kal_payroll_employee_profiles")
-    .select("worker_id,pay_type,hourly_rate,salary_amount,vacation_percent,employment_status")
+    .select("worker_id,pay_type,hourly_rate,salary_amount,vacation_percent,employment_status,payment_method")
     .eq("client_id", clientId);
   if (rateError) throw new Error("Could not load employee pay profiles.");
   const rates = new Map((rateProfiles ?? []).map(profile => [profile.worker_id, profile]));
@@ -50,7 +50,7 @@ export default async function KalClientPayrollPage({ params, searchParams }: Pag
       payRateLabel: rates.get(worker.id)?.pay_type === "salary"
         ? rates.get(worker.id)?.salary_amount == null ? "Not set" : `${money(Number(rates.get(worker.id)!.salary_amount))}/pay period`
         : rates.get(worker.id)?.hourly_rate == null ? "Not set" : `${money(Number(rates.get(worker.id)!.hourly_rate))}/hour`,
-      payMethodLabel: "Not configured",
+      payMethodLabel: rates.get(worker.id)?.payment_method === "manual_bank_transfer" ? "Manual transfer" : rates.get(worker.id)?.payment_method === "external_direct_deposit" ? "External direct deposit" : "Paper cheque",
       vacationLabel: rates.get(worker.id)?.vacation_percent == null
         ? "Review setup" : `${Number(rates.get(worker.id)!.vacation_percent)}% · review policy`
     }));
