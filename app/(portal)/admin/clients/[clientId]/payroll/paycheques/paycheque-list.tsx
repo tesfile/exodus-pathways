@@ -2,13 +2,15 @@
 
 import { useMemo, useState } from "react";
 import { Download, Printer, Search } from "lucide-react";
+import { saveChequeNumber } from "./actions";
+import Link from "next/link";
 
 type Payment={
  id:string;workerId:string;name:string;date:string;
  periodStart:string|null;periodEnd:string|null;gross:number;net:number;
- cpp:number;ei:number;incomeTax:number;payMethod:string;status:string;
+ cpp:number;ei:number;incomeTax:number;payMethod:string;status:string;chequeNumber:string;
 };
-type Props={year:number;companyName:string;initialWorkerId:string;records:Payment[];employees:Array<{id:string;name:string}>};
+type Props={year:number;companyName:string;clientId:string;companyId:string;initialWorkerId:string;records:Payment[];employees:Array<{id:string;name:string}>};
 const cash=(n:number)=>new Intl.NumberFormat("en-CA",{style:"currency",currency:"CAD"}).format(n);
 const formatted=(d:string)=>d?new Intl.DateTimeFormat("en-CA",{year:"numeric",month:"short",day:"numeric",timeZone:"UTC"}).format(new Date(d+"T00:00:00Z")):"—";
 const method=(method:string)=>({
@@ -16,7 +18,7 @@ const method=(method:string)=>({
 } as Record<string,string>)[method]??method;
 const csv=(v:string)=>'"'+v.replaceAll('"','""')+'"';
 const safe=(v:string)=>/^[=+\-@\t\r]/.test(v)?"'"+v:v;
-export function PaychequeList({year,companyName,initialWorkerId,records,employees}:Props){
+export function PaychequeList({year,companyName,clientId,companyId,initialWorkerId,records,employees}:Props){
  const [search,setSearch]=useState("");
  const [employeeId,setEmployeeId]=useState(initialWorkerId);
  const [from,setFrom]=useState(year+"-01-01");
@@ -30,8 +32,8 @@ export function PaychequeList({year,companyName,initialWorkerId,records,employee
  const visibleCash=(n:number)=>hideAmounts?"••••":cash(n);
  const totals=filtered.reduce((a,p)=>({gross:a.gross+p.gross,net:a.net+p.net}),{gross:0,net:0});
  const download=()=>{
-  const fields=["Pay date","Employee","Pay period start","Pay period end","Gross pay CAD","Net pay CAD","CPP CAD","EI CAD","Income tax CAD","Payment method","Recorded status"];
-  const data=filtered.map(p=>[p.date,p.name,p.periodStart??"",p.periodEnd??"",p.gross.toFixed(2),p.net.toFixed(2),p.cpp.toFixed(2),p.ei.toFixed(2),p.incomeTax.toFixed(2),method(p.payMethod),p.status]);
+  const fields=["Pay date","Employee","Pay period start","Pay period end","Gross pay CAD","Net pay CAD","CPP CAD","EI CAD","Income tax CAD","Payment method","Cheque number","Recorded status"];
+  const data=filtered.map(p=>[p.date,p.name,p.periodStart??"",p.periodEnd??"",p.gross.toFixed(2),p.net.toFixed(2),p.cpp.toFixed(2),p.ei.toFixed(2),p.incomeTax.toFixed(2),method(p.payMethod),p.chequeNumber,p.status]);
   const text=[fields,...data].map(row=>row.map(value=>csv(safe(String(value)))).join(",")).join("\r\n");
   const blob=new Blob(["\uFEFF",text],{type:"text/csv;charset=utf-8"});
   const url=URL.createObjectURL(blob);
@@ -67,16 +69,28 @@ export function PaychequeList({year,companyName,initialWorkerId,records,employee
     <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-700"><tr>
      <th className="p-3"><button type="button" onClick={()=>setNewestFirst(x=>!x)} className="font-bold hover:underline">Pay date {newestFirst?"↓":"↑"}</button></th>
      <th className="p-3">Employee</th><th className="p-3">Pay period</th><th className="p-3 text-right">Gross pay</th><th className="p-3 text-right">Net pay</th>
-     <th className="p-3">Pay method</th><th className="p-3">Recorded status</th>
+     <th className="p-3">Pay method</th><th className="p-3">Cheque number</th><th className="p-3">Recorded status</th><th className="p-3">Action</th>
     </tr></thead>
     <tbody className="divide-y divide-slate-100">{filtered.map(p=><tr key={p.id}>
      <td className="whitespace-nowrap p-3">{formatted(p.date)}</td><td className="p-3 font-semibold text-slate-900">{p.name}</td>
      <td className="whitespace-nowrap p-3 text-slate-600">{p.periodStart||"—"} to {p.periodEnd||"—"}</td>
      <td className="p-3 text-right">{visibleCash(p.gross)}</td><td className="p-3 text-right font-bold">{visibleCash(p.net)}</td>
-     <td className="p-3">{method(p.payMethod)}</td><td className="p-3">{p.status}</td>
+     <td className="p-3">{method(p.payMethod)}</td>
+     <td className="p-3">
+      <form action={saveChequeNumber} className="flex items-center gap-2">
+       <input type="hidden" name="client_id" value={clientId}/>
+       <input type="hidden" name="company_id" value={companyId}/>
+       <input type="hidden" name="payment_id" value={p.id}/>
+       <input type="hidden" name="year" value={year}/>
+       <input name="cheque_number" aria-label={`Cheque reference for ${p.name}`} maxLength={30}
+         defaultValue={p.chequeNumber} placeholder="—" className="w-24 rounded border border-slate-300 px-2 py-2 text-sm"/>
+       <button type="submit" className="text-xs font-bold text-emerald-700 hover:underline">Save</button>
+      </form>
+     </td><td className="p-3">{p.status}</td>
+     <td className="p-3"><Link href={`/admin/clients/${encodeURIComponent(clientId)}/payroll/paycheques/${encodeURIComponent(p.id)}?year=${year}`} className="font-bold text-emerald-700 hover:underline">Print pay record</Link></td>
     </tr>)}
-    {!filtered.length?<tr><td colSpan={7} className="p-10 text-center text-slate-500">No recorded paycheques match these filters.</td></tr>:null}</tbody>
-    <tfoot className="border-t-2 border-slate-200 bg-slate-50 font-black"><tr><td colSpan={3} className="p-3">Total · {filtered.length} records</td><td className="p-3 text-right">{visibleCash(totals.gross)}</td><td className="p-3 text-right">{visibleCash(totals.net)}</td><td colSpan={2}/></tr></tfoot>
+    {!filtered.length?<tr><td colSpan={9} className="p-10 text-center text-slate-500">No recorded paycheques match these filters.</td></tr>:null}</tbody>
+    <tfoot className="border-t-2 border-slate-200 bg-slate-50 font-black"><tr><td colSpan={3} className="p-3">Total · {filtered.length} records</td><td className="p-3 text-right">{visibleCash(totals.gross)}</td><td className="p-3 text-right">{visibleCash(totals.net)}</td><td colSpan={4}/></tr></tfoot>
    </table>
   </div>
   <p className="mt-5 text-xs leading-5 text-slate-500">CSV export contains only the filtered payroll transaction fields above. Check access permissions and secure the downloaded file.</p>
