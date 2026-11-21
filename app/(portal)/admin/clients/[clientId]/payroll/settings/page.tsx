@@ -8,7 +8,7 @@ import { CompanyScheduleFields } from "./company-schedule-fields";
 export const dynamic = "force-dynamic";
 type Props = {
   params: Promise<{ clientId: string }>;
-  searchParams?: Promise<{ companyId?: string; year?: string; saved?: string }>;
+  searchParams?: Promise<{ companyId?: string; year?: string; saved?: string; error?: string }>;
 };
 const uuid = /^[0-9a-f]{8}-[0-9a-f-]{27}$/i;
 const inputClass = "w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm focus:border-emerald-700 focus:outline-none";
@@ -42,6 +42,7 @@ export default async function CompanyPayrollSettingsPage({ params, searchParams 
       <h1 className="mt-4 text-3xl font-black text-slate-900">Payroll settings</h1>
       <p className="mt-2 text-sm text-slate-600">Choose when your company pays employees. Recurring payroll can prepare draft pay periods automatically; payments still require review.</p>
     </div>
+    {query?.error === "pay_dates" && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-900">Choose a valid pay-period end and next payday before enabling automatic payroll drafts. Payday must be on or after the period end.</p>}
     {query?.saved === "1" && <p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-900">Payroll settings saved for this company.</p>}
     {selected ? <>
       <form method="get" className="grid gap-2 rounded-xl border border-slate-200 bg-white p-5">
