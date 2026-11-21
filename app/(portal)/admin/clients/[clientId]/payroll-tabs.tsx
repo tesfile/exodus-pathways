@@ -12,6 +12,9 @@ export type PayrollEmployeeView = {
   company: string;
   companyId: string;
   status: string;
+  payRateLabel?: string;
+  payMethodLabel?: string;
+  vacationLabel?: string;
 };
 export type PayrollPaymentView = {
   id: string;
@@ -201,62 +204,77 @@ export function ClientPayrollTabs({
 
         {tab === "employees" ? (
           <>
-            <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <h3 className="text-xl font-black text-slate-900">Employees</h3>
-                <p className="mt-1 text-sm text-slate-600">Select an employee to review their recorded paychecks.</p>
+                <h3 className="text-2xl font-black text-slate-950">Employees</h3>
+                <div className="mt-4 inline-flex rounded-lg border border-slate-200 bg-slate-100 p-1">
+                  <span className="rounded-md border border-emerald-600 bg-white px-5 py-2 text-sm font-bold text-emerald-800">List</span>
+                  <span className="px-5 py-2 text-sm text-slate-500" title="Directory view is not available yet">Directory</span>
+                </div>
               </div>
-              <Link href={add} className="rounded-lg bg-emerald-700 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-800">+ New employee</Link>
-            </div>
-            <div className="rounded-xl border border-slate-200 bg-white p-5">
-              <label className="mb-4 block text-sm font-semibold text-slate-700" htmlFor="kal-employee-search">Find employee</label>
-              <input id="kal-employee-search" type="search" value={search} onChange={event => setSearch(event.target.value)}
-                placeholder="Search employee or company" className="mb-4 w-full max-w-md rounded-lg border border-slate-300 px-3 py-2 text-sm outline-emerald-700"/>
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[620px] text-left text-sm">
-                  <thead className="border-b border-slate-200 bg-slate-50 text-slate-600">
-                    <tr><th className="p-3">Employee</th><th className="p-3">Status</th><th className="p-3">Last recorded pay</th><th className="p-3">Pay frequency</th><th className="p-3">Action</th></tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {filteredEmployees.map(employee => {
-                      const latest = orderedPayments.find(payment => payment.workerId === employee.id);
-                      return <tr key={employee.id} className={selectedEmployeeId === employee.id ? "bg-emerald-50" : ""}>
-                        <td className="p-3"><button type="button" onClick={() => setSelectedEmployeeId(employee.id)} className="font-bold text-emerald-800 hover:underline">{employee.name}</button><span className="block text-xs text-slate-500">{employee.company}</span></td>
-                        <td className="p-3">{employee.status || "—"}</td>
-                        <td className="p-3">{prettyDate(latest?.date ?? null)}</td>
-                        <td className="p-3">{latest?.frequency || "Not recorded"}</td>
-                        <td className="p-3"><div className="flex flex-wrap gap-3"><Link href={profileHref(employee.id)} className="font-bold text-emerald-700 hover:underline">Edit profile</Link><Link href={`${profileHref(employee.id)}#pay-schedule`} className="font-bold text-emerald-700 hover:underline">Pay schedule</Link><Link href={employeeHref(employee.id)} className="font-bold text-blue-800 hover:underline">Review paychecks</Link></div></td>
-                      </tr>;
-                    })}
-                    {filteredEmployees.length === 0 ? <tr><td colSpan={5} className="p-7 text-center text-slate-500">No matching employees found.</td></tr> : null}
-                  </tbody>
-                </table>
+              <div className="grid justify-items-end gap-2">
+                <Link href={runHref} className="rounded-lg bg-emerald-700 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-800">▶ Run payroll</Link>
+                <button type="button" onClick={() => document.getElementById("kal-paycheck-list")?.scrollIntoView({ behavior: "smooth" })} className="text-sm font-bold text-emerald-700 hover:underline">Paycheque list</button>
               </div>
-              <p className="mt-4 text-xs text-slate-500">Employee profile and schedule settings open in a protected admin page. SIN is never displayed in this list.</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <label htmlFor="kal-employee-search" className="sr-only">Find an employee</label>
+                <input id="kal-employee-search" type="search" value={search} onChange={event => setSearch(event.target.value)}
+                  placeholder="Find an employee" className="min-h-11 w-64 max-w-full rounded-lg border border-slate-300 px-3 text-sm outline-emerald-700"/>
+                <span className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">All employees ({employees.length})</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Link href={settingsHref} className="rounded-lg border border-emerald-700 px-4 py-3 text-sm font-bold text-emerald-800 hover:bg-emerald-50">Edit payroll settings</Link>
+                <Link href={add} className="rounded-lg border border-emerald-700 px-4 py-3 text-sm font-bold text-emerald-800 hover:bg-emerald-50">Add an employee</Link>
+              </div>
+            </div>
+            <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+              <table className="w-full min-w-[830px] border-separate border-spacing-y-1 text-left text-sm">
+                <thead><tr className="text-xs uppercase tracking-wide text-slate-600">
+                  <th className="px-4 py-3">Name</th><th className="px-4 py-3">Pay rate</th>
+                  <th className="px-4 py-3">Pay method</th><th className="px-4 py-3">Available vacation</th>
+                  <th className="px-4 py-3">Status</th><th className="px-4 py-3">Profile</th>
+                </tr></thead>
+                <tbody>
+                  {filteredEmployees.map(employee => {
+                    const initials = employee.name.split(/\s+/).slice(0, 2).map(word => word[0]?.toUpperCase() ?? "").join("");
+                    const inactive = ["Terminated", "Deceased", "Not on payroll"].includes(employee.status);
+                    return <tr key={employee.id} className="border-t border-slate-100 hover:bg-emerald-50/40">
+                      <td className="border-t border-slate-100 px-4 py-4"><Link href={profileHref(employee.id)} className="inline-flex items-center gap-3 font-bold text-slate-950 hover:text-emerald-700"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-200 font-bold text-slate-600" aria-hidden="true">{initials || "E"}</span><span>{employee.name}</span></Link></td>
+                      <td className="border-t border-slate-100 px-4 py-4">{employee.payRateLabel || "Not set"}</td>
+                      <td className="border-t border-slate-100 px-4 py-4">{employee.payMethodLabel || "Not configured"}</td>
+                      <td className="border-t border-slate-100 px-4 py-4">{employee.vacationLabel || "Review setup"}</td>
+                      <td className="border-t border-slate-100 px-4 py-4"><span className={inactive ? "rounded-full bg-slate-100 px-3 py-1 text-slate-700" : "rounded-full bg-emerald-50 px-3 py-1 font-bold text-emerald-800"}>{employee.status || "Active"}</span></td>
+                      <td className="border-t border-slate-100 px-4 py-4"><Link href={profileHref(employee.id)} className="font-bold text-emerald-700 hover:underline">View / Edit</Link></td>
+                    </tr>;
+                  })}
+                  {!filteredEmployees.length ? <tr><td colSpan={6} className="p-8 text-center text-slate-500">No employees found. Add an employee to start payroll setup.</td></tr> : null}
+                </tbody>
+              </table>
+            </div>
+            <section id="kal-paycheck-list" className="scroll-mt-24 rounded-xl border border-slate-200 bg-white p-5">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <div><h4 className="text-lg font-black text-slate-900">{selectedEmployee ? `${selectedEmployee.name} — Paychecks` : "Employee Paycheck List"}</h4>
-                  <p className="text-sm text-slate-500">Saved pay dates, pay periods and amounts</p></div>
-                {selectedEmployee ? <button onClick={() => setSelectedEmployeeId("")} className="text-sm font-bold text-emerald-700" type="button">Show all employees</button> : null}
+                <div><h4 className="text-lg font-black text-slate-900">Paycheque list</h4><p className="text-sm text-slate-500">Previously saved employee payment records · {taxYear}</p></div>
+                <Link href={runHref} className="text-sm font-bold text-emerald-700 hover:underline">Run payroll</Link>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[590px] text-left text-sm">
-                  <thead className="border-b border-slate-200 bg-slate-50 text-slate-600"><tr><th className="p-3">Employee</th><th className="p-3">Pay date</th><th className="p-3">Period</th><th className="p-3 text-right">Gross</th><th className="p-3 text-right">Net</th><th className="p-3">Details</th></tr></thead>
+                <table className="w-full min-w-[650px] text-left text-sm">
+                  <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-600"><tr><th className="p-3">Employee</th><th className="p-3">Pay date</th><th className="p-3">Pay period</th><th className="p-3 text-right">Gross</th><th className="p-3 text-right">Net</th><th className="p-3">Records</th></tr></thead>
                   <tbody className="divide-y divide-slate-100">
-                    {visiblePayments.map(payment => <tr key={payment.id}>
+                    {orderedPayments.map(payment => <tr key={payment.id}>
                       <td className="p-3 font-semibold">{employeeById.get(payment.workerId)?.name ?? "Employee"}</td>
                       <td className="p-3">{prettyDate(payment.date)}</td>
                       <td className="p-3">{payment.periodStart || payment.periodEnd ? `${payment.periodStart ?? "—"} to ${payment.periodEnd ?? "—"}` : "—"}</td>
                       <td className="p-3 text-right">{money(payment.gross)}</td>
                       <td className="p-3 text-right font-semibold">{money(payment.net)}</td>
-                      <td className="p-3"><Link href={employeeHref(payment.workerId)} className="font-bold text-emerald-700 hover:underline">View</Link></td>
+                      <td className="p-3"><Link href={employeeHref(payment.workerId)} className="font-bold text-emerald-700 hover:underline">Review</Link></td>
                     </tr>)}
-                    {visiblePayments.length === 0 ? <tr><td colSpan={6} className="p-7 text-center text-slate-500">No recorded paychecks for this selection.</td></tr> : null}
+                    {orderedPayments.length === 0 ? <tr><td colSpan={6} className="p-8 text-center text-slate-500">No recorded paycheques for this year.</td></tr> : null}
                   </tbody>
                 </table>
               </div>
-            </div>
+            </section>
           </>
         ) : null}
 
