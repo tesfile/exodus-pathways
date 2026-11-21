@@ -22,6 +22,9 @@ type Props = {
   companyName: string;
   frequency: string;
   employees: RunPayrollEmployee[];
+  initialPeriodStart: string;
+  initialPeriodEnd: string;
+  initialPayDate: string;
 };
 
 const money = (amount: number) => new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(amount);
@@ -41,14 +44,14 @@ function periodWorkingDays(start: string, end: string, daysPerWeek: number): num
   return count;
 }
 
-export function PayrollRunGrid({ clientId, companyId, year, companyName, frequency, employees }: Props) {
+export function PayrollRunGrid({ clientId, companyId, year, companyName, frequency, employees, initialPeriodStart, initialPeriodEnd, initialPayDate }: Props) {
   const [payFrequency, setPayFrequency] = useState(frequency);
-  const [start, setStart] = useState("");
+  const [start, setStart] = useState(initialPeriodStart);
   const [search, setSearch] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>(employees.map(employee => employee.id));
-  const [end, setEnd] = useState("");
-  const [payDate, setPayDate] = useState("");
+  const [end, setEnd] = useState(initialPeriodEnd);
+  const [payDate, setPayDate] = useState(initialPayDate);
   const [overrides, setOverrides] = useState<Record<string, { hours?: string; rate?: string; overtimeHours?: string }>>({});
 
   const getValue = (employee: RunPayrollEmployee) => {
