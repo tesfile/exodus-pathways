@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import { requireRole } from "@/lib/supabase/server";
 import { saveCompanyPayrollSettings } from "./actions";
+import { CompanyScheduleFields } from "./company-schedule-fields";
 
 export const dynamic = "force-dynamic";
 type Props = {
@@ -61,23 +62,12 @@ export default async function CompanyPayrollSettingsPage({ params, searchParams 
           <h2 className="mt-2 text-2xl font-black text-slate-950">Choose when to pay {selected.trade_name || selected.legal_name}</h2>
           <p className="mt-2 text-sm text-slate-600">Payday and recurring pay periods are configured once for this employer. Employees can use individual schedules where necessary.</p>
         </div>
-        <Input label="Pay schedule name">
-          <input name="schedule_name" maxLength={100} defaultValue={settings?.schedule_name ?? "Regular payroll"} className={inputClass} placeholder="Example: Every Friday or Last day of month"/>
-        </Input>
-        <Input label="Pay frequency">
-          <select name="default_pay_frequency" defaultValue={settings?.default_pay_frequency ?? "biweekly"} className={inputClass}>
-            <option value="weekly">Every week</option>
-            <option value="biweekly">Every other week</option>
-            <option value="semimonthly">Twice a month</option>
-            <option value="monthly">Every month</option>
-          </select>
-        </Input>
-        <Input label="End of next pay period">
-          <input name="next_period_end" type="date" defaultValue={settings?.next_period_end ?? ""} className={inputClass}/>
-        </Input>
-        <Input label="Next pay date">
-          <input name="next_pay_date" type="date" defaultValue={settings?.next_pay_date ?? ""} className={inputClass}/>
-        </Input>
+        <CompanyScheduleFields
+          name={settings?.schedule_name ?? "Regular payroll"}
+          frequency={settings?.default_pay_frequency ?? "biweekly"}
+          periodEnd={settings?.next_period_end ?? ""}
+          payDate={settings?.next_pay_date ?? ""}
+        />
         <div className="sm:col-span-2 rounded-xl border border-emerald-200 bg-emerald-50/40 p-5">
           <label className="flex cursor-pointer items-start gap-3 text-sm font-bold text-slate-900">
             <input type="checkbox" name="auto_prepare_enabled" defaultChecked={settings?.auto_prepare_enabled ?? false} className="mt-0.5 h-5 w-5 accent-emerald-700"/>
