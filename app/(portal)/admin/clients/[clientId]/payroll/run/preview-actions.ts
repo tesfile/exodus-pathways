@@ -71,8 +71,7 @@ export async function calculatePayrollPreview2026(input:Input):Promise<PayrollCa
  const [{data:workers,error:workerError},{data:profiles,error:profileError},{data:payments,error:paymentError},{data:payItems,error:itemError}]=await Promise.all([
   db.from("workers").select("id,worker_name,worker_type").eq("client_id",input.clientId).eq("company_id",input.companyId).in("id",ids),
   db.from("kal_payroll_employee_profiles").select(
-   "worker_id,pay_type,salary_amount,pay_frequency,employment_status,birth_date,hire_date,termination_date,contract_end_date,"+
-   "td1_federal_claim,td1_provincial_claim,additional_income_tax,cpp_exempt,ei_exempt,federal_income_tax_exempt,overtime_multiplier,work_location"
+   "worker_id,pay_type,salary_amount,pay_frequency,employment_status,birth_date,hire_date,termination_date,contract_end_date,td1_federal_claim,td1_provincial_claim,additional_income_tax,cpp_exempt,ei_exempt,federal_income_tax_exempt,overtime_multiplier,work_location"
   ).eq("client_id",input.clientId).in("worker_id",ids),
   db.from("worker_payments").select(
    "worker_id,payment_date,gross_pay,cpp,cpp2,ei,income_tax_deducted,t4_box26_cpp_pensionable_earnings,t4_box24_ei_insurable_earnings,client_worker_type"
