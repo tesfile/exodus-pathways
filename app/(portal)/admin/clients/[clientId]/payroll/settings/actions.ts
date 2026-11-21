@@ -59,7 +59,31 @@ export async function saveCompanyPayrollSettings(form: FormData) {
     updated_at: new Date().toISOString()
   }, { onConflict: "company_id" });
   if (error) throw new Error("Unable to save the company payroll settings.");
+  let draftWarning = false;
+  if (autoPrepare && periodEnd && payDate) {
+    const firstEnd = new Date(periodEnd + "T00:00:00Z");
+    let firstStart: Date;
+    if (frequency === "weekly") firstStart = new Date(firstEnd.valueOf() - 6 * 86400000);
+    else if (frequency === "biweekly") firstStart = new Date(firstEnd.valueOf() - 13 * 86400000);
+    else if (frequency === "semimonthly") firstStart = new Date(Date.UTC(firstEnd.getUTCFullYear(),firstEnd.getUTCMonth(),firstEnd.getUTCDate()<=15?1:16));
+    else firstStart = new Date(Date.UTC(firstEnd.getUTCFullYear(),firstEnd.getUTCMonth(),1));
+    const firstStartDate = firstStart.toISOString().slice(0,10);
+    const { error: draftError } = await db.from("kal_payroll_draft_runs")
+      .upsert({
+        client_id: clientId,
+        company_id: companyId,
+        period_start: firstStartDate,
+        period_end: periodEnd,
+        pay_date: payDate,
+        frequency,
+        auto_generated: true
+      }, { onConflict: "company_id,period_start,period_end", ignoreDuplicates: true });
+    if (draftError) {
+      console.error("Unable to queue initial payroll draft:", draftError.code);
+      draftWarning = true;
+    }
+  }
   revalidatePath(`/admin/clients/${clientId}/payroll/settings`);
   revalidatePath(`/admin/clients/${clientId}/payroll/run`);
-  redirect(`/admin/clients/${encodeURIComponent(clientId)}/payroll/settings?companyId=${encodeURIComponent(companyId)}&year=${year}&saved=1`);
+  redirect(`/admin/clients/${encodeURIComponent(clientId)}/payroll/settings?companyId=${encodeURIComponent(companyId)}&year=${year}&saved=1${draftWarning ? "&warning=draft" : ""}`);
 }
