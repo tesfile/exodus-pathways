@@ -19,6 +19,15 @@ export async function saveCompanyPayrollSettings(form: FormData) {
   const multiplier = Number(read(form, "overtime_multiplier"));
   const vacation = Number(read(form, "vacation_percent"));
   const frequency = read(form, "default_pay_frequency");
+  const scheduleName = read(form, "schedule_name").slice(0, 100) || "Regular payroll";
+  const periodEnd = read(form, "next_period_end");
+  const payDate = read(form, "next_pay_date");
+  const autoPrepare = form.get("auto_prepare_enabled") === "on";
+  const goodDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(value + "T00:00:00Z").valueOf()) && new Date(value + "T00:00:00Z").toISOString().slice(0,10)===value;
+  if ((periodEnd && !goodDate(periodEnd)) || (payDate && !goodDate(payDate)) || (periodEnd && payDate && payDate < periodEnd) || (autoPrepare && (!periodEnd || !payDate))) {
+    throw new Error("Set a valid pay-period end and payday (on or after the period end) before enabling recurring payroll.");
+  }
+
   if (
     !Number.isFinite(hours) || hours <= 0 || hours > 24 ||
     !Number.isInteger(days) || days < 1 || days > 7 ||
@@ -43,6 +52,10 @@ export async function saveCompanyPayrollSettings(form: FormData) {
     default_pay_frequency: frequency,
     overtime_multiplier: multiplier,
     vacation_percent: vacation,
+    schedule_name: scheduleName,
+    next_period_end: periodEnd || null,
+    next_pay_date: payDate || null,
+    auto_prepare_enabled: autoPrepare,
     updated_at: new Date().toISOString()
   }, { onConflict: "company_id" });
   if (error) throw new Error("Unable to save the company payroll settings.");
