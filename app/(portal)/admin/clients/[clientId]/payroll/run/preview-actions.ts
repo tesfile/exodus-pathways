@@ -35,8 +35,41 @@ const round=(v:number)=>Math.round((v+Number.EPSILON)*100)/100;
 const money=(v:unknown)=>v===null||v===undefined?0:Number(v);
 const dateDifference=(start:string,end:string)=>(Date.parse(end+"T00:00:00Z")-Date.parse(start+"T00:00:00Z"))/86400000+1;
 
-export async function calculatePayrollPreview2026(input:Input):Promise<PayrollCalculatedPreview>{
+const exposedErrors = new Set([
+ "Select a valid employer, period and payday.",
+ "The verified deduction engine currently supports 2026 only.",
+ "Pay period dates do not match the company pay frequency. Recheck the scheduled start and end dates.",
+ "Invalid employee selection.",
+ "Invalid hours or gross pay values.",
+ "Payroll database credentials are not configured.",
+ "Employer company was not found.",
+ "Only Alberta payroll is supported by this calculation. Confirm the company's province is Alberta in Company Settings.",
+ "Unable to load required historical payroll records.",
+ "Too many historical transactions for a complete year-to-date calculation. Reconcile in payroll history first."
+]);
+export type PayrollPreviewResponse =
+  | {ok:true; preview:PayrollCalculatedPreview}
+  | {ok:false; error:string};
+
+/**
+ * A Next.js server action must return business validation errors as serializable data.
+ * Throwing here causes production Next.js to replace a useful message with the
+ * opaque "server components render" error shown in the user's screenshot.
+ */
+export async function calculatePayrollPreview2026(input:Input):Promise<PayrollPreviewResponse>{
  await requireRole(["admin"]);
+ try {
+  const preview=await calculatePayrollPreview2026Internal(input);
+  return {ok:true,preview};
+ }catch(error){
+  const message=error instanceof Error&&exposedErrors.has(error.message)
+   ?error.message
+   :"Unable to calculate the payroll preview. Please check employee details and try again.";
+  return {ok:false,error:message};
+ }
+}
+
+async function calculatePayrollPreview2026Internal(input:Input):Promise<PayrollCalculatedPreview>{
  if(!input||!idRe.test(input.clientId)||!idRe.test(input.companyId)||
    !validDate(input.periodStart)||!validDate(input.periodEnd)||!validDate(input.payDate)||
    input.periodStart>input.periodEnd||input.payDate<input.periodEnd||
