@@ -32,7 +32,7 @@ export function CompanyScheduleFields({ name, frequency: initialFrequency, perio
   const [payDate, setPayDate] = useState(initialPayDate);
   const dates = useMemo(() => {
     const end = parse(periodEnd), payday = parse(payDate);
-    if (!end || !payday || payday < end) return [];
+    if (!end || !payday || payday.valueOf() < end.valueOf()) return [];
     const diffDays = Math.round((payday.valueOf()-end.valueOf())/msDay);
     const monthOffset = (payday.getUTCFullYear()-end.getUTCFullYear())*12 + payday.getUTCMonth()-end.getUTCMonth();
     const payAnchor = payday.getUTCDate(), payEom = payAnchor===lastDay(payday.getUTCFullYear(),payday.getUTCMonth());
