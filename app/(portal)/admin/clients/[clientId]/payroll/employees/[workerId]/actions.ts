@@ -62,6 +62,18 @@ export async function savePayrollEmployeeProfile(form: FormData) {
   const workPhone=read(form,"work_phone",50);
   const mobilePhone=read(form,"mobile_phone",50);
   const basePayEffective=read(form,"base_pay_effective_date",10);
+  const gender=read(form,"gender",30);
+  const mailingSameAsHome=form.get("mailing_same_as_home")==="on";
+  const mailingAddress=read(form,"mailing_address",500);
+  const emergencyName=read(form,"emergency_contact_name",150);
+  const emergencyRelationship=read(form,"emergency_contact_relationship",80);
+  const emergencyPhone=read(form,"emergency_contact_phone",50);
+  const roeReason=read(form,"roe_reason_code",5);
+  const vacationPolicy=read(form,"vacation_policy",40);
+  const sickPayPolicy=read(form,"sick_pay_policy",40);
+  const unpaidPolicy=read(form,"unpaid_time_off_policy",40);
+  const sickHours=Number(read(form,"sick_balance_hours",20));
+
   const suppliedName = [firstName,middleName,lastName].filter(Boolean).join(" ");
   const name = suppliedName || read(form, "worker_name");
   const email = read(form, "email", 254);
@@ -107,6 +119,12 @@ export async function savePayrollEmployeeProfile(form: FormData) {
   ) invalid("invalid_pay_settings");
 
   if (![birthDate, hireDate, terminationDate, contractEndDate, periodEnd, payDate, basePayEffective].every(isDate)) invalid("invalid_dates");
+  if (!["","female","male","non_binary","another","prefer_not_to_say"].includes(gender) ||
+      !["","A00","A01","B00","D00","E00","F00","G00","H00","J00","K00","M00","N00","P00","Z00"].includes(roeReason) ||
+      !["paid_each_period","accrued","none"].includes(vacationPolicy) ||
+      !["none","hours_bank","manual"].includes(sickPayPolicy) ||
+      !["none","manual"].includes(unpaidPolicy) ||
+      !Number.isFinite(sickHours) || sickHours<0 || sickHours>10000) invalid("invalid_policy");
   if (birthDate && birthDate > new Date().toISOString().slice(0, 10)) invalid("invalid_birth_date");
   if (payDate && periodEnd && payDate < periodEnd) invalid("pay_date_before_period_end");
   if (terminationDate && hireDate && terminationDate < hireDate) invalid("invalid_termination_date");
@@ -163,6 +181,17 @@ export async function savePayrollEmployeeProfile(form: FormData) {
     work_phone: nullable(workPhone),
     mobile_phone: nullable(mobilePhone),
     base_pay_effective_date: nullable(basePayEffective),
+    gender: nullable(gender),
+    mailing_same_as_home: mailingSameAsHome,
+    mailing_address: mailingSameAsHome ? null : nullable(mailingAddress),
+    emergency_contact_name: nullable(emergencyName),
+    emergency_contact_relationship: nullable(emergencyRelationship),
+    emergency_contact_phone: nullable(emergencyPhone),
+    roe_reason_code: nullable(roeReason),
+    vacation_policy: vacationPolicy,
+    sick_pay_policy: sickPayPolicy,
+    sick_balance_hours: sickHours,
+    unpaid_time_off_policy: unpaidPolicy,
     manager_name: nullable(managerName),
     department: nullable(department),
     schedule_name: scheduleName,
