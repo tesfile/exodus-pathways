@@ -26,7 +26,7 @@ export default async function CompanyPayrollSettingsPage({ params, searchParams 
   if (!url || !secret) throw new Error("Payroll database configuration missing.");
   const db = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data: companies, error: companyError } = await db.from("companies")
-    .select("id,legal_name,trade_name").eq("client_id", clientId).order("legal_name");
+    .select("id,legal_name,trade_name,province").eq("client_id", clientId).order("legal_name");
   if (companyError) throw new Error("Unable to load payroll companies.");
   const selected = companies?.find(company => company.id === query?.companyId) ?? companies?.[0];
   const { data: settings, error } = selected
@@ -63,6 +63,27 @@ export default async function CompanyPayrollSettingsPage({ params, searchParams 
           <p className="text-xs font-black uppercase tracking-widest text-emerald-700">Company payroll schedule</p>
           <h2 className="mt-2 text-2xl font-black text-slate-950">Choose when to pay {selected.trade_name || selected.legal_name}</h2>
           <p className="mt-2 text-sm text-slate-600">Payday and recurring pay periods are configured once for this employer. Employees can use individual schedules where necessary.</p>
+        </div>
+        <div className="sm:col-span-2 rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <Input label="Province of employment (required for CRA payroll deductions)">
+            <select name="province" defaultValue={selected.province ?? ""} required className={inputClass}>
+              <option value="">Select the employer's province of employment</option>
+              <option value="AB">Alberta (2026 calculations supported)</option>
+              <option value="BC">British Columbia (calculation not yet supported)</option>
+              <option value="SK">Saskatchewan (calculation not yet supported)</option>
+              <option value="MB">Manitoba (calculation not yet supported)</option>
+              <option value="ON">Ontario (calculation not yet supported)</option>
+              <option value="QC">Quebec (calculation not yet supported)</option>
+              <option value="NB">New Brunswick (calculation not yet supported)</option>
+              <option value="NS">Nova Scotia (calculation not yet supported)</option>
+              <option value="PE">Prince Edward Island (calculation not yet supported)</option>
+              <option value="NL">Newfoundland and Labrador (calculation not yet supported)</option>
+              <option value="NT">Northwest Territories (calculation not yet supported)</option>
+              <option value="NU">Nunavut (calculation not yet supported)</option>
+              <option value="YT">Yukon (calculation not yet supported)</option>
+            </select>
+          </Input>
+          <p className="mt-2 text-xs leading-5 text-slate-600">Confirm the employee's province of employment, not simply their home address. KAL's first CRA calculation preview currently supports Alberta 2026 regular payroll.</p>
         </div>
         <CompanyScheduleFields
           name={settings?.schedule_name ?? "Regular payroll"}
