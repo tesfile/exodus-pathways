@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import Link from "next/link";
 import { saveDraftPayroll } from "./draft-actions";
+import { calculatePayrollPreview2026, type PayrollCalculatedPreview } from "./preview-actions";
 
 export type RunPayrollEmployee = {
   id:string;
@@ -61,6 +62,9 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,em
  const [search,setSearch]=useState("");
  const [showPreview,setShowPreview]=useState(false);
  const [showCompare,setShowCompare]=useState<string|null>(null);
+ const [calculated,setCalculated]=useState<PayrollCalculatedPreview|null>(null);
+ const [previewLoading,setPreviewLoading]=useState(false);
+ const [previewError,setPreviewError]=useState<string|null>(null);
  const [selectedIds,setSelectedIds]=useState<string[]>(savedLines.length
    ?savedLines.map(line=>line.workerId).filter(id=>employees.some(e=>e.id===id))
    :employees.filter(e=>priorPay[e.id]?.date!==initialPayDate).map(e=>e.id));
@@ -108,6 +112,27 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,em
    overtimeHours:values.overtimeHours,vacationPay:values.vacationPay,
    statHolidayPay:values.statHolidayPay,memo:values.memo,paymentMethod:values.paymentMethod
  }));
+
+ async function openCalculatedPreview(){
+  setCalculated(null);
+  setPreviewError(null);
+  setPreviewLoading(true);
+  setShowPreview(true);
+  try {
+   const next=await calculatePayrollPreview2026({
+    clientId,companyId,periodStart:start,periodEnd:end,payDate,
+    frequency:payFrequency as "weekly"|"biweekly"|"semimonthly"|"monthly",
+    lines:serialized.map(l=>({
+      workerId:l.workerId,regularHours:l.regularHours,hourlyRate:l.hourlyRate,
+      overtimeHours:l.overtimeHours,vacationPay:l.vacationPay,statHolidayPay:l.statHolidayPay
+    }))
+   });
+   setCalculated(next);
+  }catch(error){
+   setPreviewError(error instanceof Error?error.message:"CRA payroll preview could not be calculated.");
+  }finally{setPreviewLoading(false);}
+ }
+
  const base="/admin/clients/"+encodeURIComponent(clientId)+"/payroll";
  const settingsUrl=base+"/settings?companyId="+encodeURIComponent(companyId)+"&year="+year;
  const employeeUrl=(id:string)=>base+"/employees/"+encodeURIComponent(id)+"?year="+year;
@@ -184,7 +209,7 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,em
    {alreadyPaid?<p role="alert" className="border-t border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-800">An employee already has a recorded payment on this payday. Deselect that employee to prevent duplicates.</p>:null}
    {offContract?<p role="alert" className="border-t border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-800">Final partial periods after a contract end date need manual review; deselect those employees from this draft.</p>:null}
    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 p-5">
-    <p className="max-w-xl text-xs leading-5 text-slate-600">Draft gross includes entered regular pay, vacation and statutory pay. Overtime earnings, CPP, CPP2, EI, taxes, net pay and employer contributions are not calculated here.</p>
+    <p className="max-w-xl text-xs leading-5 text-slate-600">Draft hours and pay are editable. The Alberta CRA calculation preview checks employees and historical records before displaying CPP, CPP2, EI, income tax, net pay and employer contributions. Save for later does not send money.</p>
     <div className="flex flex-wrap gap-3">
      <form action={saveDraftPayroll}>
       <input name="client_id" type="hidden" value={clientId}/><input name="company_id" type="hidden" value={companyId}/>
@@ -193,29 +218,66 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,em
       <input name="draft_id" type="hidden" value={draftId}/><input name="lines" type="hidden" value={JSON.stringify(serialized)}/>
       <button type="submit" disabled={!canSave} className="rounded-lg border border-emerald-700 px-5 py-3 text-sm font-bold text-emerald-800 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50">Save for later</button>
      </form>
-     <button type="button" onClick={()=>setShowPreview(true)} disabled={!canSave} className="rounded-lg bg-emerald-700 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-300">Preview for {chosen.length} employees</button>
+     <button type="button" onClick={openCalculatedPreview} disabled={!canSave||year!==2026||previewLoading} className="rounded-lg bg-emerald-700 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-300">Preview for {chosen.length} employees</button>
     </div>
    </div>
   </div>
   {showPreview?<div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
-   <div role="dialog" aria-modal="true" aria-labelledby="kal-preview-title" className="max-h-[90vh] w-full max-w-5xl overflow-auto rounded-xl bg-white p-6 shadow-2xl">
-    <div className="flex items-start justify-between gap-3"><div><h2 id="kal-preview-title" className="text-2xl font-black text-slate-950">Payroll preview · {companyName}</h2><p className="mt-1 text-sm text-slate-600">{start} to {end} · Payday {payDate}</p></div><button aria-label="Close preview" type="button" onClick={()=>setShowPreview(false)}><X className="h-6 w-6"/></button></div>
-    <div className="mt-5 grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-5 sm:grid-cols-3">
-     <div><p className="text-xs uppercase text-slate-500">Draft gross pay</p><p className="mt-1 text-2xl font-black">{money(gross)}</p></div>
-     <div><p className="text-xs uppercase text-slate-500">Employee &amp; employer taxes</p><p className="mt-2 text-sm font-semibold text-amber-800">Not calculated</p></div>
-     <div><p className="text-xs uppercase text-slate-500">Total payroll cost</p><p className="mt-2 text-sm font-semibold text-amber-800">Pending CRA calculations</p></div>
+   <div role="dialog" aria-modal="true" aria-labelledby="kal-preview-title" className="max-h-[92vh] w-full max-w-6xl overflow-auto rounded-xl bg-white p-6 shadow-2xl">
+    <div className="flex items-start justify-between gap-3">
+     <div><h2 id="kal-preview-title" className="text-2xl font-black text-slate-950">Payroll preview · {companyName}</h2>
+      <p className="mt-1 text-sm text-slate-600">{start} to {end} · Payday {payDate}</p>
+      <p className="mt-2 text-xs font-semibold text-emerald-700">2026 Alberta · CRA T4127 Option 1 regular payroll calculations</p>
+     </div>
+     <button aria-label="Close preview" type="button" onClick={()=>setShowPreview(false)}><X className="h-6 w-6"/></button>
     </div>
-    <div className="mt-5 overflow-x-auto"><table className="w-full min-w-[700px] text-left text-sm">
-     <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase"><tr><th className="p-3">Name</th><th className="p-3">Total hours</th><th className="p-3">Draft gross</th><th className="p-3">Employee deductions</th><th className="p-3">Net pay</th><th className="p-3">Previous recorded gross</th></tr></thead>
-     <tbody className="divide-y divide-slate-100">{chosen.map(({employee,values})=><tr key={employee.id}>
-      <td className="p-3 font-semibold">{employee.name}</td><td className="p-3">{(values.hours+values.overtimeHours).toFixed(2)}h</td>
-      <td className="p-3">{money(values.draftGross)}</td><td className="p-3 text-amber-800">Pending</td><td className="p-3 text-amber-800">Pending</td>
-      <td className="p-3">{priorPay[employee.id]?<button type="button" onClick={()=>setShowCompare(showCompare===employee.id?null:employee.id)} className="text-emerald-700 hover:underline">{money(priorPay[employee.id].gross)} · Compare</button>:"No previous pay"}
-       {showCompare===employee.id&&priorPay[employee.id]?<p className="mt-2 text-xs">Previously recorded on {priorPay[employee.id].date}. Difference in gross: {money(values.draftGross-priorPay[employee.id].gross)}</p>:null}
-      </td></tr>)}</tbody>
-    </table></div>
-    <p className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">This is a payroll draft, not a completed Canadian paycheque. Review CPP, CPP2, EI, tax, vacation/statutory eligibility and previous payments before recording pay. No bank payment or CRA filing will be sent.</p>
-    <div className="mt-5 flex justify-end"><button type="button" onClick={()=>setShowPreview(false)} className="rounded-lg bg-emerald-700 px-5 py-3 text-sm font-bold text-white">Back to payroll</button></div>
+    {previewLoading?<p role="status" className="mt-6 rounded-lg bg-slate-100 p-6 text-sm font-semibold text-slate-800">Checking employee profiles, previous CPP/EI contributions and 2026 CRA deduction formulas…</p>:null}
+    {previewError?<p role="alert" className="mt-6 rounded-lg border border-red-300 bg-red-50 p-5 text-sm font-semibold text-red-800">{previewError}</p>:null}
+    {calculated?<>
+     <div className="mt-5 grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-5 sm:grid-cols-4">
+      <div><p className="text-xs uppercase text-slate-500">Gross pay</p><p className="mt-1 text-2xl font-black">{calculated.totalGross===null?"Incomplete":money(calculated.totalGross)}</p></div>
+      <div><p className="text-xs uppercase text-slate-500">Employee deductions</p><p className="mt-1 text-xl font-black">{calculated.totalDeductions===null?"Review required":money(calculated.totalDeductions)}</p></div>
+      <div><p className="text-xs uppercase text-slate-500">Net pay</p><p className="mt-1 text-xl font-black">{calculated.totalNetPay===null?"Review required":money(calculated.totalNetPay)}</p></div>
+      <div><p className="text-xs uppercase text-slate-500">Total payroll cost</p><p className="mt-1 text-xl font-black">{calculated.totalPayrollCost===null?"Review required":money(calculated.totalPayrollCost)}</p></div>
+     </div>
+     {calculated.blockedCount>0?<p role="alert" className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-900">
+      {calculated.blockedCount} of {calculated.lines.length} employees need additional information. Payroll totals are withheld until every selected employee has a valid calculation.
+     </p>:<p role="status" className="mt-4 rounded-lg border border-emerald-300 bg-emerald-50 p-4 text-sm font-semibold text-emerald-900">
+      Deductions calculated for {calculated.calculatedCount} employee{calculated.calculatedCount===1?"":"s"}. Verify the amounts using CRA PDOC before real payroll.
+     </p>}
+     <div className="mt-5 overflow-x-auto"><table className="w-full min-w-[1250px] text-left text-sm">
+      <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase"><tr>
+       <th className="p-3">Employee</th><th className="p-3">Gross</th><th className="p-3">CPP</th><th className="p-3">CPP2</th><th className="p-3">EI</th><th className="p-3">Income tax</th><th className="p-3">Net pay</th><th className="p-3">Employer CPP + CPP2</th><th className="p-3">Employer EI</th><th className="p-3">Employer total cost</th>
+      </tr></thead>
+      <tbody className="divide-y divide-slate-100">{calculated.lines.map(line=><tr key={line.workerId}>
+       <td className="p-3 align-top"><span className="font-bold text-slate-950">{line.name}</span>
+        {line.issue?<p className="mt-2 max-w-64 text-xs font-semibold leading-5 text-amber-800">{line.issue}</p>:null}
+       </td>
+       {line.result?<><td className="p-3">{money(line.result.grossPay)}</td>
+        <td className="p-3">{money(line.result.cpp)}</td><td className="p-3">{money(line.result.cpp2)}</td>
+        <td className="p-3">{money(line.result.ei)}</td><td className="p-3">{money(line.result.incomeTax)}</td>
+        <td className="p-3 font-black text-slate-950">{money(line.result.netPay)}</td>
+        <td className="p-3">{money(line.result.employerCpp+line.result.employerCpp2)}</td>
+        <td className="p-3">{money(line.result.employerEi)}</td>
+        <td className="p-3 font-bold">{money(line.result.totalPayrollCost)}</td></>
+       :<td className="p-3 text-amber-800" colSpan={9}>Requires review before a statutory calculation can be shown. <Link href={employeeUrl(line.workerId)} className="font-bold text-emerald-700 underline">Edit employee</Link></td>}
+      </tr>)}</tbody>
+     </table></div>
+     {calculated.blockedCount===0?<div className="mt-4 grid gap-3 rounded-lg bg-slate-50 p-5 sm:grid-cols-4">
+      <p className="text-sm">Total CPP: <strong>{money(calculated.totalCpp??0)}</strong></p>
+      <p className="text-sm">Total CPP2: <strong>{money(calculated.totalCpp2??0)}</strong></p>
+      <p className="text-sm">Total EI: <strong>{money(calculated.totalEi??0)}</strong></p>
+      <p className="text-sm">Total income tax: <strong>{money(calculated.totalIncomeTax??0)}</strong></p>
+     </div>:null}
+     <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+      <p className="font-black">Calculation review required before real payroll</p>
+      {calculated.information.map((notice,i)=><p key={i} className="mt-2">{notice}</p>)}
+      <p className="mt-3">Official verification: <a target="_blank" rel="noopener noreferrer" className="font-bold text-emerald-800 underline" href="https://www.canada.ca/en/revenue-agency/services/e-services/digital-services-businesses/payroll-deductions-online-calculator.html">CRA Payroll Deductions Online Calculator (PDOC)</a></p>
+     </div>
+    </>:null}
+    <div className="mt-5 flex justify-end">
+     <button type="button" onClick={()=>setShowPreview(false)} className="rounded-lg bg-emerald-700 px-5 py-3 text-sm font-bold text-white">Back to payroll</button>
+    </div>
    </div>
   </div>:null}
  </section>;
