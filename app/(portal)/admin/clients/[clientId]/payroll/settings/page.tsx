@@ -29,17 +29,17 @@ export default async function CompanyPayrollSettingsPage({ params, searchParams 
   if (companyError) throw new Error("Unable to load payroll companies.");
   const selected = companies?.find(company => company.id === query?.companyId) ?? companies?.[0];
   const { data: settings, error } = selected
-    ? await db.from("kal_company_payroll_settings").select("default_hours_per_day,default_days_per_week,default_pay_frequency,overtime_multiplier,vacation_percent")
+    ? await db.from("kal_company_payroll_settings").select("default_hours_per_day,default_days_per_week,default_pay_frequency,overtime_multiplier,vacation_percent,schedule_name,next_period_end,next_pay_date,auto_prepare_enabled")
       .eq("company_id", selected.id).eq("client_id", clientId).maybeSingle()
     : { data: null, error: null };
   if (error) throw new Error("Unable to read company payroll settings.");
 
   const back = `/admin/clients/${encodeURIComponent(clientId)}/payroll?year=${year}`;
-  return <main className="mx-auto grid max-w-4xl gap-6">
+  return <main className="mx-auto grid max-w-5xl gap-6">
     <div>
-      <Link href={back} className="text-sm font-bold text-emerald-700 hover:underline">← Back to Client Payroll</Link>
+      <Link href={back} className="text-sm font-bold text-emerald-700 hover:underline">← Back to Payroll</Link>
       <h1 className="mt-4 text-3xl font-black text-slate-900">Payroll settings</h1>
-      <p className="mt-2 text-sm text-slate-600">Standard hours and payroll defaults belong to the selected employer company, not all KAL clients.</p>
+      <p className="mt-2 text-sm text-slate-600">Choose when your company pays employees. Recurring payroll can prepare draft pay periods automatically; payments still require review.</p>
     </div>
     {query?.saved === "1" && <p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-900">Payroll settings saved for this company.</p>}
     {selected ? <>
@@ -52,27 +52,46 @@ export default async function CompanyPayrollSettingsPage({ params, searchParams 
         </Input>
         <button type="submit" className="mt-2 w-fit rounded-lg border border-slate-300 px-5 py-2 text-sm font-bold">View company</button>
       </form>
-      <form action={saveCompanyPayrollSettings} className="grid gap-5 rounded-xl border border-slate-200 bg-white p-6 sm:grid-cols-2">
+      <form action={saveCompanyPayrollSettings} className="grid gap-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:grid-cols-2">
         <input name="client_id" type="hidden" value={clientId}/>
         <input name="company_id" type="hidden" value={selected.id}/>
         <input name="year" type="hidden" value={year}/>
-        <div className="sm:col-span-2">
-          <h2 className="text-xl font-black text-slate-900">{selected.trade_name || selected.legal_name}</h2>
-          <p className="mt-1 text-sm text-slate-600">Default working time: 8 hours per day, 5 days per week (40 hours per week).</p>
+        <div className="sm:col-span-2 border-b border-slate-200 pb-4">
+          <p className="text-xs font-black uppercase tracking-widest text-emerald-700">Company payroll schedule</p>
+          <h2 className="mt-2 text-2xl font-black text-slate-950">Choose when to pay {selected.trade_name || selected.legal_name}</h2>
+          <p className="mt-2 text-sm text-slate-600">Payday and recurring pay periods are configured once for this employer. Employees can use individual schedules where necessary.</p>
         </div>
+        <Input label="Pay schedule name">
+          <input name="schedule_name" maxLength={100} defaultValue={settings?.schedule_name ?? "Regular payroll"} className={inputClass} placeholder="Example: Every Friday or Last day of month"/>
+        </Input>
+        <Input label="Pay frequency">
+          <select name="default_pay_frequency" defaultValue={settings?.default_pay_frequency ?? "biweekly"} className={inputClass}>
+            <option value="weekly">Every week</option>
+            <option value="biweekly">Every other week</option>
+            <option value="semimonthly">Twice a month</option>
+            <option value="monthly">Every month</option>
+          </select>
+        </Input>
+        <Input label="End of next pay period">
+          <input name="next_period_end" type="date" defaultValue={settings?.next_period_end ?? ""} className={inputClass}/>
+        </Input>
+        <Input label="Next pay date">
+          <input name="next_pay_date" type="date" defaultValue={settings?.next_pay_date ?? ""} className={inputClass}/>
+        </Input>
+        <div className="sm:col-span-2 rounded-xl border border-emerald-200 bg-emerald-50/40 p-5">
+          <label className="flex cursor-pointer items-start gap-3 text-sm font-bold text-slate-900">
+            <input type="checkbox" name="auto_prepare_enabled" defaultChecked={settings?.auto_prepare_enabled ?? false} className="mt-0.5 h-5 w-5 accent-emerald-700"/>
+            <span>Automatically prepare recurring payroll drafts
+              <span className="mt-2 block text-sm font-normal leading-6 text-slate-600">When enabled, scheduled pay periods will be added to the draft queue without re-entering the dates each month. Drafts include only eligible active employees and stop including employees after their contract end date. This does not transfer money, file taxes, or approve paycheques.</span>
+            </span>
+          </label>
+        </div>
+        <div className="sm:col-span-2 border-t border-slate-200 pt-5"><h3 className="text-lg font-black text-slate-950">Standard hours and pay rules</h3><p className="mt-1 text-sm text-slate-500">Default for new employees: 8 hours per day, 5 days per week (40 hours).</p></div>
         <Input label="Default hours per day">
           <input name="default_hours_per_day" required type="number" min="0.25" max="24" step="0.25" defaultValue={settings?.default_hours_per_day ?? 8} className={inputClass}/>
         </Input>
         <Input label="Default days per week">
           <input name="default_days_per_week" required type="number" min="1" max="7" step="1" defaultValue={settings?.default_days_per_week ?? 5} className={inputClass}/>
-        </Input>
-        <Input label="Default pay frequency">
-          <select name="default_pay_frequency" defaultValue={settings?.default_pay_frequency ?? "biweekly"} className={inputClass}>
-            <option value="weekly">Weekly</option>
-            <option value="biweekly">Biweekly</option>
-            <option value="semimonthly">Twice a month</option>
-            <option value="monthly">Monthly</option>
-          </select>
         </Input>
         <Input label="Overtime multiplier (reference only)">
           <input name="overtime_multiplier" type="number" required step="0.25" min="1" max="4" defaultValue={settings?.overtime_multiplier ?? 1.5} className={inputClass}/>
