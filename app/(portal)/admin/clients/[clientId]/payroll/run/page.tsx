@@ -93,16 +93,26 @@ export default async function RunPayrollPage({ params, searchParams }: Props) {
       </label>
       <button type="submit" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold">Select company</button>
     </form>
+    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div><h2 className="text-xl font-black text-slate-950">Scheduled payroll drafts</h2><p className="mt-1 text-sm text-slate-600">Recurring periods prepared by the company schedule. Every pay run still requires review.</p></div>
+        <Link href={`/admin/clients/${encodeURIComponent(clientId)}/payroll/settings?companyId=${encodeURIComponent(selected.id)}&year=${year}`} className="text-sm font-bold text-emerald-700 hover:underline">Edit schedule</Link>
+      </div>
+      {draftRuns?.length ? <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {draftRuns.map(draft => <Link key={draft.id}
+          href={`/admin/clients/${encodeURIComponent(clientId)}/payroll/run?companyId=${encodeURIComponent(selected.id)}&year=${year}&draftId=${encodeURIComponent(draft.id)}`}
+          className={selectedDraft?.id === draft.id ? "rounded-xl border-2 border-emerald-700 bg-emerald-50 p-4" : "rounded-xl border border-slate-200 bg-white p-4 hover:border-emerald-500"}>
+          <span className="block text-sm font-bold text-slate-950">{draft.period_start} – {draft.period_end}</span>
+          <span className="mt-1 block text-xs text-slate-600">Pay date: {draft.pay_date} · {draft.status}</span>
+        </Link>)}
+      </div> : <p className="mt-4 rounded-lg bg-slate-50 p-4 text-sm text-slate-600">No recurring drafts yet. Enable automatic draft preparation in Company Settings. The daily scheduler creates the future periods. You can use the prefilled dates below immediately.</p>}
+    </section>
     <PayrollRunGrid clientId={clientId} companyId={selected.id} year={year}
       companyName={selected.trade_name || selected.legal_name}
       frequency={selectedDraft?.frequency ?? settings?.default_pay_frequency ?? "biweekly"}
       initialPeriodStart={currentPeriodStart}
       initialPeriodEnd={currentPeriodEnd}
       initialPayDate={selectedDraft?.pay_date ?? settings?.next_pay_date ?? ""}
-      drafts={(draftRuns ?? []).map(draft => ({
-        id: draft.id, periodStart: draft.period_start, periodEnd: draft.period_end,
-        payDate: draft.pay_date, frequency: draft.frequency, status: draft.status
-      }))}
       employees={employees}/>
   </main>;
 }
