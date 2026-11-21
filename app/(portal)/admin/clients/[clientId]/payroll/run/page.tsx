@@ -75,7 +75,7 @@ export default async function RunPayrollPage({ params, searchParams }: Props) {
       return {
         id: worker.id,
         name: worker.worker_name,
-        payType: profile?.pay_type === "salary" ? "salary" : "hourly",
+        payType: profile?.pay_type === "commission" ? "commission" : profile?.pay_type === "salary" ? "salary" : "hourly",
         hourlyRate: profile?.hourly_rate === null || profile?.hourly_rate === undefined ? null : numeric(profile.hourly_rate),
         salaryAmount: profile?.salary_amount === null || profile?.salary_amount === undefined ? null : numeric(profile.salary_amount),
         hoursPerDay: numeric(profile?.default_hours_per_day, numeric(settings?.default_hours_per_day, 8)),
