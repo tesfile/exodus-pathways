@@ -75,6 +75,50 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
       {query?.saved === "1" ? <p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-900">Employee profile and pay schedule saved.</p> : null}
       {query?.error ? <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-900">Please check the employee details and dates. No changes were saved for the invalid fields.</p> : null}
 
+      <section aria-label="Employee payroll summary" className="grid gap-4">
+        <div className="grid gap-4 lg:grid-cols-2">
+          <article className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="mb-4 flex items-center justify-between gap-3"><h2 className="text-lg font-black text-slate-950">Personal information</h2><a href="#personal-information" className="text-sm font-bold text-emerald-700 hover:underline">Edit</a></div>
+            <dl className="grid gap-3 text-sm sm:grid-cols-2">
+              <div><dt className="text-slate-500">Legal name</dt><dd className="font-bold text-slate-900">{worker.worker_name}</dd></div>
+              <div><dt className="text-slate-500">SIN</dt><dd className="font-bold text-slate-900">{profile?.sin_last4 ? `Protected · ending ${profile.sin_last4}` : "Not provided"}</dd></div>
+              <div><dt className="text-slate-500">Birthdate</dt><dd className="font-bold text-slate-900">{profile?.birth_date ?? "Not recorded"}</dd></div>
+              <div><dt className="text-slate-500">Email</dt><dd className="break-all font-semibold text-slate-900">{worker.email || "Not provided"}</dd></div>
+            </dl>
+          </article>
+          <article className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="mb-4 flex items-center justify-between gap-3"><h2 className="text-lg font-black text-slate-950">Employment details</h2><a href="#employment-details" className="text-sm font-bold text-emerald-700 hover:underline">Edit</a></div>
+            <dl className="grid gap-3 text-sm sm:grid-cols-2">
+              <div><dt className="text-slate-500">Status</dt><dd className="font-bold text-emerald-800">{profile?.employment_status || worker.status || "Active"}</dd></div>
+              <div><dt className="text-slate-500">Hire date</dt><dd className="font-bold text-slate-900">{profile?.hire_date || "Not set"}</dd></div>
+              <div><dt className="text-slate-500">Department</dt><dd className="font-bold text-slate-900">{profile?.department || "Not set"}</dd></div>
+              <div><dt className="text-slate-500">Pay schedule</dt><dd className="font-bold text-slate-900">{profile?.schedule_name || "Regular payroll"}</dd></div>
+            </dl>
+          </article>
+        </div>
+        <article className="rounded-xl border border-slate-200 bg-white p-5">
+          <div className="mb-4 flex items-center justify-between gap-3"><h2 className="text-lg font-black text-slate-950">Base pay</h2><a href="#base-pay" className="text-sm font-bold text-emerald-700 hover:underline">Edit base pay</a></div>
+          <dl className="grid gap-4 text-sm sm:grid-cols-3">
+            <div><dt className="text-slate-500">Pay type</dt><dd className="mt-1 font-bold capitalize text-slate-900">{profile?.pay_type || "hourly"}</dd></div>
+            <div><dt className="text-slate-500">Rate</dt><dd className="mt-1 font-bold text-slate-900">{profile?.pay_type === "salary" ? (profile.salary_amount == null ? "Not set" : `${Number(profile.salary_amount).toLocaleString("en-CA", {style:"currency",currency:"CAD"})}/period`) : (profile?.hourly_rate == null ? "Not set" : `${Number(profile.hourly_rate).toLocaleString("en-CA",{style:"currency",currency:"CAD"})}/hour`)}</dd></div>
+            <div><dt className="text-slate-500">Default working hours</dt><dd className="mt-1 font-bold text-slate-900">{Number(profile?.default_hours_per_day ?? 8) * Number(profile?.default_days_per_week ?? 5)} hours/week</dd></div>
+          </dl>
+          <p className="mt-3 text-xs text-slate-600">Vacation and overtime settings are editable below; calculation and statutory entitlements require review before finalizing payroll.</p>
+        </article>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <article className="rounded-xl border border-slate-200 bg-white p-5">
+            <h2 className="text-lg font-black text-slate-950">Tax withholdings</h2>
+            <p className="mt-2 text-sm text-slate-600">TD1 federal and provincial claim amounts and exemptions have not been configured in this employee profile.</p>
+            <p className="mt-3 text-xs font-semibold text-amber-800">Do not assume default tax claims without reviewing signed TD1 forms.</p>
+          </article>
+          <article className="rounded-xl border border-slate-200 bg-white p-5">
+            <h2 className="text-lg font-black text-slate-950">Payment method</h2>
+            <p className="mt-2 text-sm text-slate-600">Not yet configured for bank payment. Paycheques must be issued using an approved payment method outside this screen.</p>
+            <a href="#deductions" className="mt-3 inline-block text-sm font-bold text-emerald-700 hover:underline">Deductions &amp; T4 benefits</a>
+          </article>
+        </div>
+      </section>
+
       <nav aria-label="Employee profile sections" className="flex flex-wrap items-center gap-1 border-b border-slate-200 bg-white px-2">
         <a href="#personal-information" className="border-b-2 border-transparent px-4 py-3 text-sm font-bold text-slate-700 hover:border-emerald-600 hover:text-emerald-800">Personal info</a>
         <a href="#employment-details" className="border-b-2 border-transparent px-4 py-3 text-sm font-bold text-slate-700 hover:border-emerald-600 hover:text-emerald-800">Employment details</a>
