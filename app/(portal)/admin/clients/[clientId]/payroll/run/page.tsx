@@ -48,16 +48,17 @@ export default async function RunPayrollPage({ params, searchParams }: Props) {
   const selectedDraft = draftRuns?.find(draft => draft.id === query?.draftId) ??
     (draftRuns ?? []).find(draft => draft.status === "draft" && draft.pay_date >= today) ??
     (draftRuns ?? []).find(draft => draft.status === "draft") ?? null;
-  const currentPeriodStart = selectedDraft?.period_start ?? (settings?.next_period_end
+  const scheduledPeriodEnd = settings?.next_period_end ?? settings?.next_pay_date ?? null;
+  const currentPeriodStart = selectedDraft?.period_start ?? (scheduledPeriodEnd
     ? (() => {
-      const d = new Date(settings.next_period_end + "T00:00:00Z");
+      const d = new Date(scheduledPeriodEnd + "T00:00:00Z");
       if (settings.default_pay_frequency === "weekly") d.setUTCDate(d.getUTCDate()-6);
       else if (settings.default_pay_frequency === "biweekly") d.setUTCDate(d.getUTCDate()-13);
       else if (settings.default_pay_frequency === "semimonthly") d.setUTCDate(d.getUTCDate() <= 15 ? 1 : 16);
       else d.setUTCDate(1);
       return d.toISOString().slice(0,10);
     })() : "");
-  const currentPeriodEnd = selectedDraft?.period_end ?? settings?.next_period_end ?? "";
+  const currentPeriodEnd = selectedDraft?.period_end ?? scheduledPeriodEnd ?? "";
 
   const employees: RunPayrollEmployee[] = (workers ?? [])
     .filter(worker => /employee/i.test(worker.worker_type))
