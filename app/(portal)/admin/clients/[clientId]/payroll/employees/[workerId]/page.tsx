@@ -39,7 +39,7 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
     db.from("workers").select("id,client_id,company_id,worker_type,worker_name,address,phone,email,status")
       .eq("id", workerId).eq("client_id", clientId).maybeSingle(),
     db.from("kal_payroll_employee_profiles")
-      .select("birth_date,hire_date,termination_date,employment_status,work_location,manager_name,department,schedule_name,pay_frequency,next_period_end,next_pay_date,default_schedule,sin_last4,pay_type,hourly_rate,salary_amount,default_hours_per_day,default_days_per_week,overtime_multiplier,vacation_percent")
+      .select("birth_date,hire_date,termination_date,contract_end_date,auto_include,employment_status,work_location,manager_name,department,schedule_name,pay_frequency,next_period_end,next_pay_date,default_schedule,sin_last4,pay_type,hourly_rate,salary_amount,default_hours_per_day,default_days_per_week,overtime_multiplier,vacation_percent")
       .eq("worker_id", workerId).eq("client_id", clientId).maybeSingle()
   ]);
 
@@ -154,6 +154,15 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
         </select></Field>
         <Field label="Hire date"><input className={fieldClass} type="date" name="hire_date" defaultValue={profile?.hire_date ?? ""}/></Field>
         <Field label="Termination date"><input className={fieldClass} type="date" name="termination_date" defaultValue={profile?.termination_date ?? ""}/></Field>
+        <Field label="Contract end date (optional)"><input className={fieldClass} type="date" name="contract_end_date" min={profile?.hire_date || undefined} defaultValue={profile?.contract_end_date ?? ""}/></Field>
+        <div className="md:col-span-2 rounded-lg border border-emerald-200 bg-emerald-50/40 p-4">
+          <label className="flex items-start gap-3 text-sm font-semibold text-slate-900">
+            <input name="auto_include" type="checkbox" defaultChecked={profile?.auto_include ?? true} className="mt-1 h-5 w-5 accent-emerald-700"/>
+            <span>Include this employee in recurring payroll drafts
+              <span className="mt-1 block text-sm font-normal leading-6 text-slate-600">Automatically prepare scheduled periods while employed. The employee will not be included in new periods beginning after their contract ends or termination date. A final partial pay period requires administrator review; no automatic payment is sent.</span>
+            </span>
+          </label>
+        </div>
         <Field label="Work location"><input className={fieldClass} name="work_location" maxLength={200} defaultValue={profile?.work_location ?? ""}/></Field>
         <Field label="Department"><input className={fieldClass} name="department" maxLength={200} defaultValue={profile?.department ?? ""}/></Field>
         <Field label="Manager"><input className={fieldClass} name="manager_name" maxLength={200} defaultValue={profile?.manager_name ?? ""}/></Field>
