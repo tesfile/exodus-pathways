@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import Link from "next/link";
 import { saveDraftPayroll } from "./draft-actions";
@@ -53,7 +53,6 @@ function workingDays(start:string,end:string,daysPerWeek:number){
 }
 export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,employees,
   initialPeriodStart,initialPeriodEnd,initialPayDate,draftId,savedLines,priorPay}:Props){
- const original=new Map(savedLines.map(line=>[line.workerId,line]));
  const [payFrequency,setPayFrequency]=useState(frequency);
  const [start,setStart]=useState(initialPeriodStart);
  const [end,setEnd]=useState(initialPeriodEnd);
@@ -102,11 +101,11 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,em
  const offContract=chosen.some(r=>Boolean(r.employee.contractEndDate&&end>r.employee.contractEndDate));
  const alreadyPaid=chosen.some(r=>priorPay[r.employee.id]?.date===payDate);
  const canSave=chosen.length>0&&!invalidDates&&!hasInvalid&&!alreadyPaid&&!offContract;
- const serialized=useMemo(()=>chosen.map(({employee,values})=>({
+ const serialized=chosen.map(({employee,values})=>({
    workerId:employee.id,regularHours:values.hours,hourlyRate:values.rate,
    overtimeHours:values.overtimeHours,vacationPay:values.vacationPay,
    statHolidayPay:values.statHolidayPay,memo:values.memo,paymentMethod:values.paymentMethod
- })),[chosen]);
+ }));
  const base="/admin/clients/"+encodeURIComponent(clientId)+"/payroll";
  const settingsUrl=base+"/settings?companyId="+encodeURIComponent(companyId)+"&year="+year;
  const employeeUrl=(id:string)=>base+"/employees/"+encodeURIComponent(id)+"?year="+year;
