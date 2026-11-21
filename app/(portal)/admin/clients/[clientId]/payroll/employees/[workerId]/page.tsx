@@ -4,11 +4,12 @@ import { createClient } from "@supabase/supabase-js";
 import { requireRole } from "@/lib/supabase/server";
 import { savePayrollEmployeeProfile } from "./actions";
 import { PayScheduleEditor } from "./pay-schedule-editor";
+import { saveDentalBenefitsCode } from "./dental-actions";
 
 export const dynamic = "force-dynamic";
 type Props = {
   params: Promise<{ clientId: string; workerId: string }>;
-  searchParams?: Promise<{ year?: string; saved?: string; error?: string; created?: string }>;
+  searchParams?: Promise<{ year?: string; saved?: string; error?: string; created?: string; dentalSaved?: string }>;
 };
 
 const statuses = [
@@ -51,29 +52,43 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
     : { data: null, error: null };
   if (companyError) throw new Error("Could not load company payroll defaults.");
 
+  const { data: dental, error: dentalError } = await db.from("kal_payroll_t4_dental_access")
+    .select("access_code").eq("client_id", clientId).eq("worker_id", workerId)
+    .eq("tax_year", Number(year)).maybeSingle();
+  if (dentalError) throw new Error("Could not load T4 dental-benefits information.");
+
   const back = `/admin/clients/${encodeURIComponent(clientId)}/payroll?year=${year}`;
 
   return (
-    <main className="mx-auto grid max-w-5xl gap-5">
+    <main className="mx-auto grid max-w-7xl gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <Link href={back} className="text-sm font-bold text-emerald-700 hover:underline">← Back to client Payroll</Link>
-          <p className="mt-4 text-xs font-black uppercase tracking-widest text-amber-600">KAL Accounting &amp; Tax</p>
-          <h1 className="mt-1 text-3xl font-black text-slate-900">Employee payroll profile</h1>
-          <p className="mt-2 text-sm text-slate-600">{worker.worker_name} · Secure admin-only employee settings</p>
+          <Link href={back} className="text-sm font-bold text-emerald-700 hover:underline">← Employees</Link>
+          <p className="mt-4 text-xs font-black uppercase tracking-widest text-amber-600">KAL Payroll</p>
+          <h1 className="mt-1 text-3xl font-black text-slate-900">{worker.worker_name}</h1>
+          <p className="mt-2 text-sm text-slate-600">{worker.worker_name} · Employee profile · secure administrator access</p>
         </div>
       </div>
 
       {query?.created === "1" ? <p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-900">Employee created. Birthdate is saved in the protected payroll profile; any SIN provided was encrypted. Review the pay rate and schedule below before running payroll.</p> : null}
+      {query?.dentalSaved === "1" ? <p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-900">T4 dental benefits access code saved for {year}. Review the code against the employee\u0027s actual access before filing.</p> : null}
       {query?.saved === "1" ? <p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-900">Employee profile and pay schedule saved.</p> : null}
       {query?.error ? <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-900">Please check the employee details and dates. No changes were saved for the invalid fields.</p> : null}
 
-      <form action={savePayrollEmployeeProfile} autoComplete="off" className="grid gap-5 rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm sm:p-6 md:grid-cols-2">
+      <nav aria-label="Employee profile sections" className="flex flex-wrap items-center gap-1 border-b border-slate-200 bg-white px-2">
+        <a href="#personal-information" className="border-b-2 border-transparent px-4 py-3 text-sm font-bold text-slate-700 hover:border-emerald-600 hover:text-emerald-800">Personal info</a>
+        <a href="#employment-details" className="border-b-2 border-transparent px-4 py-3 text-sm font-bold text-slate-700 hover:border-emerald-600 hover:text-emerald-800">Employment details</a>
+        <a href="#base-pay" className="border-b-2 border-transparent px-4 py-3 text-sm font-bold text-slate-700 hover:border-emerald-600 hover:text-emerald-800">Base pay</a>
+        <a href="#pay-schedule" className="border-b-2 border-transparent px-4 py-3 text-sm font-bold text-slate-700 hover:border-emerald-600 hover:text-emerald-800">Pay schedule</a>
+        <a href="#deductions" className="border-b-2 border-transparent px-4 py-3 text-sm font-bold text-slate-700 hover:border-emerald-600 hover:text-emerald-800">Deductions &amp; T4</a>
+      </nav>
+
+      <form action={savePayrollEmployeeProfile} autoComplete="off" className="grid gap-5 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 md:grid-cols-2">
         <input type="hidden" name="client_id" value={clientId}/>
         <input type="hidden" name="worker_id" value={workerId}/>
         <input type="hidden" name="year" value={year}/>
 
-        <div className="md:col-span-2"><h2 className="text-xl font-black text-slate-900">Personal information</h2><p className="mt-1 text-sm text-slate-600">Legal name, contact information and protected identifiers.</p></div>
+        <div id="personal-information" className="scroll-mt-24 md:col-span-2 border-b border-slate-100 pb-3"><h2 className="text-xl font-black text-slate-900">Personal information</h2><p className="mt-1 text-sm text-slate-600">Legal name, contact information and protected identifiers.</p></div>
 
         <Field label="Legal full name *"><input className={fieldClass} name="worker_name" required maxLength={200} defaultValue={worker.worker_name}/></Field>
         <Field label="Birthdate"><input className={fieldClass} name="birth_date" type="date" defaultValue={profile?.birth_date ?? ""}/></Field>
@@ -89,7 +104,7 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
           <p className="mt-2 text-xs text-slate-700">Leave blank to keep the existing SIN. A new SIN is encrypted on the server and shown only as its last four digits here. It will not be copied into the general worker record.</p>
         </div>
 
-        <div className="md:col-span-2 border-t border-slate-200 pt-5"><h2 className="text-xl font-black text-slate-900">Employment details</h2></div>
+        <div id="employment-details" className="scroll-mt-24 md:col-span-2 border-t border-slate-200 pt-5"><h2 className="text-xl font-black text-slate-900">Employment details</h2></div>
         <Field label="Employment status"><select className={fieldClass} name="employment_status" defaultValue={profile?.employment_status ?? (statuses.includes(worker.status) ? worker.status : "Active")}>
           {statuses.map(status => <option key={status} value={status}>{status}</option>)}
         </select></Field>
@@ -99,7 +114,7 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
         <Field label="Department"><input className={fieldClass} name="department" maxLength={200} defaultValue={profile?.department ?? ""}/></Field>
         <Field label="Manager"><input className={fieldClass} name="manager_name" maxLength={200} defaultValue={profile?.manager_name ?? ""}/></Field>
 
-        <section className="grid gap-4 rounded-xl border border-slate-200 bg-white p-5 md:col-span-2">
+        <section id="base-pay" className="scroll-mt-24 grid gap-4 rounded-xl border border-slate-200 bg-white p-5 md:col-span-2">
           <div><h2 className="text-xl font-black text-slate-900">Pay rate and standard hours</h2>
             <p className="mt-1 text-sm text-slate-600">Hourly employees default to 8 hours per day, 5 days per week. Set their hourly rate before running payroll.</p></div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -130,6 +145,40 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
           <Link href={back} className="rounded-lg border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-700 hover:bg-slate-100">Cancel</Link>
         </div>
       </form>
+      <section id="deductions" className="scroll-mt-24 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-2xl font-black text-slate-950">Deductions and contributions</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-600">Health insurance, RRSP, loan repayments, wage garnishments and other voluntary deductions need separate payroll setup and review. This page does not automatically deduct these items from wages.</p>
+        <div className="mt-6 border-t border-slate-200 pt-6">
+          <h3 className="text-xl font-black text-slate-950">Dental benefits access · T4 {year}</h3>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">Select the code describing who had access to employer-provided dental benefits on December 31. Access may apply even if the employee declined the offered coverage.</p>
+          <form action={saveDentalBenefitsCode} className="mt-5 flex flex-wrap items-end gap-3">
+            <input type="hidden" name="client_id" value={clientId}/>
+            <input type="hidden" name="worker_id" value={workerId}/>
+            <input type="hidden" name="tax_year" value={year}/>
+            <label className="grid min-w-64 gap-2 text-sm font-semibold text-slate-800">T4 dental benefits code
+              <select name="access_code" defaultValue={dental?.access_code ? String(dental.access_code) : ""} className={fieldClass}>
+                <option value="">Select an option</option>
+                <option value="1">Code 1 — No access</option>
+                <option value="2">Code 2 — Employee only</option>
+                <option value="3">Code 3 — Employee, spouse and dependants</option>
+                <option value="4">Code 4 — Employee and spouse</option>
+                <option value="5">Code 5 — Employee and dependants</option>
+              </select>
+            </label>
+            <button type="submit" className="min-h-11 rounded-lg bg-emerald-700 px-5 text-sm font-bold text-white hover:bg-emerald-800">Save dental code</button>
+          </form>
+          <div className="mt-5 overflow-x-auto rounded-xl border border-slate-200 p-4">
+            <h4 className="mb-3 text-base font-bold text-slate-900">What do the codes mean?</h4>
+            <table className="w-full min-w-[550px] text-left text-sm">
+              <thead className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500"><tr><th className="p-3">Code</th><th className="p-3">Access to employer dental benefits</th><th className="p-3">Who is covered</th></tr></thead>
+              <tbody className="divide-y divide-slate-100">
+                {([["1","No","No one"],["2","Yes","Employee"],["3","Yes","Employee, spouse and dependants"],["4","Yes","Employee and spouse"],["5","Yes","Employee and dependants"]] as const).map(row => <tr key={row[0]}><td className="p-3 font-bold">Code {row[0]}</td><td className="p-3">{row[1]}</td><td className="p-3">{row[2]}</td></tr>)}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-3 text-xs text-slate-600">This is a stored T4 preparation value. KAL does not file a T4 with CRA when you save this code.</p>
+        </div>
+      </section>
     </main>
   );
 }
