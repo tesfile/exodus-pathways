@@ -52,9 +52,9 @@ export default async function RunPayrollPage({ params, searchParams }: Props) {
   const currentPeriodStart = selectedDraft?.period_start ?? (scheduledPeriodEnd
     ? (() => {
       const d = new Date(String(scheduledPeriodEnd) + "T00:00:00Z");
-      if (settings.default_pay_frequency === "weekly") d.setUTCDate(d.getUTCDate()-6);
-      else if (settings.default_pay_frequency === "biweekly") d.setUTCDate(d.getUTCDate()-13);
-      else if (settings.default_pay_frequency === "semimonthly") d.setUTCDate(d.getUTCDate() <= 15 ? 1 : 16);
+      if (settings?.default_pay_frequency === "weekly") d.setUTCDate(d.getUTCDate()-6);
+      else if (settings?.default_pay_frequency === "biweekly") d.setUTCDate(d.getUTCDate()-13);
+      else if (settings?.default_pay_frequency === "semimonthly") d.setUTCDate(d.getUTCDate() <= 15 ? 1 : 16);
       else d.setUTCDate(1);
       return d.toISOString().slice(0,10);
     })() : "");
