@@ -25,7 +25,7 @@ export async function saveCompanyPayrollSettings(form: FormData) {
   const autoPrepare = form.get("auto_prepare_enabled") === "on";
   const goodDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(value + "T00:00:00Z").valueOf()) && new Date(value + "T00:00:00Z").toISOString().slice(0,10)===value;
   if ((periodEnd && !goodDate(periodEnd)) || (payDate && !goodDate(payDate)) || (periodEnd && payDate && payDate < periodEnd) || (autoPrepare && (!periodEnd || !payDate))) {
-    throw new Error("Set a valid pay-period end and payday (on or after the period end) before enabling recurring payroll.");
+    redirect(`/admin/clients/${encodeURIComponent(clientId)}/payroll/settings?companyId=${encodeURIComponent(companyId)}&year=${year}&error=pay_dates`);
   }
 
   if (
