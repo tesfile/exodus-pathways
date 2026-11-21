@@ -37,6 +37,18 @@ type Tab = "overview" | "employees" | "tax" | "compliance";
 const money = (amount: number) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(amount);
 const prettyDate = (date: string | null) => date || "—";
+const officialPayrollResources=[
+ {title:"Current minimum wages in Canadian provinces and territories",description:"Check jurisdiction-specific current rates before setting an employee's hourly pay.",href:"https://minwage-salairemin.service.canada.ca/en/general.html"},
+ {title:"CRA payroll deductions calculator (PDOC)",description:"Verify federal and provincial income tax, CPP and EI deductions for individual paycheques.",href:"https://www.canada.ca/en/revenue-agency/services/e-services/digital-services-businesses/payroll-deductions-online-calculator.html"},
+ {title:"Employer CPP and CPP2 contributions",description:"Review the current earnings ceilings, second CPP contributions and employer responsibilities.",href:"https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/payroll/payroll-deductions-contributions/canada-pension-plan-cpp/cpp-enhancement.html"},
+ {title:"Annual dental benefits reporting — T4 Box 45",description:"Confirm the correct dental access code reported on T4 slips.",href:"https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/payroll/completing-filing-information-returns/t4-information-employers/t4-slip.html"},
+ {title:"Employers’ guide to T4 slips and summaries",description:"Review what to report and how to prepare annual information returns.",href:"https://www.canada.ca/en/revenue-agency/services/forms-publications/publications/rc4120/employers-guide-filing-t4-slip-summary.html"},
+ {title:"Payroll remittance deadlines",description:"Check deadlines according to the employer's actual CRA remitter type.",href:"https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/payroll/remitting-source-deductions/how-when-remit-due-dates.html"},
+ {title:"Record of Employment (ROE) employer guide",description:"Understand interruption of earnings, ROE codes, recordkeeping and how to issue ROEs.",href:"https://www.canada.ca/en/employment-social-development/programs/ei/ei-list/reports/roe-guide.html"},
+ {title:"Service Canada — ROE Web",description:"Access the official employer platform for submitting ROEs.",href:"https://www.canada.ca/en/employment-social-development/programs/ei/ei-list/ei-roe/access-roe.html"},
+ {title:"FINTRAC — who is required to report",description:"Learn which businesses are reporting entities; FINTRAC is not a routine payroll remittance authority.",href:"https://fintrac-canafe.canada.ca/reporting-declaration/Info/re-ed-eng"}
+];
+
 
 export function ClientPayrollTabs({
   clientId, clientName, taxYear, initialTab = "overview", initialCompanyId, companies, employees: allEmployees, payments: allPayments, children
@@ -342,6 +354,17 @@ export function ClientPayrollTabs({
                 <Link href={base} className="font-bold text-emerald-700 hover:underline">Open worker records</Link>
               </article>
             </div>
+            <section className="rounded-xl border border-slate-200 bg-white p-5">
+              <h4 className="text-xl font-black text-slate-950">Compliance News and Information</h4>
+              <p className="mt-2 text-sm leading-6 text-slate-600">Official Canadian payroll, employment standards and year-end reporting resources. Open a resource to verify current requirements before preparing filings.</p>
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                {officialPayrollResources.map(resource=><article key={resource.href} className="rounded-xl border border-slate-200 p-4">
+                  <a href={resource.href} target="_blank" rel="noopener noreferrer" className="font-bold text-emerald-800 hover:underline">{resource.title} ↗</a>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{resource.description}</p>
+                </article>)}
+              </div>
+              <p className="mt-5 text-xs leading-5 text-amber-800">These are official external resources, not evidence that KAL has issued ROEs, filed T4s, or remitted payroll tax.</p>
+            </section>
             <p className="text-sm text-slate-600">T4 dental-benefit access codes and official CRA submissions must be reviewed through a supported year-end workflow before filing.</p>
           </>
         ) : null}
