@@ -63,7 +63,7 @@ export default async function RunPayrollPage({ params, searchParams }: Props) {
       const profile = profileMap.get(worker.id);
       const status = profile?.employment_status ?? worker.status;
       return !["Terminated", "Deceased", "Not on payroll", "Paid leave of absence", "Unpaid leave of absence"].includes(status)
-        && profile?.auto_include !== false
+        && (!selectedDraft || profile?.auto_include !== false)
         && (!profile?.hire_date || !currentPeriodEnd || profile.hire_date <= currentPeriodEnd)
         && (!profile?.termination_date || !currentPeriodStart || profile.termination_date >= currentPeriodStart)
         && (!profile?.contract_end_date || !currentPeriodStart || profile.contract_end_date >= currentPeriodStart);
@@ -79,7 +79,8 @@ export default async function RunPayrollPage({ params, searchParams }: Props) {
         hoursPerDay: numeric(profile?.default_hours_per_day, numeric(settings?.default_hours_per_day, 8)),
         daysPerWeek: numeric(profile?.default_days_per_week, numeric(settings?.default_days_per_week, 5)),
         frequency: profile?.pay_frequency ?? settings?.default_pay_frequency ?? "biweekly",
-        status: profile?.employment_status ?? worker.status
+        status: profile?.employment_status ?? worker.status,
+        contractEndDate: profile?.contract_end_date ?? null
       };
     });
   return <main className="mx-auto grid max-w-7xl gap-5">
