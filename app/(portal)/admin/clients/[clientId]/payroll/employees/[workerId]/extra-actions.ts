@@ -35,7 +35,7 @@ export async function saveTaxAndPayment(form:FormData) {
   const {data,error}=await db.from("kal_payroll_employee_profiles").update({
     td1_federal_claim:amounts[0],td1_provincial_claim:amounts[1],additional_income_tax:amounts[2]??0,
     cpp_exempt:form.get("cpp_exempt")==="on",ei_exempt:form.get("ei_exempt")==="on",
-    payment_method:method,updated_at:new Date().toISOString()
+    payment_method:method,federal_income_tax_exempt:form.get("federal_income_tax_exempt")==="on",updated_at:new Date().toISOString()
   }).eq("client_id",clientId).eq("worker_id",workerId).select("worker_id").maybeSingle();
   if(error||!data) throw new Error("Unable to save employee tax and payment preferences.");
   revalidatePath(base.split("?")[0]);
