@@ -67,7 +67,7 @@ export default async function CompanyPayrollSettingsPage({ params, searchParams 
         <div className="sm:col-span-2 rounded-lg border border-slate-200 bg-slate-50 p-4">
           <Input label="Province of employment (required for CRA payroll deductions)">
             <select name="province" defaultValue={selected.province ?? ""} required className={inputClass}>
-              <option value="">Select the employer's province of employment</option>
+              <option value="">Select the employer&apos;s province of employment</option>
               <option value="AB">Alberta (2026 calculations supported)</option>
               <option value="BC">British Columbia (calculation not yet supported)</option>
               <option value="SK">Saskatchewan (calculation not yet supported)</option>
@@ -83,7 +83,7 @@ export default async function CompanyPayrollSettingsPage({ params, searchParams 
               <option value="YT">Yukon (calculation not yet supported)</option>
             </select>
           </Input>
-          <p className="mt-2 text-xs leading-5 text-slate-600">Confirm the employee's province of employment, not simply their home address. KAL's first CRA calculation preview currently supports Alberta 2026 regular payroll.</p>
+          <p className="mt-2 text-xs leading-5 text-slate-600">Confirm the employee&apos;s province of employment, not simply their home address. KAL's first CRA calculation preview currently supports Alberta 2026 regular payroll.</p>
         </div>
         <CompanyScheduleFields
           name={settings?.schedule_name ?? "Regular payroll"}
