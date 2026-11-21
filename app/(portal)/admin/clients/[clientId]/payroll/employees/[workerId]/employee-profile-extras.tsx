@@ -6,6 +6,7 @@ type Profile = {
   additional_income_tax: number | null;
   cpp_exempt: boolean | null;
   ei_exempt: boolean | null;
+  federal_income_tax_exempt: boolean | null;
   payment_method: string | null;
 } | null;
 type Item = {
@@ -114,6 +115,7 @@ export function EmployeeProfileExtras({profile,items,clientId,workerId,year}:{pr
     </label>
     <label className="flex items-center gap-3 text-sm font-semibold text-slate-800"><input name="cpp_exempt" type="checkbox" defaultChecked={profile?.cpp_exempt??false} className="h-4 w-4 accent-emerald-700"/> CPP exempt — only if legally eligible</label>
     <label className="flex items-center gap-3 text-sm font-semibold text-slate-800"><input name="ei_exempt" type="checkbox" defaultChecked={profile?.ei_exempt??false} className="h-4 w-4 accent-emerald-700"/> EI exempt — only if legally eligible</label>
+    <label className="flex items-center gap-3 text-sm font-semibold text-slate-800"><input name="federal_income_tax_exempt" type="checkbox" defaultChecked={profile?.federal_income_tax_exempt??false} className="h-4 w-4 accent-emerald-700"/> Federal income tax exempt — only with documented eligibility</label>
     <div className="sm:col-span-2">
      <button type="submit" className="rounded-lg bg-emerald-700 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-800">Save tax and payment settings</button>
      <p className="mt-3 text-xs leading-5 text-amber-800">Choosing a payment method does not connect a bank or transfer money. Do not assume CPP/EI exemptions without supporting evidence.</p>
