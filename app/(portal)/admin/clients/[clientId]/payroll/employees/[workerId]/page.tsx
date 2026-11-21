@@ -5,11 +5,12 @@ import { requireRole } from "@/lib/supabase/server";
 import { savePayrollEmployeeProfile } from "./actions";
 import { PayScheduleEditor } from "./pay-schedule-editor";
 import { saveDentalBenefitsCode } from "./dental-actions";
+import { EmployeeProfileExtras } from "./employee-profile-extras";
 
 export const dynamic = "force-dynamic";
 type Props = {
   params: Promise<{ clientId: string; workerId: string }>;
-  searchParams?: Promise<{ year?: string; saved?: string; error?: string; created?: string; dentalSaved?: string }>;
+  searchParams?: Promise<{ year?: string; saved?: string; error?: string; created?: string; dentalSaved?: string; taxSaved?: string; itemSaved?: string }>;
 };
 
 const statuses = [
@@ -39,7 +40,7 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
     db.from("workers").select("id,client_id,company_id,worker_type,worker_name,address,phone,email,status")
       .eq("id", workerId).eq("client_id", clientId).maybeSingle(),
     db.from("kal_payroll_employee_profiles")
-      .select("birth_date,hire_date,termination_date,contract_end_date,auto_include,employment_status,work_location,manager_name,department,schedule_name,pay_frequency,next_period_end,next_pay_date,default_schedule,sin_last4,pay_type,hourly_rate,salary_amount,default_hours_per_day,default_days_per_week,overtime_multiplier,vacation_percent")
+      .select("birth_date,hire_date,termination_date,contract_end_date,auto_include,employment_status,work_location,manager_name,department,schedule_name,pay_frequency,next_period_end,next_pay_date,default_schedule,sin_last4,pay_type,hourly_rate,salary_amount,default_hours_per_day,default_days_per_week,overtime_multiplier,vacation_percent,legal_first_name,legal_middle_name,legal_last_name,preferred_first_name,home_phone,work_phone,mobile_phone,job_title,employee_code,base_pay_effective_date,td1_federal_claim,td1_provincial_claim,additional_income_tax,cpp_exempt,ei_exempt,payment_method")
       .eq("worker_id", workerId).eq("client_id", clientId).maybeSingle()
   ]);
 
@@ -56,6 +57,11 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
     .select("access_code").eq("client_id", clientId).eq("worker_id", workerId)
     .eq("tax_year", Number(year)).maybeSingle();
   if (dentalError) throw new Error("Could not load T4 dental-benefits information.");
+  const { data: payrollItems, error: payrollItemsError } = await db.from("kal_payroll_employee_items")
+    .select("id,kind,item_type,item_name,calculation,amount,effective_date,end_date,active")
+    .eq("client_id",clientId).eq("worker_id",workerId).order("created_at",{ascending:false});
+  if(payrollItemsError) throw new Error("Could not load employee deductions or additional pay types.");
+
 
   const back = `/admin/clients/${encodeURIComponent(clientId)}/payroll?year=${year}`;
 
@@ -72,6 +78,7 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
 
       {query?.created === "1" ? <p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-900">Employee created. Birthdate is saved in the protected payroll profile; any SIN provided was encrypted. Review the pay rate and schedule below before running payroll.</p> : null}
       {query?.dentalSaved === "1" ? <p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-900">T4 dental benefits access code saved for {year}. Review the code against the employee\u0027s actual access before filing.</p> : null}
+      {query?.taxSaved === "1" || query?.itemSaved === "1" ? <p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-900">Employee payroll preferences saved successfully.</p> : null}
       {query?.saved === "1" ? <p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-900">Employee profile and pay schedule saved.</p> : null}
       {query?.error ? <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-900">Please check the employee details and dates. No changes were saved for the invalid fields.</p> : null}
 
@@ -107,14 +114,16 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
         </article>
         <div className="grid gap-4 lg:grid-cols-2">
           <article className="rounded-xl border border-slate-200 bg-white p-5">
-            <h2 className="text-lg font-black text-slate-950">Tax withholdings</h2>
-            <p className="mt-2 text-sm text-slate-600">TD1 federal and provincial claim amounts and exemptions have not been configured in this employee profile.</p>
-            <p className="mt-3 text-xs font-semibold text-amber-800">Do not assume default tax claims without reviewing signed TD1 forms.</p>
+            <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-black text-slate-950">Tax withholdings</h2><a href="#tax-withholdings" className="text-sm font-bold text-emerald-700 hover:underline">Edit</a></div>
+            <p className="mt-3 text-sm text-slate-700">Federal TD1: <strong>{profile?.td1_federal_claim == null ? "Not entered" : Number(profile.td1_federal_claim).toLocaleString("en-CA",{style:"currency",currency:"CAD"})}</strong></p>
+            <p className="mt-1 text-sm text-slate-700">Provincial TD1: <strong>{profile?.td1_provincial_claim == null ? "Not entered" : Number(profile.td1_provincial_claim).toLocaleString("en-CA",{style:"currency",currency:"CAD"})}</strong></p>
+            <p className="mt-1 text-sm text-slate-700">Additional tax: <strong>{Number(profile?.additional_income_tax ?? 0).toLocaleString("en-CA",{style:"currency",currency:"CAD"})}</strong></p>
+            <p className="mt-3 text-xs text-amber-800">Verify signed TD1 forms and CPP/EI status before calculating payroll.</p>
           </article>
           <article className="rounded-xl border border-slate-200 bg-white p-5">
-            <h2 className="text-lg font-black text-slate-950">Payment method</h2>
-            <p className="mt-2 text-sm text-slate-600">Not yet configured for bank payment. Paycheques must be issued using an approved payment method outside this screen.</p>
-            <a href="#deductions" className="mt-3 inline-block text-sm font-bold text-emerald-700 hover:underline">Deductions &amp; T4 benefits</a>
+            <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-black text-slate-950">Payment method</h2><a href="#tax-withholdings" className="text-sm font-bold text-emerald-700 hover:underline">Edit</a></div>
+            <p className="mt-3 text-sm font-bold text-slate-900">{profile?.payment_method === "manual_bank_transfer" ? "Manual bank transfer" : profile?.payment_method === "external_direct_deposit" ? "External direct deposit" : "Paper cheque"}</p>
+            <p className="mt-2 text-xs text-slate-600">No bank instructions or automatic payments are sent by KAL.</p>
           </article>
         </div>
       </section>
@@ -124,6 +133,8 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
         <a href="#employment-details" className="border-b-2 border-transparent px-4 py-3 text-sm font-bold text-slate-700 hover:border-emerald-600 hover:text-emerald-800">Employment details</a>
         <a href="#base-pay" className="border-b-2 border-transparent px-4 py-3 text-sm font-bold text-slate-700 hover:border-emerald-600 hover:text-emerald-800">Base pay</a>
         <a href="#pay-schedule" className="border-b-2 border-transparent px-4 py-3 text-sm font-bold text-slate-700 hover:border-emerald-600 hover:text-emerald-800">Pay schedule</a>
+        <a href="#tax-withholdings" className="border-b-2 border-transparent px-4 py-3 text-sm font-bold text-slate-700 hover:border-emerald-600 hover:text-emerald-800">Tax &amp; Payment</a>
+        <a href="#payroll-items" className="border-b-2 border-transparent px-4 py-3 text-sm font-bold text-slate-700 hover:border-emerald-600 hover:text-emerald-800">Pay items &amp; deductions</a>
         <a href="#deductions" className="border-b-2 border-transparent px-4 py-3 text-sm font-bold text-slate-700 hover:border-emerald-600 hover:text-emerald-800">Deductions &amp; T4</a>
       </nav>
 
@@ -134,10 +145,19 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
 
         <div id="personal-information" className="scroll-mt-24 md:col-span-2 border-b border-slate-100 pb-3"><h2 className="text-xl font-black text-slate-900">Personal information</h2><p className="mt-1 text-sm text-slate-600">Legal name, contact information and protected identifiers.</p></div>
 
-        <Field label="Legal full name *"><input className={fieldClass} name="worker_name" required maxLength={200} defaultValue={worker.worker_name}/></Field>
+        <div className="md:col-span-2 grid gap-4 sm:grid-cols-[1fr_120px_1fr]">
+          <Field label="Legal first name"><input className={fieldClass} name="legal_first_name" maxLength={80} defaultValue={profile?.legal_first_name ?? ""} placeholder="First name"/></Field>
+          <Field label="M.I. / Middle"><input className={fieldClass} name="legal_middle_name" maxLength={80} defaultValue={profile?.legal_middle_name ?? ""} placeholder="Optional"/></Field>
+          <Field label="Legal last name"><input className={fieldClass} name="legal_last_name" maxLength={80} defaultValue={profile?.legal_last_name ?? ""} placeholder="Last name"/></Field>
+        </div>
+        <Field label="Full legal display name *"><input className={fieldClass} name="worker_name" required maxLength={200} defaultValue={worker.worker_name}/></Field>
+        <Field label="Preferred first name"><input className={fieldClass} name="preferred_first_name" maxLength={80} defaultValue={profile?.preferred_first_name ?? ""}/></Field>
         <Field label="Birthdate"><input className={fieldClass} name="birth_date" type="date" defaultValue={profile?.birth_date ?? ""}/></Field>
         <Field label="Email"><input className={fieldClass} name="email" type="email" maxLength={254} defaultValue={worker.email ?? ""}/></Field>
-        <Field label="Phone"><input className={fieldClass} name="phone" type="tel" maxLength={50} defaultValue={worker.phone ?? ""}/></Field>
+        <Field label="Primary phone"><input className={fieldClass} name="phone" type="tel" maxLength={50} defaultValue={worker.phone ?? ""}/></Field>
+        <Field label="Home phone"><input className={fieldClass} name="home_phone" type="tel" maxLength={50} defaultValue={profile?.home_phone ?? ""}/></Field>
+        <Field label="Work phone"><input className={fieldClass} name="work_phone" type="tel" maxLength={50} defaultValue={profile?.work_phone ?? ""}/></Field>
+        <Field label="Mobile phone"><input className={fieldClass} name="mobile_phone" type="tel" maxLength={50} defaultValue={profile?.mobile_phone ?? ""}/></Field>
         <div className="md:col-span-2"><Field label="Home address"><textarea name="address" rows={2} maxLength={500} className={fieldClass} defaultValue={worker.address ?? ""}/></Field></div>
 
         <div className="md:col-span-2 rounded-xl border border-amber-200 bg-amber-50 p-4">
@@ -166,6 +186,8 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
         <Field label="Work location"><input className={fieldClass} name="work_location" maxLength={200} defaultValue={profile?.work_location ?? ""}/></Field>
         <Field label="Department"><input className={fieldClass} name="department" maxLength={200} defaultValue={profile?.department ?? ""}/></Field>
         <Field label="Manager"><input className={fieldClass} name="manager_name" maxLength={200} defaultValue={profile?.manager_name ?? ""}/></Field>
+        <Field label="Job title"><input className={fieldClass} name="job_title" maxLength={150} defaultValue={profile?.job_title ?? ""}/></Field>
+        <Field label="Employee ID"><input className={fieldClass} name="employee_code" maxLength={60} defaultValue={profile?.employee_code ?? ""}/></Field>
 
         <section id="base-pay" className="scroll-mt-24 grid gap-4 rounded-xl border border-slate-200 bg-white p-5 md:col-span-2">
           <div><h2 className="text-xl font-black text-slate-900">Pay rate and standard hours</h2>
@@ -180,6 +202,7 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
             <Field label="Default days each week"><input type="number" name="default_days_per_week" min="1" max="7" step="1" required className={fieldClass} defaultValue={profile?.default_days_per_week ?? companySettings?.default_days_per_week ?? 5} /></Field>
             <Field label="Overtime multiplier (reference only)"><input type="number" name="overtime_multiplier" min="1" max="4" step="0.25" required className={fieldClass} defaultValue={profile?.overtime_multiplier ?? companySettings?.overtime_multiplier ?? 1.5} /></Field>
             <Field label="Vacation pay percent (reference only)"><input type="number" name="vacation_percent" min="0" max="30" step="0.01" required className={fieldClass} defaultValue={profile?.vacation_percent ?? companySettings?.vacation_percent ?? 4} /></Field>
+            <Field label="Base pay effective date"><input type="date" name="base_pay_effective_date" className={fieldClass} defaultValue={profile?.base_pay_effective_date ?? ""}/></Field>
           </div>
           <p className="text-xs text-slate-500">The payroll run uses regular hours and rate as a draft. Overtime and vacation pay must be reviewed separately under applicable employment standards.</p>
         </section>
@@ -198,6 +221,13 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
           <Link href={back} className="rounded-lg border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-700 hover:bg-slate-100">Cancel</Link>
         </div>
       </form>
+      <EmployeeProfileExtras
+        profile={profile}
+        items={(payrollItems ?? []).map(item => ({
+          ...item,amount:Number(item.amount),active:Boolean(item.active)
+        }))}
+        clientId={clientId} workerId={workerId} year={year}
+      />
       <section id="deductions" className="scroll-mt-24 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-2xl font-black text-slate-950">Deductions and contributions</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">Health insurance, RRSP, loan repayments, wage garnishments and other voluntary deductions need separate payroll setup and review. This page does not automatically deduct these items from wages.</p>
