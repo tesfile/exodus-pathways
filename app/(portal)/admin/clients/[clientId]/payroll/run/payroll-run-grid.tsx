@@ -128,9 +128,10 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,em
       overtimeHours:l.overtimeHours,vacationPay:l.vacationPay,statHolidayPay:l.statHolidayPay
     }))
    });
-   setCalculated(next);
+   if(!next.ok){setPreviewError(next.error);return;}
+   setCalculated(next.preview);
   }catch(error){
-   setPreviewError(error instanceof Error?error.message:"CRA payroll preview could not be calculated.");
+   setPreviewError("CRA payroll preview could not be completed. Review your company settings and employee profiles, then try again.");
   }finally{setPreviewLoading(false);}
  }
 
