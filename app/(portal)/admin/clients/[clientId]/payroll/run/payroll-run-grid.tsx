@@ -8,7 +8,7 @@ import { saveDraftPayroll } from "./draft-actions";
 export type RunPayrollEmployee = {
   id:string;
   name:string;
-  payType:"hourly"|"salary";
+  payType:"hourly"|"salary"|"commission";
   hourlyRate:number|null;
   salaryAmount:number|null;
   hoursPerDay:number;
@@ -83,7 +83,7 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,em
   const overtimeHours=Number(edit.overtimeHours??0);
   const vacationPay=Number(edit.vacationPay??0);
   const statHolidayPay=Number(edit.statHolidayPay??0);
-  const regularGross=employee.payType==="salary"?Number(employee.salaryAmount??0):hours*rate;
+  const regularGross=employee.payType==="commission"?0:employee.payType==="salary"?Number(employee.salaryAmount??0):hours*rate;
   const draftGross=regularGross+vacationPay+statHolidayPay;
   return {hours,rate,overtimeHours,vacationPay,statHolidayPay,regularGross,draftGross,
     memo:edit.memo??"",paymentMethod:edit.paymentMethod??employee.paymentMethod};
@@ -100,7 +100,7 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,em
   r.values.rate>100000||r.values.vacationPay>1000000||r.values.statHolidayPay>1000000);
  const offContract=chosen.some(r=>Boolean(r.employee.contractEndDate&&end>r.employee.contractEndDate));
  const alreadyPaid=chosen.some(r=>priorPay[r.employee.id]?.date===payDate);
- const canSave=chosen.length>0&&!invalidDates&&!hasInvalid&&!alreadyPaid&&!offContract;
+ const canSave=chosen.length>0&&!chosen.some(r=>r.employee.payType==="commission")&&!invalidDates&&!hasInvalid&&!alreadyPaid&&!offContract;
  const serialized=chosen.map(({employee,values})=>({
    workerId:employee.id,regularHours:values.hours,hourlyRate:values.rate,
    overtimeHours:values.overtimeHours,vacationPay:values.vacationPay,
@@ -161,7 +161,7 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,em
           {wasPaid?<p className="mt-1 text-xs font-semibold text-amber-800">Already recorded on {payDate}</p>:null}</div>
          </div>
         </td>
-        <td className="px-3 py-3"><input aria-label={"Hours "+employee.name} type="number" min="0" max="1000" step="0.25" disabled={employee.payType==="salary"||wasPaid} value={overrides[employee.id]?.hours??values.hours.toFixed(2)} onChange={e=>update(employee.id,"hours",e.target.value)} className={numberInput}/></td>
+        <td className="px-3 py-3"><input aria-label={"Hours "+employee.name} type="number" min="0" max="1000" step="0.25" disabled={employee.payType!=="hourly"||wasPaid} value={overrides[employee.id]?.hours??values.hours.toFixed(2)} onChange={e=>update(employee.id,"hours",e.target.value)} className={numberInput}/></td>
         <td className="px-3 py-3"><input aria-label={"Rate "+employee.name} type="number" min="0" max="100000" step="0.01" disabled={employee.payType==="salary"||wasPaid} value={overrides[employee.id]?.rate??String(employee.hourlyRate??0)} onChange={e=>update(employee.id,"rate",e.target.value)} className={numberInput}/></td>
         <td className="px-3 py-3"><input aria-label={"Overtime "+employee.name} type="number" min="0" max="1000" step="0.25" disabled={wasPaid} value={overrides[employee.id]?.overtimeHours??"0"} onChange={e=>update(employee.id,"overtimeHours",e.target.value)} className={numberInput}/></td>
         <td className="px-3 py-3"><input aria-label={"Vacation "+employee.name} type="number" min="0" max="1000000" step="0.01" disabled={wasPaid} value={overrides[employee.id]?.vacationPay??"0"} onChange={e=>update(employee.id,"vacationPay",e.target.value)} className={numberInput}/><p className="mt-1 text-xs text-slate-500">{employee.vacationPercent}% policy</p></td>
@@ -170,7 +170,7 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,em
         <td className="px-3 py-3 font-bold">{num(values.draftGross)?money(values.draftGross):"Invalid"}</td>
         <td className="px-3 py-3"><input aria-label={"Memo "+employee.name} maxLength={500} value={values.memo} onChange={e=>update(employee.id,"memo",e.target.value)} className="w-32 rounded-lg border border-slate-300 px-2 py-2 text-sm" placeholder="+ Memo"/></td>
         <td className="px-3 py-3"><select aria-label={"Pay method "+employee.name} value={values.paymentMethod} onChange={e=>update(employee.id,"paymentMethod",e.target.value)} className="w-40 rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm">{Object.entries(methodLabels).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></td>
-        <td className="px-3 py-3">{reviewReady?<Link href={recordUrl(employee,values.hours,values.rate)} className="whitespace-nowrap font-bold text-emerald-700 hover:underline">Review paycheque</Link>:<span className="max-w-44 text-xs text-amber-800">{wasPaid?"Already recorded":endAfterContract?"Final partial period requires review":values.overtimeHours>0?"Review overtime manually":employee.payType==="salary"?"Salary review required":values.vacationPay+values.statHolidayPay>0?"Review additional pay":"Complete pay details"}</span>}</td>
+        <td className="px-3 py-3">{reviewReady?<Link href={recordUrl(employee,values.hours,values.rate)} className="whitespace-nowrap font-bold text-emerald-700 hover:underline">Review paycheque</Link>:<span className="max-w-44 text-xs text-amber-800">{wasPaid?"Already recorded":endAfterContract?"Final partial period requires review":values.overtimeHours>0?"Review overtime manually":employee.payType==="commission"?"Commission requires review":employee.payType==="salary"?"Salary review required":values.vacationPay+values.statHolidayPay>0?"Review additional pay":"Complete pay details"}</span>}</td>
        </tr>;
      })}
      {!visible.length?<tr><td colSpan={11} className="px-3 py-10 text-center text-slate-500">No employees match your selection.</td></tr>:null}
