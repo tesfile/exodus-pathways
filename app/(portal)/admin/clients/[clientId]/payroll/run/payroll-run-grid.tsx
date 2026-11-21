@@ -20,6 +20,7 @@ export type RunPayrollEmployee = {
   paymentMethod:string;
   vacationPercent:number;
   vacationPolicy:string;
+  overtimeMultiplier:number;
 };
 type SavedLine = {
   workerId:string; regularHours:number; hourlyRate:number;
@@ -89,7 +90,8 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,em
   const proposedVacation=employee.payType==="hourly"&&employee.vacationPolicy==="paid_each_period" ? Math.round(regularGross*employee.vacationPercent)/100 : 0;
   const vacationPay=Number(edit.vacationPay??proposedVacation.toFixed(2));
   const statHolidayPay=Number(edit.statHolidayPay??0);
-  const draftGross=regularGross+vacationPay+statHolidayPay;
+  const overtimeGross=employee.payType==="hourly"?overtimeHours*rate*employee.overtimeMultiplier:0;
+  const draftGross=regularGross+overtimeGross+vacationPay+statHolidayPay;
   return {hours,rate,overtimeHours,vacationPay,statHolidayPay,regularGross,draftGross,
     memo:edit.memo??"",paymentMethod:edit.paymentMethod??employee.paymentMethod};
  };
@@ -208,7 +210,7 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,em
    {alreadyPaid?<p role="alert" className="border-t border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-800">An employee already has a recorded payment on this payday. Deselect that employee to prevent duplicates.</p>:null}
    {offContract?<p role="alert" className="border-t border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-800">Final partial periods after a contract end date need manual review; deselect those employees from this draft.</p>:null}
    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 p-5">
-    <p className="max-w-xl text-xs leading-5 text-slate-600">Draft hours and pay are editable. The Alberta CRA calculation preview checks employees and historical records before displaying CPP, CPP2, EI, income tax, net pay and employer contributions. Save for later does not send money.</p>
+    <p className="max-w-xl text-xs leading-5 text-slate-600">Draft hours and pay are editable. Draft gross includes entered overtime using each employee’s saved multiplier. The Alberta CRA calculation preview checks employees and historical records before displaying CPP, CPP2, EI, income tax, net pay and employer contributions. Save for later does not send money.</p>
     <div className="flex flex-wrap gap-3">
      <form action={saveDraftPayroll}>
       <input name="client_id" type="hidden" value={clientId}/><input name="company_id" type="hidden" value={companyId}/>
