@@ -73,6 +73,7 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
           <p className="mt-4 text-xs font-black uppercase tracking-widest text-amber-600">KAL Payroll</p>
           <h1 className="mt-1 text-3xl font-black text-slate-900">{worker.worker_name}</h1>
           <p className="mt-2 text-sm text-slate-600">{worker.worker_name} · Employee profile · secure administrator access</p>
+          {worker.company_id ? <Link href={`/admin/clients/${encodeURIComponent(clientId)}/payroll/paycheques?companyId=${encodeURIComponent(worker.company_id)}&year=${year}&workerId=${encodeURIComponent(workerId)}`} className="mt-3 inline-flex rounded-lg border border-emerald-700 px-4 py-2 text-sm font-bold text-emerald-800 hover:bg-emerald-50">View employee paycheque list</Link> : null}
         </div>
       </div>
 
