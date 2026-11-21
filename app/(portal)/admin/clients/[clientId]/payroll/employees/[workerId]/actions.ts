@@ -52,7 +52,18 @@ export async function savePayrollEmployeeProfile(form: FormData) {
   const invalid = (reason: string): never => redirect(`${base}&error=${encodeURIComponent(reason)}`);
   const status = read(form, "employment_status", 40);
   const frequency = read(form, "pay_frequency", 20);
-  const name = read(form, "worker_name");
+  const firstName=read(form,"legal_first_name",80);
+  const middleName=read(form,"legal_middle_name",80);
+  const lastName=read(form,"legal_last_name",80);
+  const preferredName=read(form,"preferred_first_name",80);
+  const jobTitle=read(form,"job_title",150);
+  const employeeCode=read(form,"employee_code",60);
+  const homePhone=read(form,"home_phone",50);
+  const workPhone=read(form,"work_phone",50);
+  const mobilePhone=read(form,"mobile_phone",50);
+  const basePayEffective=read(form,"base_pay_effective_date",10);
+  const suppliedName = [firstName,middleName,lastName].filter(Boolean).join(" ");
+  const name = suppliedName || read(form, "worker_name");
   const email = read(form, "email", 254);
   const phone = read(form, "phone", 50);
   const address = read(form, "address", 500);
@@ -82,7 +93,7 @@ export async function savePayrollEmployeeProfile(form: FormData) {
   const overtimeMultiplier = Number(overtimeMultiplierText);
   const vacationPercent = Number(vacationPercentText);
 
-  if (!name || !statuses.has(status) || !frequencies.has(frequency)) invalid("invalid_fields");
+  if (!name || !statuses.has(status) || !frequencies.has(frequency) || (firstName && !lastName) || (!firstName && lastName)) invalid("invalid_fields");
   if (
     !["hourly", "salary"].includes(payType) ||
     (payType === "hourly" && (hourlyRate === null || hourlyRate <= 0)) ||
@@ -95,7 +106,7 @@ export async function savePayrollEmployeeProfile(form: FormData) {
     !Number.isFinite(vacationPercent) || vacationPercent < 0 || vacationPercent > 30
   ) invalid("invalid_pay_settings");
 
-  if (![birthDate, hireDate, terminationDate, contractEndDate, periodEnd, payDate].every(isDate)) invalid("invalid_dates");
+  if (![birthDate, hireDate, terminationDate, contractEndDate, periodEnd, payDate, basePayEffective].every(isDate)) invalid("invalid_dates");
   if (birthDate && birthDate > new Date().toISOString().slice(0, 10)) invalid("invalid_birth_date");
   if (payDate && periodEnd && payDate < periodEnd) invalid("pay_date_before_period_end");
   if (terminationDate && hireDate && terminationDate < hireDate) invalid("invalid_termination_date");
@@ -142,6 +153,16 @@ export async function savePayrollEmployeeProfile(form: FormData) {
     auto_include: autoInclude,
     employment_status: status,
     work_location: nullable(workLocation),
+    legal_first_name: nullable(firstName),
+    legal_middle_name: nullable(middleName),
+    legal_last_name: nullable(lastName),
+    preferred_first_name: nullable(preferredName),
+    job_title: nullable(jobTitle),
+    employee_code: nullable(employeeCode),
+    home_phone: nullable(homePhone),
+    work_phone: nullable(workPhone),
+    mobile_phone: nullable(mobilePhone),
+    base_pay_effective_date: nullable(basePayEffective),
     manager_name: nullable(managerName),
     department: nullable(department),
     schedule_name: scheduleName,
