@@ -116,7 +116,7 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
           <div className="mb-4 flex items-center justify-between gap-3"><h2 className="text-lg font-black text-slate-950">Base pay</h2><a href="#base-pay" className="text-sm font-bold text-emerald-700 hover:underline">Edit base pay</a></div>
           <dl className="grid gap-4 text-sm sm:grid-cols-3">
             <div><dt className="text-slate-500">Pay type</dt><dd className="mt-1 font-bold capitalize text-slate-900">{profile?.pay_type || "hourly"}</dd></div>
-            <div><dt className="text-slate-500">Rate</dt><dd className="mt-1 font-bold text-slate-900">{profile?.pay_type === "salary" ? (profile.salary_amount == null ? "Not set" : `${Number(profile.salary_amount).toLocaleString("en-CA", {style:"currency",currency:"CAD"})}/period`) : (profile?.hourly_rate == null ? "Not set" : `${Number(profile.hourly_rate).toLocaleString("en-CA",{style:"currency",currency:"CAD"})}/hour`)}</dd></div>
+            <div><dt className="text-slate-500">Rate</dt><dd className="mt-1 font-bold text-slate-900">{profile?.pay_type === "commission" ? "Commission only · manual review" : profile?.pay_type === "salary" ? (profile.salary_amount == null ? "Not set" : `${Number(profile.salary_amount).toLocaleString("en-CA", {style:"currency",currency:"CAD"})}/period`) : (profile?.hourly_rate == null ? "Not set" : `${Number(profile.hourly_rate).toLocaleString("en-CA",{style:"currency",currency:"CAD"})}/hour`)}</dd></div>
             <div><dt className="text-slate-500">Default working hours</dt><dd className="mt-1 font-bold text-slate-900">{Number(profile?.default_hours_per_day ?? 8) * Number(profile?.default_days_per_week ?? 5)} hours/week</dd></div>
             <div><dt className="text-slate-500">Effective date</dt><dd className="mt-1 font-semibold text-slate-900">{profile?.base_pay_effective_date || "Not set"}</dd></div>
             <div><dt className="text-slate-500">Vacation policy</dt><dd className="mt-1 font-semibold text-slate-900">{profile?.vacation_policy === "accrued" ? "Accrued" : profile?.vacation_policy === "none" ? "Not configured" : `${Number(profile?.vacation_percent ?? 4).toFixed(2)}% Paid out each pay period`}</dd></div>
@@ -240,7 +240,7 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
             <p className="mt-1 text-sm text-slate-600">Hourly employees default to 8 hours per day, 5 days per week. Set their hourly rate before running payroll.</p></div>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Pay type"><select name="pay_type" className={fieldClass} defaultValue={profile?.pay_type ?? "hourly"}>
-              <option value="hourly">Hourly</option><option value="salary">Salary</option>
+              <option value="hourly">Hourly</option><option value="salary">Salary</option><option value="commission">Commission only (manual calculation)</option>
             </select></Field>
             <Field label="Hourly rate ($)"><input type="number" name="hourly_rate" min="0" max="100000" step="0.01" className={fieldClass} defaultValue={profile?.hourly_rate ?? ""} placeholder="Enter for hourly employees" /></Field>
             <Field label="Salary amount per pay period ($)"><input type="number" name="salary_amount" min="0" max="10000000" step="0.01" className={fieldClass} defaultValue={profile?.salary_amount ?? ""} placeholder="Enter for salary employees" /></Field>
