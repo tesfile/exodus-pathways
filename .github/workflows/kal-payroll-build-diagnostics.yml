@@ -1,0 +1,32 @@
+name: KAL Payroll build diagnostics
+on:
+  pull_request:
+    branches:
+      - kal-payroll-documents-staging
+  workflow_dispatch:
+jobs:
+  check:
+    name: TypeScript, CRA tests and Next.js build
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjk5OTk5OTk5OTl9.dummy
+      SUPABASE_SECRET_KEY: eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjk5OTk5OTk5OTl9.dummy
+      PAYROLL_SIN_ENCRYPTION_KEY: diagnostics-placeholder-no-real-data
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: CRA payroll tests
+        run: npm run test:payroll
+      - name: TypeScript check
+        if: always()
+        run: npm run typecheck
+      - name: Next.js production build
+        if: always()
+        run: npm run build
