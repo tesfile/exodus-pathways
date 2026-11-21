@@ -77,14 +77,15 @@ export async function calculatePayrollPreview2026(input:Input):Promise<PayrollCa
   db.from("worker_payments").select(
    "worker_id,payment_date,gross_pay,cpp,cpp2,ei,income_tax_deducted,t4_box26_cpp_pensionable_earnings,t4_box24_ei_insurable_earnings,client_worker_type"
   ).eq("client_id",input.clientId).eq("company_id",input.companyId)
-   .gte("payment_date","2026-01-01").lt("payment_date",input.payDate).order("payment_date",{ascending:true}).limit(3000),
+   .gte("payment_date","2026-01-01").lte("payment_date",input.payDate).order("payment_date",{ascending:true}).limit(3000),
   db.from("kal_payroll_employee_items").select("worker_id,item_name,kind,amount,active,effective_date,end_date")
     .eq("client_id",input.clientId).in("worker_id",ids).eq("active",true)
  ]);
  if(workerError||profileError||paymentError||itemError)throw new Error("Unable to load required historical payroll records.");
  const workerById=new Map((workers??[]).map(w=>[w.id,w]));
  const profileById=new Map((profiles??[]).map(p=>[p.worker_id,p]));
- const paymentsByWorker=new Map<string,typeof payments>();
+ type PriorPayment=NonNullable<typeof payments>[number];
+ const paymentsByWorker=new Map<string,PriorPayment[]>();
  for(const payment of payments??[]){
   const list=paymentsByWorker.get(payment.worker_id)??[];
   list.push(payment);paymentsByWorker.set(payment.worker_id,list);
@@ -119,11 +120,12 @@ export async function calculatePayrollPreview2026(input:Input):Promise<PayrollCa
   if(!Number.isFinite(wages)||wages<0)return blocked("Enter valid wages.");
   const gross=round(wages+line.overtimeHours*line.hourlyRate*multiplier+line.vacationPay+line.statHolidayPay);
   if(gross<=0)return blocked("Hourly rate or salary is missing; gross pay cannot be zero.");
-  const prior=paymentsByWorker.get(line.workerId)??[];
-  if(prior.some(p=>p.payment_date>=input.periodStart&&p.payment_date===input.payDate))
+  const allPrior=paymentsByWorker.get(line.workerId)??[];
+  if(allPrior.some(p=>p.payment_date===input.payDate))
    return blocked("A payroll payment is already recorded on this payday; review duplicates.");
+  const prior=allPrior.filter(p=>p.payment_date<input.payDate);
   if(prior.some(p=>p.gross_pay===null||p.cpp===null||p.ei===null||
-   p.t4_box26_cpp_pensionable_earnings===null&&Number(p.gross_pay)<0))
+   Number(p.gross_pay)<0))
    return blocked("Historical pay has missing gross/CPP/EI values. Reconcile year-to-date records.");
   if(prior.some(p=>p.client_worker_type&&!/employee/i.test(p.client_worker_type)))
    return blocked("The employee has non-payroll transactions in the same year; reconcile year-to-date records.");
@@ -134,7 +136,7 @@ export async function calculatePayrollPreview2026(input:Input):Promise<PayrollCa
    pensionable:round(prior.reduce((a,p)=>a+money(p.t4_box26_cpp_pensionable_earnings??p.gross_pay),0)),
    insurable:round(prior.reduce((a,p)=>a+money(p.t4_box24_ei_insurable_earnings??p.gross_pay),0))
   };
-  if(ytd.pensionable>=74600&&prior.some(p=>p.cpp2===null))
+  if(ytd.pensionable+gross>74600&&prior.some(p=>p.cpp2===null))
    return blocked("Prior CPP2 amounts were not recorded. Reconcile CPP2 before calculating this pay.");
   try {
    const result=calculate2026AlbertaRegularPay({
