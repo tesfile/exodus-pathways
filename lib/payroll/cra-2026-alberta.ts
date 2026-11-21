@@ -80,27 +80,35 @@ export function calculate2026AlbertaRegularPay(input:Payroll2026Input):Payroll20
  if(input.federalTd1!==null&&(!Number.isFinite(input.federalTd1)||input.federalTd1<0))throw new PayrollCalculationError("Invalid federal TD1 amount.");
  if(input.albertaTd1!==null&&(!Number.isFinite(input.albertaTd1)||input.albertaTd1<0))throw new PayrollCalculationError("Invalid Alberta TD1 amount.");
  const eligible=!input.cppExempt&&cppEligibleOn(input.payDate,input.birthDate);
+ const ageYear=Number(input.birthDate.slice(0,4));
+ const birthMonth=Number(input.birthDate.slice(5,7));
+ const turn18Year=ageYear+18,turn70Year=ageYear+70;
+ const PM=turn18Year===2026?12-birthMonth:turn70Year===2026?birthMonth:12;
+ const maxCpp=round(4230.45*(PM/12));
+ const maxCpp2=round(416*(PM/12));
+ const maxBaseCpp=round(3519.45*(PM/12));
  // CRA Chapter 6, basic exemption truncated (not rounded) to 2 decimal places.
  const cppBasicExemption=truncatedCents(3500/P);
  const C=eligible?round(clamp(Math.min(
-  4230.45-input.ytd.cpp,
+  maxCpp-input.ytd.cpp,
   0.0595*Math.max(0,input.grossPay-cppBasicExemption)
- ),0,4230.45)):0;
+ ),0,maxCpp)):0;
  // The second CPP contribution is based on accumulated pensionable wages with this employer.
  const W=Math.max(input.ytd.pensionable,74600);
  const C2=eligible?round(clamp(Math.min(
-  416-input.ytd.cpp2,
+  maxCpp2-input.ytd.cpp2,
   0.04*Math.max(0,input.ytd.pensionable+input.grossPay-W)
- ),0,416)):0;
+ ),0,maxCpp2)):0;
  const EI=input.eiExempt?0:round(clamp(Math.min(1123.07-input.ytd.ei,0.0163*input.grossPay),0,1123.07));
  // First additional CPP and CPP2 are deductible in computing taxable income.
- const F5= C*(0.01/0.0595)+C2;
+ const F5=round(C*(0.01/0.0595)+C2);
  const A=Math.max(0,P*(input.grossPay-F5));
  const TC=input.federalTd1===null?federalBpa(A):input.federalTd1;
  const TCP=input.albertaTd1===null?22769:input.albertaTd1;
  // K2/K2P credits for BASE CPP and EI, with current-year annual caps.
- const annualBaseCPP=Math.min(3519.45,P*C*(0.0495/0.0595));
- const annualEI=Math.min(1123.07,P*EI);
+ const baseRatio=0.0495/0.0595;
+ const annualBaseCPP=Math.min(maxBaseCpp,Math.max(P*C*baseRatio,input.ytd.cpp*baseRatio));
+ const annualEI=Math.min(1123.07,Math.max(P*EI,input.ytd.ei));
  const K2=0.14*(annualBaseCPP+annualEI);
  const K2P=0.08*(annualBaseCPP+annualEI);
  const K4=Math.min(0.14*P*input.grossPay,0.14*1501);
@@ -109,9 +117,10 @@ export function calculate2026AlbertaRegularPay(input:Payroll2026Input):Payroll20
  const K5P=Math.max(0,((0.08*TCP)+K2P-4896)*0.25);
  const T3=Math.max(0,federalBracket-0.14*TC-K2-K4);
  const T4=Math.max(0,provincialBracket-0.08*TCP-K2P-K5P);
- const federalTax=input.federalTaxExempt?0:round(T3/P);
- const albertaTax=input.federalTaxExempt?0:round(T4/P);
- const incomeTax=input.federalTaxExempt?0:round((T3+T4)/P+input.additionalTax);
+ if(input.federalTaxExempt)throw new PayrollCalculationError("Documented income-tax exemption needs a special review before automatic calculation.");
+ const federalTax=round(T3/P);
+ const albertaTax=round(T4/P);
+ const incomeTax=round((T3+T4)/P+input.additionalTax);
  const employeeDeductions=round(C+C2+EI+incomeTax);
  const netPay=round(input.grossPay-employeeDeductions);
  const employerCpp=C,employerCpp2=C2,employerEi=round(EI*1.4);
