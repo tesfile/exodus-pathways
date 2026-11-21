@@ -28,8 +28,9 @@ export function CompanyScheduleFields({ name, frequency: initialFrequency, perio
   const [frequency, setFrequency] = useState<Frequency>(
     (["weekly","biweekly","semimonthly","monthly"].includes(initialFrequency) ? initialFrequency : "biweekly") as Frequency
   );
-  const [periodEnd, setPeriodEnd] = useState(initialEnd);
   const [payDate, setPayDate] = useState(initialPayDate);
+  const [sameDay, setSameDay] = useState(!initialEnd || initialEnd === initialPayDate);
+  const [periodEnd, setPeriodEnd] = useState(initialEnd || initialPayDate);
   const dates = useMemo(() => {
     const end = parse(periodEnd), payday = parse(payDate);
     if (!end || !payday || payday.valueOf() < end.valueOf()) return [];
@@ -70,13 +71,17 @@ export function CompanyScheduleFields({ name, frequency: initialFrequency, perio
           <option value="monthly">Every month</option>
         </select>
       </label>
+      <label className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-slate-800">
+        <input type="checkbox" name="same_day_pay_period_end" checked={sameDay} onChange={event=>{setSameDay(event.target.checked);if(event.target.checked)setPeriodEnd(payDate);}} className="h-5 w-5 accent-emerald-700"/>
+        Payday is the final day of each pay period (use the same date automatically)
+      </label>
       <label className="grid gap-2 text-sm font-semibold text-slate-800">Next pay date
-        <input name="next_pay_date" type="date" value={payDate} min={periodEnd || undefined} onChange={event=>setPayDate(event.target.value)} className={css}/>
+        <input name="next_pay_date" type="date" value={payDate} min={sameDay ? undefined : (periodEnd || undefined)} onChange={event=>{setPayDate(event.target.value);if(sameDay)setPeriodEnd(event.target.value);}} className={css}/>
         <span className="text-xs font-normal text-slate-500">The day employees are scheduled to receive their pay.</span>
       </label>
       <label className="grid gap-2 text-sm font-semibold text-slate-800">End of next pay period
-        <input name="next_period_end" type="date" value={periodEnd} onChange={event=>setPeriodEnd(event.target.value)} className={css}/>
-        <span className="text-xs font-normal text-slate-500">The last day of work covered by the next paycheque.</span>
+        <input name="next_period_end" type="date" value={sameDay?payDate:periodEnd} readOnly={sameDay} onChange={event=>setPeriodEnd(event.target.value)} className={css+(sameDay ? " bg-slate-100" : "")}/>
+        <span className="text-xs font-normal text-slate-500">The last day of work covered by the next paycheque. This follows the pay date automatically while the same-day option is checked.</span>
       </label>
       {warning ? <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm font-semibold text-red-800">The pay date cannot be before the end of the pay period.</p> : null}
     </div>
