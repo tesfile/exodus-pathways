@@ -1,12 +1,5 @@
-import { PublicFooter } from "@/components/public/public-footer";
-import { PublicHeader } from "@/components/public/public-header";
+import { PublicChrome } from "@/components/public/public-chrome";
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <PublicHeader />
-      <main>{children}</main>
-      <PublicFooter />
-    </>
-  );
+  return <PublicChrome>{children}</PublicChrome>;
 }
