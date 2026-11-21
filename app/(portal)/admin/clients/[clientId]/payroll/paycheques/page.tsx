@@ -26,7 +26,7 @@ export default async function PaychequesPage({params,searchParams}:Props){
  const employees=(workers??[]).filter(w=>w.company_id===company.id&&/employee/i.test(w.worker_type));
  const ids=new Set(employees.map(e=>e.id));
  const {data:payments,error:pError}=await db.from("worker_payments")
- .select("id,worker_id,payment_date,pay_period_start,pay_period_end,gross_pay,net_pay,payment_method,status,cpp,ei,income_tax_deducted")
+ .select("id,worker_id,payment_date,pay_period_start,pay_period_end,gross_pay,net_pay,payment_method,status,cheque_number,cpp,ei,income_tax_deducted")
  .eq("client_id",clientId).eq("company_id",company.id).gte("payment_date",year+"-01-01")
  .lte("payment_date",year+"-12-31").order("payment_date",{ascending:false}).limit(2000);
  if(pError)throw new Error("Unable to load recorded payroll payments.");
@@ -35,7 +35,7 @@ export default async function PaychequesPage({params,searchParams}:Props){
   date:p.payment_date,periodStart:p.pay_period_start,periodEnd:p.pay_period_end,
   gross:Number(p.gross_pay??0),net:Number(p.net_pay??0),
   cpp:Number(p.cpp??0),ei:Number(p.ei??0),incomeTax:Number(p.income_tax_deducted??0),
-  payMethod:p.payment_method??"Not recorded",status:p.status??"Not recorded"
+  payMethod:p.payment_method??"Not recorded",status:p.status??"Not recorded",chequeNumber:p.cheque_number??""
  }));
  return <main className="mx-auto grid max-w-7xl gap-5">
   <Link href={base} className="w-fit text-sm font-bold text-emerald-700 hover:underline">← Back to Employees</Link>
@@ -50,7 +50,7 @@ export default async function PaychequesPage({params,searchParams}:Props){
     <button type="submit" className="rounded-lg bg-emerald-700 px-5 py-3 text-sm font-bold text-white">Choose company</button>
    </form>
   </div>
-  <PaychequeList year={year} companyName={company.trade_name||company.legal_name}
+  <PaychequeList year={year} companyName={company.trade_name||company.legal_name} clientId={clientId} companyId={company.id}
    initialWorkerId={query?.workerId||""}
    records={display}
    employees={employees.map(e=>({id:e.id,name:e.worker_name}))}/>
