@@ -95,7 +95,7 @@ export function EmployeeProfileExtras({profile,items,clientId,workerId,year}:{pr
  return <>
   <section id="tax-withholdings" className="scroll-mt-24 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
    <h2 className="text-xl font-black text-slate-950">Tax withholdings and payment method</h2>
-   <p className="mt-2 text-sm text-slate-600">Enter amounts from the employee's signed federal and provincial TD1 forms. These are settings, not a completed tax calculation.</p>
+   <p className="mt-2 text-sm text-slate-600">Enter amounts from the employee&apos;s signed federal and provincial TD1 forms. These are settings, not a completed tax calculation.</p>
    <form action={saveTaxAndPayment} className="mt-5 grid gap-5 sm:grid-cols-2">
     <Hidden clientId={clientId} workerId={workerId} year={year}/>
     <label className="grid gap-2 text-sm font-semibold text-slate-800">Federal TD1 claim amount ($)
