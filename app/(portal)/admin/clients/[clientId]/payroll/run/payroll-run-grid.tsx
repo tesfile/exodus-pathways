@@ -61,7 +61,6 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,em
  const [payDate,setPayDate]=useState(initialPayDate);
  const [search,setSearch]=useState("");
  const [showPreview,setShowPreview]=useState(false);
- const [showCompare,setShowCompare]=useState<string|null>(null);
  const [calculated,setCalculated]=useState<PayrollCalculatedPreview|null>(null);
  const [previewLoading,setPreviewLoading]=useState(false);
  const [previewError,setPreviewError]=useState<string|null>(null);
