@@ -60,6 +60,7 @@ export function ClientPayrollTabs({
   const companyParams = `companyId=${encodeURIComponent(companyId)}&year=${taxYear}`;
   const runHref = `/admin/clients/${encodeURIComponent(clientId)}/payroll/run?${companyParams}`;
   const settingsHref = `/admin/clients/${encodeURIComponent(clientId)}/payroll/settings?${companyParams}`;
+  const paychequesHref = `/admin/clients/${encodeURIComponent(clientId)}/payroll/paycheques?${companyParams}`;
   const sectionHref = (section: Tab, selectedCompany = companyId) =>
     `/admin/clients/${encodeURIComponent(clientId)}/payroll?year=${taxYear}&companyId=${encodeURIComponent(selectedCompany)}&section=${section}`;
   const navigateToTab = (section: Tab) => {
@@ -178,7 +179,7 @@ export function ClientPayrollTabs({
                     </tbody>
                   </table>
                 </div>
-                <button onClick={() => navigateToTab("employees")} type="button" className="mt-4 text-sm font-bold text-emerald-700 hover:underline">View employees and paychecks</button>
+                <Link href={paychequesHref} className="mt-4 inline-block text-sm font-bold text-emerald-700 hover:underline">View paycheques &amp; export</Link>
               </article>
               <article className="rounded-xl border border-slate-200 bg-white p-5">
                 <h4 className="text-lg font-black text-slate-900">Payroll tasks</h4>
@@ -209,7 +210,7 @@ export function ClientPayrollTabs({
               </div>
               <div className="grid justify-items-end gap-2">
                 <Link href={runHref} className="rounded-lg bg-emerald-700 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-800">▶ Run payroll</Link>
-                <button type="button" onClick={() => document.getElementById("kal-paycheck-list")?.scrollIntoView({ behavior: "smooth" })} className="text-sm font-bold text-emerald-700 hover:underline">Paycheque list</button>
+                <Link href={paychequesHref} className="text-sm font-bold text-emerald-700 hover:underline">Paycheque list</Link>
               </div>
             </div>
             <div className="mt-2 flex flex-wrap items-center justify-between gap-4">
@@ -251,7 +252,7 @@ export function ClientPayrollTabs({
             <section id="kal-paycheck-list" className="scroll-mt-24 rounded-xl border border-slate-200 bg-white p-5">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div><h4 className="text-lg font-black text-slate-900">Paycheque list</h4><p className="text-sm text-slate-500">Previously saved employee payment records · {taxYear}</p></div>
-                <Link href={runHref} className="text-sm font-bold text-emerald-700 hover:underline">Run payroll</Link>
+                <div className="flex flex-wrap gap-3"><Link href={runHref} className="text-sm font-bold text-emerald-700 hover:underline">Run payroll</Link><Link href={paychequesHref} className="text-sm font-bold text-emerald-700 hover:underline">Open Paycheque List &amp; Export</Link></div>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[650px] text-left text-sm">
