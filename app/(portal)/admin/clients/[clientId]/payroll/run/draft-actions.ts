@@ -29,7 +29,7 @@ export async function saveDraftPayroll(form:FormData) {
  let lines:Line[];
  try {lines=JSON.parse(String(form.get("lines")??"[]")) as Line[];} catch {throw new Error("Malformed payroll draft.");}
  if(!Array.isArray(lines)||lines.length>200||new Set(lines.map(l=>l.workerId)).size!==lines.length) throw new Error("Invalid payroll draft employees.");
- if(lines.some(l=>!idRe.test(l.workerId)||![l.regularHours,l.hourlyRate,l.overtimeHours,l.vacationPay,l.statHolidayPay].every(Number.isFinite)||
+ if(lines.some(l=>!l||typeof l!=="object"||!idRe.test(l.workerId)||![l.regularHours,l.hourlyRate,l.overtimeHours,l.vacationPay,l.statHolidayPay].every(Number.isFinite)||
     !inRange(l.regularHours,1000)||!inRange(l.hourlyRate,100000)||!inRange(l.overtimeHours,1000)||!inRange(l.vacationPay,1000000)||!inRange(l.statHolidayPay,1000000)||
     !["paper_cheque","manual_bank_transfer","external_direct_deposit"].includes(l.paymentMethod)||typeof l.memo!=="string"||l.memo.length>500)) throw new Error("Invalid draft pay entries.");
  const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.SUPABASE_SECRET_KEY;
@@ -38,7 +38,7 @@ export async function saveDraftPayroll(form:FormData) {
  const {data:company,error:companyError}=await db.from("companies").select("id").eq("id",companyId).eq("client_id",clientId).maybeSingle();
  if(companyError||!company) throw new Error("Company not found.");
  const {data:workers,error:workersError}=await db.from("workers").select("id,worker_type").eq("client_id",clientId).eq("company_id",companyId).in("id",lines.length?lines.map(l=>l.workerId):["00000000-0000-0000-0000-000000000000"]);
- if(workersError||workers?.length!==lines.length||workers.some(w=>!/employee/i.test(w.worker_type))) throw new Error("One or more employees do not belong to this company.");
+ if(workersError||(workers??[]).length!==lines.length||(workers??[]).some(w=>!/employee/i.test(w.worker_type))) throw new Error("One or more employees do not belong to this company.");
  const {data:profiles,error:profilesError}=await db.from("kal_payroll_employee_profiles")
  .select("worker_id,employment_status,hire_date,termination_date,contract_end_date").eq("client_id",clientId).in("worker_id",lines.length?lines.map(l=>l.workerId):["00000000-0000-0000-0000-000000000000"]);
  if(profilesError) throw new Error("Employee pay profiles are unavailable.");
