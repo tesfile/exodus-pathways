@@ -14,6 +14,7 @@ export type RunPayrollEmployee = {
   daysPerWeek: number;
   frequency: string;
   status: string;
+  contractEndDate: string | null;
 };
 type Props = {
   clientId: string;
@@ -140,7 +141,7 @@ export function PayrollRunGrid({ clientId, companyId, year, companyName, frequen
           </tr></thead>
           <tbody className="divide-y divide-slate-100">
             {displayRows.map(({ employee, values }, index) => {
-              const ready = year === 2026 && datesOk && employee.payType === "hourly" && validNumber(values.hours) && values.hours <= 1000
+              const ready = !(employee.contractEndDate && validDate(end) && end > employee.contractEndDate) && year === 2026 && datesOk && employee.payType === "hourly" && validNumber(values.hours) && values.hours <= 1000
                 && values.rate > 0 && validNumber(values.rate) && values.overtimeHours === 0 && values.gross > 0;
               return <tr key={employee.id} className={index % 2 ? "bg-slate-50/70" : "bg-white"}>
                 <td className="px-3 py-4"><div className="flex items-center gap-3"><input aria-label={`Include ${employee.name}`} type="checkbox" checked={selectedIds.includes(employee.id)} onChange={e => setSelectedIds(prev => e.target.checked ? [...prev, employee.id] : prev.filter(id => id !== employee.id))} className="h-4 w-4 accent-emerald-700"/><span><Link href={employeeUrl(employee)} className="font-bold text-slate-900 hover:text-emerald-700">{employee.name}</Link><span className="block text-xs text-slate-500">{employee.payType}</span></span></div></td>
@@ -152,7 +153,7 @@ export function PayrollRunGrid({ clientId, companyId, year, companyName, frequen
                 <td className="px-3 py-4 font-semibold">{values.hours + values.overtimeHours}h</td>
                 <td className="px-3 py-4 text-right font-bold">{validNumber(values.gross) ? money(values.gross) : "Invalid"}</td>
                 <td className="px-3 py-4 text-slate-600">Not configured</td>
-                <td className="px-3 py-4">{ready ? <Link href={recordUrl(employee, values.hours, values.rate)} className="text-sm font-bold text-emerald-700 hover:underline">Review paycheque</Link> : <span className="text-xs text-slate-500">{values.overtimeHours > 0 ? "Review overtime" : employee.payType === "salary" ? "Salary: individual pay form" : "Set dates / rate"}</span>}</td>
+                <td className="px-3 py-4">{ready ? <Link href={recordUrl(employee, values.hours, values.rate)} className="text-sm font-bold text-emerald-700 hover:underline">Review paycheque</Link> : <span className="text-xs text-slate-500">{values.overtimeHours > 0 ? "Review overtime" : employee.contractEndDate && validDate(end) && end > employee.contractEndDate ? "Final partial period: review separately" : employee.payType === "salary" ? "Salary: individual pay form" : "Set dates / rate"}</span>}</td>
               </tr>;
             })}
             {!displayRows.length ? <tr><td colSpan={10} className="p-8 text-center text-slate-500">No employees selected or matching the search.</td></tr> : null}
