@@ -18,6 +18,7 @@ export type RunPayrollEmployee = {
   contractEndDate:string|null;
   paymentMethod:string;
   vacationPercent:number;
+  vacationPolicy:string;
 };
 type SavedLine = {
   workerId:string; regularHours:number; hourlyRate:number;
@@ -81,9 +82,10 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,em
   const hours=Number(edit.hours??standard.toFixed(2));
   const rate=Number(edit.rate??employee.hourlyRate??0);
   const overtimeHours=Number(edit.overtimeHours??0);
-  const vacationPay=Number(edit.vacationPay??0);
-  const statHolidayPay=Number(edit.statHolidayPay??0);
   const regularGross=employee.payType==="commission"?0:employee.payType==="salary"?Number(employee.salaryAmount??0):hours*rate;
+  const proposedVacation=employee.payType==="hourly"&&employee.vacationPolicy==="paid_each_period" ? Math.round(regularGross*employee.vacationPercent)/100 : 0;
+  const vacationPay=Number(edit.vacationPay??proposedVacation.toFixed(2));
+  const statHolidayPay=Number(edit.statHolidayPay??0);
   const draftGross=regularGross+vacationPay+statHolidayPay;
   return {hours,rate,overtimeHours,vacationPay,statHolidayPay,regularGross,draftGross,
     memo:edit.memo??"",paymentMethod:edit.paymentMethod??employee.paymentMethod};
@@ -131,7 +133,7 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,em
     <label className="grid gap-2 text-sm font-semibold text-slate-800">Period end<input type="date" min={start||undefined} value={end} onChange={e=>{setEnd(e.target.value);reset();}} className="min-h-11 rounded-lg border border-slate-300 px-3 py-2"/></label>
     <label className="grid gap-2 text-sm font-semibold text-slate-800">Pay date<input type="date" min={end||undefined} value={payDate} onChange={e=>setPayDate(e.target.value)} className="min-h-11 rounded-lg border border-slate-300 px-3 py-2"/></label>
    </div>
-   <p className="mt-3 text-xs leading-5 text-slate-500">Default hours use employee settings. Vacation, statutory holiday, overtime and sick pay require confirmation; a draft is not a calculated paycheque.</p>
+   <p className="mt-3 text-xs leading-5 text-slate-500">Default hours use employee settings. Eligible hourly employees receive an editable vacation-pay proposal when their saved policy says paid every period. Check vacationable earnings, statutory holiday pay, overtime and sick pay before approval.</p>
   </div>
   {year!==2026?<p role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-950">This version has not verified CRA calculations for {year}. Drafts are for preparation only.</p>:null}
   <div className="overflow-hidden rounded-xl border border-slate-200">
@@ -164,7 +166,7 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,em
         <td className="px-3 py-3"><input aria-label={"Hours "+employee.name} type="number" min="0" max="1000" step="0.25" disabled={employee.payType!=="hourly"||wasPaid} value={overrides[employee.id]?.hours??values.hours.toFixed(2)} onChange={e=>update(employee.id,"hours",e.target.value)} className={numberInput}/></td>
         <td className="px-3 py-3"><input aria-label={"Rate "+employee.name} type="number" min="0" max="100000" step="0.01" disabled={employee.payType==="salary"||wasPaid} value={overrides[employee.id]?.rate??String(employee.hourlyRate??0)} onChange={e=>update(employee.id,"rate",e.target.value)} className={numberInput}/></td>
         <td className="px-3 py-3"><input aria-label={"Overtime "+employee.name} type="number" min="0" max="1000" step="0.25" disabled={wasPaid} value={overrides[employee.id]?.overtimeHours??"0"} onChange={e=>update(employee.id,"overtimeHours",e.target.value)} className={numberInput}/></td>
-        <td className="px-3 py-3"><input aria-label={"Vacation "+employee.name} type="number" min="0" max="1000000" step="0.01" disabled={wasPaid} value={overrides[employee.id]?.vacationPay??"0"} onChange={e=>update(employee.id,"vacationPay",e.target.value)} className={numberInput}/><p className="mt-1 text-xs text-slate-500">{employee.vacationPercent}% policy</p></td>
+        <td className="px-3 py-3"><input aria-label={"Vacation "+employee.name} type="number" min="0" max="1000000" step="0.01" disabled={wasPaid} value={overrides[employee.id]?.vacationPay??values.vacationPay.toFixed(2)} onChange={e=>update(employee.id,"vacationPay",e.target.value)} className={numberInput}/><p className="mt-1 text-xs text-slate-500">{employee.vacationPolicy==="paid_each_period"?`${employee.vacationPercent}% proposal`:"Manual / accrued"}</p></td>
         <td className="px-3 py-3"><input aria-label={"Stat holiday "+employee.name} type="number" min="0" max="1000000" step="0.01" disabled={wasPaid} value={overrides[employee.id]?.statHolidayPay??"0"} onChange={e=>update(employee.id,"statHolidayPay",e.target.value)} className={numberInput}/></td>
         <td className="px-3 py-3 font-semibold">{num(values.hours+values.overtimeHours)?(values.hours+values.overtimeHours).toFixed(2)+"h":"Invalid"}</td>
         <td className="px-3 py-3 font-bold">{num(values.draftGross)?money(values.draftGross):"Invalid"}</td>
