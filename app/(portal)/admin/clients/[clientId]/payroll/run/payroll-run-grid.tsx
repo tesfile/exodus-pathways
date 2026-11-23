@@ -15,6 +15,9 @@ export type RunPayrollEmployee = {
   hoursPerDay:number;
   daysPerWeek:number;
   frequency:string;
+  hasPayrollProfile:boolean;
+  hasBirthDate:boolean;
+  hireDate:string|null;
   status:string;
   contractEndDate:string|null;
   paymentMethod:string;
@@ -39,6 +42,32 @@ const money=(n:number)=>new Intl.NumberFormat("en-CA",{style:"currency",currency
 const num=(n:number)=>Number.isFinite(n)&&n>=0;
 const dateOk=(v:string)=>/^\d{4}-\d{2}-\d{2}$/.test(v)&&!Number.isNaN(Date.parse(v+"T00:00:00Z"));
 const numberInput="w-24 rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm text-slate-900 focus:border-emerald-700 focus:outline-none";
+const frequencyLabels:Record<string,string>={
+ weekly:"Every week",biweekly:"Every other week",semimonthly:"Twice a month",monthly:"Every month"
+};
+function employeeSetupIssue(employee:RunPayrollEmployee):string|null{
+ if(!employee.hasPayrollProfile)return "Payroll profile not created yet";
+ if(!employee.hasBirthDate)return "Date of birth is missing";
+ if(employee.payType==="commission")return "Commission pay needs separate review";
+ if(employee.payType==="salary"&&!(employee.salaryAmount!==null&&employee.salaryAmount>0))return "Salary amount is missing";
+ if(employee.payType==="hourly"&&!(employee.hourlyRate!==null&&employee.hourlyRate>0))return "Hourly rate is missing";
+ return null;
+}
+function scheduleIssue(employee:RunPayrollEmployee,frequency:string,periodStart:string):string|null{
+ const setup=employeeSetupIssue(employee);
+ if(setup)return setup;
+ if(employee.frequency!==frequency)return "Employee is on "+(frequencyLabels[employee.frequency]??employee.frequency)+"; this run uses "+(frequencyLabels[frequency]??frequency);
+ if(employee.hireDate&&periodStart&&employee.hireDate>periodStart)return "Hired during this period; review partial-period pay";
+ return null;
+}
+function proposedStart(periodEnd:string,frequency:string):string{
+ if(!dateOk(periodEnd))return "";
+ const d=new Date(periodEnd+"T00:00:00Z");
+ if(frequency==="weekly"||frequency==="biweekly")d.setUTCDate(d.getUTCDate()-(frequency==="weekly"?6:13));
+ else if(frequency==="semimonthly")d.setUTCDate(d.getUTCDate()<=15?1:16);
+ else d.setUTCDate(1);
+ return d.toISOString().slice(0,10);
+}
 const methodLabels:Record<string,string>={
   paper_cheque:"Paper cheque",
   manual_bank_transfer:"Manual transfer",
@@ -65,9 +94,15 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,em
  const [calculated,setCalculated]=useState<PayrollCalculatedPreview|null>(null);
  const [previewLoading,setPreviewLoading]=useState(false);
  const [previewError,setPreviewError]=useState<string|null>(null);
- const [selectedIds,setSelectedIds]=useState<string[]>(savedLines.length
-   ?savedLines.map(line=>line.workerId).filter(id=>employees.some(e=>e.id===id))
-   :employees.filter(e=>priorPay[e.id]?.date!==initialPayDate).map(e=>e.id));
+ const [selectedIds,setSelectedIds]=useState<string[]>(()=>{
+  const stored=savedLines.length?savedLines.map(line=>line.workerId):employees.map(e=>e.id);
+  return stored.filter(id=>{
+   const employee=employees.find(e=>e.id===id);
+   return Boolean(employee&&!scheduleIssue(employee,frequency,initialPeriodStart)&&
+    priorPay[id]?.date!==initialPayDate&&
+    (!employee.contractEndDate||!initialPeriodEnd||initialPeriodEnd<=employee.contractEndDate));
+  });
+ });
  const [overrides,setOverrides]=useState<Record<string,Fields>>(
    Object.fromEntries(savedLines.map(l=>[l.workerId,{
      hours:String(l.regularHours),rate:String(l.hourlyRate),overtimeHours:String(l.overtimeHours),
@@ -96,6 +131,10 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,em
     memo:edit.memo??"",paymentMethod:edit.paymentMethod??employee.paymentMethod};
  };
  const rows=employees.map(employee=>({employee,values:currentValues(employee)}));
+ const readyEmployees=employees.filter(employee=>!scheduleIssue(employee,payFrequency,start)&&
+  priorPay[employee.id]?.date!==payDate&&
+  (!employee.contractEndDate||!end||end<=employee.contractEndDate));
+ const blockedEmployees=employees.filter(employee=>Boolean(scheduleIssue(employee,payFrequency,start)));
  const chosen=rows.filter(r=>selectedIds.includes(r.employee.id));
  const visible=rows.filter(r=>r.employee.name.toLowerCase().includes(search.toLowerCase())&&(!showOnlySelected||selectedIds.includes(r.employee.id)));
  const gross=chosen.reduce((sum,r)=>sum+(num(r.values.draftGross)?r.values.draftGross:0),0);
@@ -107,7 +146,8 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,em
   r.values.rate>100000||r.values.vacationPay>1000000||r.values.statHolidayPay>1000000);
  const offContract=chosen.some(r=>Boolean(r.employee.contractEndDate&&end>r.employee.contractEndDate));
  const alreadyPaid=chosen.some(r=>priorPay[r.employee.id]?.date===payDate);
- const canSave=chosen.length>0&&!chosen.some(r=>r.employee.payType==="commission")&&!invalidDates&&!hasInvalid&&!alreadyPaid&&!offContract;
+ const canSave=chosen.length>0&&!chosen.some(r=>Boolean(scheduleIssue(r.employee,payFrequency,start)))
+  &&!invalidDates&&!hasInvalid&&!alreadyPaid&&!offContract;
  const serialized=chosen.map(({employee,values})=>({
    workerId:employee.id,regularHours:values.hours,hourlyRate:values.rate,
    overtimeHours:values.overtimeHours,vacationPay:values.vacationPay,
