@@ -360,8 +360,12 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,co
       <p className="text-sm">Total EI: <strong>{money(calculated.totalEi??0)}</strong></p>
       <p className="text-sm">Total income tax: <strong>{money(calculated.totalIncomeTax??0)}</strong></p>
      </div>:null}
-     <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-      <p className="font-black">Calculation review required before real payroll</p>
+     <div role="note" className={calculated.blockedCount>0
+       ? "mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900"
+       : "mt-5 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700"}>
+      <p className="font-black">{calculated.blockedCount>0
+        ? "Resolve employee calculation issues before payroll"
+        : "Before issuing payroll: verify deductions and employee details"}</p>
       {calculated.information.map((notice,i)=><p key={i} className="mt-2">{notice}</p>)}
       <p className="mt-3">Official verification: <a target="_blank" rel="noopener noreferrer" className="font-bold text-emerald-800 underline" href="https://www.canada.ca/en/revenue-agency/services/e-services/digital-services-businesses/payroll-deductions-online-calculator.html">CRA Payroll Deductions Online Calculator (PDOC)</a></p>
      </div>
