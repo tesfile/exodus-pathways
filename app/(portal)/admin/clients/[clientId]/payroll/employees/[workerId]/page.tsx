@@ -63,7 +63,19 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
   if(payrollItemsError) throw new Error("Could not load employee deductions or additional pay types.");
 
 
-  const back = `/admin/clients/${encodeURIComponent(clientId)}/payroll?year=${year}`;
+  const back = `/admin/clients/${encodeURIComponent(clientId)}/payroll?year=${year}&section=employees`;
+  const runUrl = `/admin/clients/${encodeURIComponent(clientId)}/payroll/run?year=${year}${worker.company_id?"&companyId="+encodeURIComponent(worker.company_id):""}`;
+  const setupNeeded: {label:string;href:string}[] = [];
+  if(!profile)setupNeeded.push({label:"Create this employee's payroll profile",href:"#personal-information"});
+  if(!profile?.birth_date)setupNeeded.push({label:"Enter their correct birthdate for CPP",href:"#personal-information"});
+  if(!profile?.hire_date)setupNeeded.push({label:"Confirm their actual hire date",href:"#employment-details"});
+  if((profile?.pay_type??"hourly")==="hourly"&&!(Number(profile?.hourly_rate)>0))
+    setupNeeded.push({label:"Enter the actual hourly pay rate",href:"#base-pay"});
+  if(profile?.pay_type==="salary"&&!(Number(profile.salary_amount)>0))
+    setupNeeded.push({label:"Enter the salary amount per pay period",href:"#base-pay"});
+  if(profile?.pay_frequency && companySettings?.default_pay_frequency &&
+     profile.pay_frequency!==companySettings.default_pay_frequency)
+    setupNeeded.push({label:"Verify pay schedule: employee uses "+profile.pay_frequency+", company uses "+companySettings.default_pay_frequency,href:"#pay-schedule"});
 
   return (
     <main className="mx-auto grid max-w-7xl gap-6">
@@ -83,6 +95,14 @@ export default async function EmployeePayrollProfilePage({ params, searchParams 
       {query?.saved === "1" ? <p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-900">Employee profile and pay schedule saved.</p> : null}
       {query?.error ? <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-900">Please check the employee details and dates. No changes were saved for the invalid fields.</p> : null}
 
+      {setupNeeded.length>0?<section aria-label="Payroll setup checklist" className="rounded-xl border border-amber-300 bg-amber-50 p-5">
+         <h2 className="text-lg font-black text-amber-950">Complete employee payroll setup</h2>
+         <p className="mt-1 text-sm text-amber-900">These items need attention before this employee can be included in a valid CRA payroll preview. Do not guess personal information or change pay frequency unless it reflects the actual pay arrangement.</p>
+         <div className="mt-3 grid gap-2 sm:grid-cols-2">
+           {setupNeeded.map(item=><a key={item.label} href={item.href} className="rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm font-semibold text-emerald-800 hover:underline">{item.label}</a>)}
+         </div>
+         <Link href={runUrl} className="mt-4 inline-flex rounded-lg border border-emerald-700 bg-white px-4 py-2 text-sm font-bold text-emerald-800">Return to Run Payroll</Link>
+        </section>:<p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-900">Basic employee payroll details are saved. Verify TD1 forms and statutory eligibility before issuing real paycheques. <Link className="underline" href={runUrl}>Return to Run Payroll</Link></p>}
       <section aria-label="Employee payroll summary" className="grid gap-4">
         <div className="grid gap-4 lg:grid-cols-2">
           <article className="rounded-xl border border-slate-200 bg-white p-5">
