@@ -7,7 +7,7 @@ import { PayrollRunGrid, type RunPayrollEmployee } from "./payroll-run-grid";
 export const dynamic = "force-dynamic";
 type Props = {
   params: Promise<{ clientId: string }>;
-  searchParams?: Promise<{ companyId?: string; year?: string; draftId?: string; saved?: string }>;
+  searchParams?: Promise<{ companyId?: string; year?: string; draftId?: string; saved?: string; scheduleUpdated?: string }>;
 };
 const uuid = /^[0-9a-f]{8}-[0-9a-f-]{27}$/i;
 const numeric = (value: unknown, fallback = 0) => value === null || value === undefined ? fallback : Number(value);
@@ -132,9 +132,11 @@ export default async function RunPayrollPage({ params, searchParams }: Props) {
       </div> : <p className="mt-4 rounded-lg bg-slate-50 p-4 text-sm text-slate-600">No recurring drafts yet. Enable automatic draft preparation in Company Settings. The daily scheduler creates the future periods. You can use the prefilled dates below immediately.</p>}
     </section>
     {query?.saved==="1" ? <p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-900">Payroll draft saved. No payments or CRA filings have been issued.</p> : null}
-    <PayrollRunGrid clientId={clientId} companyId={selected.id} year={year}
+    {query?.scheduleUpdated==="1"?<p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-900">Employee pay schedules assigned to the company schedule. Review missing birthdates, pay rates and tax settings before previewing payroll. No payments were issued.</p>:null}
+    <PayrollRunGrid key={selected.id+"-"+(selectedDraft?.id??"new")} clientId={clientId} companyId={selected.id} year={year}
       companyName={selected.trade_name || selected.legal_name}
       frequency={selectedDraft?.frequency ?? settings?.default_pay_frequency ?? "biweekly"}
+      companyFrequency={settings?.default_pay_frequency ?? "biweekly"}
       initialPeriodStart={currentPeriodStart}
       initialPeriodEnd={currentPeriodEnd}
       initialPayDate={selectedDraft?.pay_date ?? settings?.next_pay_date ?? ""}
