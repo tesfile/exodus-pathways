@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import Link from "next/link";
 import { saveDraftPayroll } from "./draft-actions";
+import { assignEmployeesToCompanySchedule } from "./schedule-actions";
 import { calculatePayrollPreview2026, type PayrollCalculatedPreview } from "./preview-actions";
 
 export type RunPayrollEmployee = {
@@ -32,7 +33,7 @@ type SavedLine = {
 };
 type Props = {
   clientId:string; companyId:string; year:number; companyName:string;
-  frequency:string; employees:RunPayrollEmployee[];
+  frequency:string; companyFrequency:string; employees:RunPayrollEmployee[];
   initialPeriodStart:string; initialPeriodEnd:string; initialPayDate:string;
   draftId:string; savedLines:SavedLine[];
   priorPay:Record<string,{gross:number;date:string}>;
@@ -83,7 +84,7 @@ function workingDays(start:string,end:string,daysPerWeek:number){
  }
  return days;
 }
-export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,employees,
+export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,companyFrequency,employees,
   initialPeriodStart,initialPeriodEnd,initialPayDate,draftId,savedLines,priorPay}:Props){
  const [payFrequency,setPayFrequency]=useState(frequency);
  const [start,setStart]=useState(initialPeriodStart);
@@ -135,6 +136,7 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,em
   priorPay[employee.id]?.date!==payDate&&
   (!employee.contractEndDate||!end||end<=employee.contractEndDate));
  const blockedEmployees=employees.filter(employee=>Boolean(scheduleIssue(employee,payFrequency,start)));
+ const employeesOnOtherSchedules=employees.filter(employee=>employee.hasPayrollProfile&&employee.frequency!==companyFrequency&&employee.status==="Active");
  const chosen=rows.filter(r=>selectedIds.includes(r.employee.id));
  const visible=rows.filter(r=>r.employee.name.toLowerCase().includes(search.toLowerCase())&&(!showOnlySelected||selectedIds.includes(r.employee.id)));
  const gross=chosen.reduce((sum,r)=>sum+(num(r.values.draftGross)?r.values.draftGross:0),0);
@@ -222,6 +224,19 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,em
          <Link className="font-bold text-emerald-800 underline" href={employeeUrl(employee.id)}>Review employee setup</Link>
        </div>)}
      </div>:null}
+     {payFrequency===companyFrequency&&employeesOnOtherSchedules.length>0?<form className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4"
+       action={assignEmployeesToCompanySchedule}
+       onSubmit={event=>{if(!window.confirm("Assign "+employeesOnOtherSchedules.length+" existing employee(s) to the saved "+(frequencyLabels[companyFrequency]??companyFrequency)+" company schedule? This changes their future pay frequency and pay dates, but does not modify past pay or send any money. Continue only if this is their correct actual schedule."))event.preventDefault();}}>
+       <input type="hidden" name="client_id" value={clientId}/>
+       <input type="hidden" name="company_id" value={companyId}/>
+       <input type="hidden" name="year" value={year}/>
+       <input type="hidden" name="worker_ids" value={JSON.stringify(employeesOnOtherSchedules.map(employee=>employee.id))}/>
+       <p className="text-sm font-bold text-slate-900">{employeesOnOtherSchedules.length} existing employee{employeesOnOtherSchedules.length===1?" has":"s have"} a different saved pay frequency.</p>
+       <p className="mt-1 text-xs leading-5 text-slate-700">Only use this option if these employees are actually paid on the company schedule. It updates the saved employee schedule, not pay amounts, taxes, birthdates or historical pay records.</p>
+       <button type="submit" className="mt-3 rounded-lg border border-emerald-700 bg-white px-4 py-2 text-sm font-bold text-emerald-800 hover:bg-emerald-100">
+         Assign these employees to {frequencyLabels[companyFrequency]??companyFrequency} company schedule
+       </button>
+      </form>:null}
      {readyEmployees.length===0?<p role="status" className="mt-3 text-sm text-slate-700">There are no employees ready for this run. Use each employee&apos;s actual schedule or complete their payroll profile. No payroll can be previewed or saved until at least one employee is eligible.</p>:null}
    </div>
   {year!==2026?<p role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-950">This version has not verified CRA calculations for {year}. Drafts are for preparation only.</p>:null}
