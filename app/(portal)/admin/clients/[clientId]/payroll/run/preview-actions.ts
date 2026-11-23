@@ -11,6 +11,7 @@ const idRe=/^[0-9a-f]{8}-[0-9a-f-]{27}$/i;
 type PreviewLine={
   workerId:string; regularHours:number; hourlyRate:number;
   overtimeHours:number; vacationPay:number; statHolidayPay:number;
+  partialPeriodConfirmed?:boolean;
 };
 export type PayrollCalculatedLine={
   workerId:string;name:string;result:Payroll2026Result|null;issue:string|null;
@@ -104,7 +105,7 @@ async function calculatePayrollPreview2026Internal(input:Input):Promise<PayrollC
  const [{data:workers,error:workerError},{data:profiles,error:profileError},{data:payments,error:paymentError},{data:payItems,error:itemError}]=await Promise.all([
   db.from("workers").select("id,worker_name,worker_type").eq("client_id",input.clientId).eq("company_id",input.companyId).in("id",ids),
   db.from("kal_payroll_employee_profiles").select(
-   "worker_id,pay_type,salary_amount,pay_frequency,employment_status,birth_date,hire_date,termination_date,contract_end_date,td1_federal_claim,td1_provincial_claim,additional_income_tax,cpp_exempt,ei_exempt,federal_income_tax_exempt,overtime_multiplier,work_location"
+   "worker_id,pay_type,salary_amount,pay_frequency,employment_status,birth_date,hire_date,termination_date,contract_end_date,td1_federal_claim,td1_provincial_claim,additional_income_tax,cpp_exempt,ei_exempt,federal_income_tax_exempt,overtime_multiplier,work_location,default_hours_per_day,default_days_per_week"
   ).eq("client_id",input.clientId).in("worker_id",ids),
   db.from("worker_payments").select(
    "worker_id,payment_date,gross_pay,cpp,cpp2,ei,income_tax_deducted,t4_box26_cpp_pensionable_earnings,t4_box24_ei_insurable_earnings,client_worker_type"
@@ -137,8 +138,22 @@ async function calculatePayrollPreview2026Internal(input:Input):Promise<PayrollC
    return blocked("Employment dates or contract end require a partial-period review.");
   if(profile.pay_frequency&&profile.pay_frequency!==input.frequency)
     return blocked("Employee pay frequency differs from this company run. Select the correct pay schedule before calculating income tax.");
-  if(profile.hire_date&&profile.hire_date>input.periodStart)
-    return blocked("Employee was hired during this pay period. Confirm prorated working hours and special first-pay rules.");
+  if(profile.hire_date&&profile.hire_date>input.periodStart){
+    if(profile.pay_type!=="hourly")return blocked("Salaried first-pay periods need manual prorating and review.");
+    if(!line.partialPeriodConfirmed)return blocked("Confirm hours from the hire date for this first pay period.");
+    const daysPerWeek=Number(profile.default_days_per_week??5);
+    const hoursPerDay=Number(profile.default_hours_per_day??8);
+    if(!Number.isFinite(daysPerWeek)||!Number.isFinite(hoursPerDay)||daysPerWeek<1||daysPerWeek>7||hoursPerDay<=0||hoursPerDay>24)
+      return blocked("Review standard daily hours and workdays before a partial first pay.");
+    let scheduledDays=0;
+    const cursor=new Date(profile.hire_date+"T00:00:00Z");
+    const finish=new Date(input.periodEnd+"T00:00:00Z");
+    for(let i=0;cursor<=finish&&i<370;i++,cursor.setUTCDate(cursor.getUTCDate()+1)){
+      if((cursor.getUTCDay()+6)%7<daysPerWeek)scheduledDays++;
+    }
+    if(line.regularHours>scheduledDays*hoursPerDay+0.001)
+      return blocked("Regular hours exceed scheduled hours from the hire date. Adjust hours or review manually.");
+  }
   if(profile.pay_type==="commission")return blocked("Commission-only pay requires the CRA commission calculation method.");
   if(profile.pay_type==="salary"&&line.overtimeHours>0)
     return blocked("Overtime for salaried employees requires review.");
