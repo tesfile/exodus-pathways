@@ -28,7 +28,7 @@ export async function saveDraftPayroll(form:FormData) {
    periodStart>periodEnd||payDate<periodEnd||!["weekly","biweekly","semimonthly","monthly"].includes(frequency)) throw new Error("Invalid payroll draft dates.");
  let lines:Line[];
  try {lines=JSON.parse(String(form.get("lines")??"[]")) as Line[];} catch {throw new Error("Malformed payroll draft.");}
- if(!Array.isArray(lines)||lines.length>200||new Set(lines.map(l=>l.workerId)).size!==lines.length) throw new Error("Invalid payroll draft employees.");
+ if(!Array.isArray(lines)||lines.length<1||lines.length>200||new Set(lines.map(l=>l.workerId)).size!==lines.length) throw new Error("Invalid payroll draft employees.");
  if(lines.some(l=>!l||typeof l!=="object"||!idRe.test(l.workerId)||![l.regularHours,l.hourlyRate,l.overtimeHours,l.vacationPay,l.statHolidayPay].every(Number.isFinite)||
     !inRange(l.regularHours,1000)||!inRange(l.hourlyRate,100000)||!inRange(l.overtimeHours,1000)||!inRange(l.vacationPay,1000000)||!inRange(l.statHolidayPay,1000000)||
     !["paper_cheque","manual_bank_transfer","external_direct_deposit"].includes(l.paymentMethod)||typeof l.memo!=="string"||l.memo.length>500)) throw new Error("Invalid draft pay entries.");
@@ -40,15 +40,19 @@ export async function saveDraftPayroll(form:FormData) {
  const {data:workers,error:workersError}=await db.from("workers").select("id,worker_type").eq("client_id",clientId).eq("company_id",companyId).in("id",lines.length?lines.map(l=>l.workerId):["00000000-0000-0000-0000-000000000000"]);
  if(workersError||(workers??[]).length!==lines.length||(workers??[]).some(w=>!/employee/i.test(w.worker_type))) throw new Error("One or more employees do not belong to this company.");
  const {data:profiles,error:profilesError}=await db.from("kal_payroll_employee_profiles")
- .select("worker_id,employment_status,hire_date,termination_date,contract_end_date").eq("client_id",clientId).in("worker_id",lines.length?lines.map(l=>l.workerId):["00000000-0000-0000-0000-000000000000"]);
+ .select("worker_id,employment_status,hire_date,termination_date,contract_end_date,pay_frequency,birth_date,pay_type,hourly_rate,salary_amount").eq("client_id",clientId).in("worker_id",lines.length?lines.map(l=>l.workerId):["00000000-0000-0000-0000-000000000000"]);
  if(profilesError) throw new Error("Employee pay profiles are unavailable.");
  const map=new Map((profiles??[]).map(p=>[p.worker_id,p]));
  for(const line of lines){
   const profile=map.get(line.workerId);
   if(!profile||profile.employment_status!=="Active"||
-    (profile.hire_date&&profile.hire_date>periodEnd)||
+    profile.pay_frequency!==frequency||!profile.birth_date||
+    (profile.pay_type==="hourly"&&!(Number(profile.hourly_rate)>0))||
+    (profile.pay_type==="salary"&&!(Number(profile.salary_amount)>0))||
+    profile.pay_type==="commission"||
+    (profile.hire_date&&profile.hire_date>periodStart)||
     (profile.termination_date&&profile.termination_date<periodStart)||
-    (profile.contract_end_date&&profile.contract_end_date<periodStart)) throw new Error("One or more employees are ineligible for this payroll period.");
+    (profile.contract_end_date&&profile.contract_end_date<periodStart)) throw new Error("An employee has a different pay schedule or incomplete payroll setup. Review employee profiles before saving.");
  }
  const runQuery=db.from("kal_payroll_draft_runs").select("id,status,period_start,period_end,pay_date,frequency").eq("client_id",clientId).eq("company_id",companyId);
  const {data:existing,error:existingError}=await (draftId&&idRe.test(draftId)?runQuery.eq("id",draftId):runQuery.eq("period_start",periodStart).eq("period_end",periodEnd)).maybeSingle();
