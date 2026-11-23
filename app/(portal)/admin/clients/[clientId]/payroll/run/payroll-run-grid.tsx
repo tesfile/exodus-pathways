@@ -58,7 +58,6 @@ function scheduleIssue(employee:RunPayrollEmployee,frequency:string,periodStart:
  const setup=employeeSetupIssue(employee);
  if(setup)return setup;
  if(employee.frequency!==frequency)return "Employee is on "+(frequencyLabels[employee.frequency]??employee.frequency)+"; this run uses "+(frequencyLabels[frequency]??frequency);
- if(employee.hireDate&&periodStart&&employee.hireDate>periodStart)return "Hired during this period; review partial-period pay";
  return null;
 }
 function proposedStart(periodEnd:string,frequency:string):string{
@@ -112,12 +111,14 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,co
    }]))
  );
  const [showOnlySelected,setShowOnlySelected]=useState(false);
+ const [firstPayConfirmed,setFirstPayConfirmed]=useState<string[]>([]);
  const update=(id:string,key:keyof Fields,value:string)=>setOverrides(prev=>({...prev,[id]:{...prev[id],[key]:value}}));
  const reset=()=>setOverrides({});
  const currentValues=(employee:RunPayrollEmployee)=>{
   const edit=overrides[employee.id]??{};
+  const effectiveStart=employee.hireDate&&employee.hireDate>start?employee.hireDate:start;
   const standard=dateOk(start)&&dateOk(end)
-   ? employee.hoursPerDay*workingDays(start,end,employee.daysPerWeek)
+   ? employee.hoursPerDay*workingDays(effectiveStart,end,employee.daysPerWeek)
    : employee.hoursPerDay*employee.daysPerWeek*(payFrequency==="biweekly"?2:1);
   const hours=Number(edit.hours??standard.toFixed(2));
   const rate=Number(edit.rate??employee.hourlyRate??0);
@@ -150,12 +151,14 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,co
   r.values.rate>100000||r.values.vacationPay>1000000||r.values.statHolidayPay>1000000);
  const offContract=chosen.some(r=>Boolean(r.employee.contractEndDate&&end>r.employee.contractEndDate));
  const alreadyPaid=chosen.some(r=>priorPay[r.employee.id]?.date===payDate);
- const canSave=chosen.length>0&&!selectedIds.some(id=>!eligibleIds.has(id))&&!chosen.some(r=>Boolean(scheduleIssue(r.employee,payFrequency,start)))
+ const unconfirmedFirstPay=chosen.some(({employee})=>Boolean(employee.hireDate&&employee.hireDate>start&&employee.hireDate<=end&&!firstPayConfirmed.includes(employee.id)));
+ const canSave=chosen.length>0&&!unconfirmedFirstPay&&!selectedIds.some(id=>!eligibleIds.has(id))&&!chosen.some(r=>Boolean(scheduleIssue(r.employee,payFrequency,start)))
   &&!invalidDates&&!hasInvalid&&!alreadyPaid&&!offContract;
  const serialized=chosen.map(({employee,values})=>({
    workerId:employee.id,regularHours:values.hours,hourlyRate:values.rate,
    overtimeHours:values.overtimeHours,vacationPay:values.vacationPay,
-   statHolidayPay:values.statHolidayPay,memo:values.memo,paymentMethod:values.paymentMethod
+   statHolidayPay:values.statHolidayPay,memo:values.memo,paymentMethod:values.paymentMethod,
+   partialPeriodConfirmed:firstPayConfirmed.includes(employee.id)
  }));
 
  async function openCalculatedPreview(){
@@ -169,7 +172,8 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,co
     frequency:payFrequency as "weekly"|"biweekly"|"semimonthly"|"monthly",
     lines:serialized.map(l=>({
       workerId:l.workerId,regularHours:l.regularHours,hourlyRate:l.hourlyRate,
-      overtimeHours:l.overtimeHours,vacationPay:l.vacationPay,statHolidayPay:l.statHolidayPay
+      overtimeHours:l.overtimeHours,vacationPay:l.vacationPay,statHolidayPay:l.statHolidayPay,
+      partialPeriodConfirmed:l.partialPeriodConfirmed
     }))
    });
    if(!next.ok){setPreviewError(next.error);return;}
@@ -203,6 +207,7 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,co
       setPayFrequency(next);
       setStart(nextStart);
       setCalculated(null);
+      setFirstPayConfirmed([]);
       setSelectedIds(employees.filter(employee=>!scheduleIssue(employee,next,nextStart)&&
        priorPay[employee.id]?.date!==payDate&&
        (!employee.contractEndDate||!end||end<=employee.contractEndDate)).map(employee=>employee.id));
@@ -210,9 +215,9 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,co
      }} className="min-h-11 rounded-lg border border-slate-300 px-3 py-2">
       <option value="weekly">Every week</option><option value="biweekly">Every other week</option><option value="semimonthly">Twice monthly</option><option value="monthly">Every month</option>
     </select></label>
-    <label className="grid gap-2 text-sm font-semibold text-slate-800">Period start<input type="date" value={start} onChange={e=>{setStart(e.target.value);setSelectedIds([]);setCalculated(null);reset();}} className="min-h-11 rounded-lg border border-slate-300 px-3 py-2"/></label>
-    <label className="grid gap-2 text-sm font-semibold text-slate-800">Period end<input type="date" min={start||undefined} value={end} onChange={e=>{setEnd(e.target.value);setSelectedIds([]);setCalculated(null);reset();}} className="min-h-11 rounded-lg border border-slate-300 px-3 py-2"/></label>
-    <label className="grid gap-2 text-sm font-semibold text-slate-800">Pay date<input type="date" min={end||undefined} value={payDate} onChange={e=>{setPayDate(e.target.value);setSelectedIds([]);setCalculated(null);}} className="min-h-11 rounded-lg border border-slate-300 px-3 py-2"/></label>
+    <label className="grid gap-2 text-sm font-semibold text-slate-800">Period start<input type="date" value={start} onChange={e=>{setStart(e.target.value);setSelectedIds([]);setFirstPayConfirmed([]);setCalculated(null);reset();}} className="min-h-11 rounded-lg border border-slate-300 px-3 py-2"/></label>
+    <label className="grid gap-2 text-sm font-semibold text-slate-800">Period end<input type="date" min={start||undefined} value={end} onChange={e=>{setEnd(e.target.value);setSelectedIds([]);setFirstPayConfirmed([]);setCalculated(null);reset();}} className="min-h-11 rounded-lg border border-slate-300 px-3 py-2"/></label>
+    <label className="grid gap-2 text-sm font-semibold text-slate-800">Pay date<input type="date" min={end||undefined} value={payDate} onChange={e=>{setPayDate(e.target.value);setSelectedIds([]);setFirstPayConfirmed([]);setCalculated(null);}} className="min-h-11 rounded-lg border border-slate-300 px-3 py-2"/></label>
    </div>
    <p className="mt-3 text-xs leading-5 text-slate-500">Only employees matching the selected pay frequency and with complete basic payroll details are preselected. Changing frequency suggests a new period start; verify dates against the actual schedule. Check vacationable earnings, statutory holiday pay, overtime and sick pay before approval.</p>
   </div>
@@ -290,6 +295,7 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,co
      <tfoot className="border-t border-slate-200 bg-slate-100 font-black"><tr><td className="px-3 py-4">Total · {chosen.length} employees</td><td/><td/><td/><td/><td/><td className="px-3 py-4">{totalHours.toFixed(2)}h</td><td className="px-3 py-4">{money(gross)}</td><td colSpan={3}/></tr></tfoot>
     </table>
    </div>
+   {chosen.filter(({employee})=>employee.hireDate&&employee.hireDate>start&&employee.hireDate<=end).map(({employee,values})=><label key={employee.id} className="flex items-start gap-3 border-t border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><input type="checkbox" className="mt-1" checked={firstPayConfirmed.includes(employee.id)} onChange={e=>setFirstPayConfirmed(prev=>e.target.checked?[...prev,employee.id]:prev.filter(id=>id!==employee.id))}/><span><strong>{employee.name}: first payroll period.</strong> Hired {employee.hireDate}. Confirm {values.hours.toFixed(2)} regular hours reflect work on or after the hire date and that any additional pay is correct. Payroll preview remains unavailable until confirmed.</span></label>)}
    {invalidDates?<p role="alert" className="border-t border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800">Choose a valid period and pay date before saving.</p>:null}
    {alreadyPaid?<p role="alert" className="border-t border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-800">An employee already has a recorded payment on this payday. Deselect that employee to prevent duplicates.</p>:null}
    {offContract?<p role="alert" className="border-t border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-800">Final partial periods after a contract end date need manual review; deselect those employees from this draft.</p>:null}
