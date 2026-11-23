@@ -193,15 +193,37 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,em
     <Link href={settingsUrl} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-900 hover:border-emerald-600">Manage pay schedules</Link>
    </div>
    <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-    <label className="grid gap-2 text-sm font-semibold text-slate-800">Pay frequency<select value={payFrequency} onChange={e=>{setPayFrequency(e.target.value);reset();}} className="min-h-11 rounded-lg border border-slate-300 px-3 py-2">
+    <label className="grid gap-2 text-sm font-semibold text-slate-800">Pay frequency<select value={payFrequency} onChange={e=>{
+      const next=e.target.value;
+      const nextStart=proposedStart(end,next);
+      setPayFrequency(next);
+      setStart(nextStart);
+      setSelectedIds(employees.filter(employee=>!scheduleIssue(employee,next,nextStart)&&
+       priorPay[employee.id]?.date!==payDate&&
+       (!employee.contractEndDate||!end||end<=employee.contractEndDate)).map(employee=>employee.id));
+      reset();
+     }} className="min-h-11 rounded-lg border border-slate-300 px-3 py-2">
       <option value="weekly">Every week</option><option value="biweekly">Every other week</option><option value="semimonthly">Twice monthly</option><option value="monthly">Every month</option>
     </select></label>
     <label className="grid gap-2 text-sm font-semibold text-slate-800">Period start<input type="date" value={start} onChange={e=>{setStart(e.target.value);reset();}} className="min-h-11 rounded-lg border border-slate-300 px-3 py-2"/></label>
     <label className="grid gap-2 text-sm font-semibold text-slate-800">Period end<input type="date" min={start||undefined} value={end} onChange={e=>{setEnd(e.target.value);reset();}} className="min-h-11 rounded-lg border border-slate-300 px-3 py-2"/></label>
     <label className="grid gap-2 text-sm font-semibold text-slate-800">Pay date<input type="date" min={end||undefined} value={payDate} onChange={e=>setPayDate(e.target.value)} className="min-h-11 rounded-lg border border-slate-300 px-3 py-2"/></label>
    </div>
-   <p className="mt-3 text-xs leading-5 text-slate-500">Default hours use employee settings. Eligible hourly employees receive an editable vacation-pay proposal when their saved policy says paid every period. Check vacationable earnings, statutory holiday pay, overtime and sick pay before approval.</p>
+   <p className="mt-3 text-xs leading-5 text-slate-500">Only employees matching the selected pay frequency and with complete basic payroll details are preselected. Changing frequency suggests a new period start; verify dates against the actual schedule. Check vacationable earnings, statutory holiday pay, overtime and sick pay before approval.</p>
   </div>
+  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+     <div className="flex flex-wrap items-center justify-between gap-2">
+      <p className="text-sm font-bold text-slate-900">{readyEmployees.length} of {employees.length} employees ready for {frequencyLabels[payFrequency]??payFrequency} payroll</p>
+      {readyEmployees.length>0?<button type="button" onClick={()=>setSelectedIds(readyEmployees.map(e=>e.id))} className="text-sm font-bold text-emerald-800 underline">Select eligible employees</button>:null}
+     </div>
+     {blockedEmployees.length>0?<div className="mt-3 grid gap-2">
+       {blockedEmployees.map(employee=><div key={employee.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm">
+         <div><span className="font-semibold text-slate-900">{employee.name}</span><span className="ml-2 text-amber-800">{scheduleIssue(employee,payFrequency,start)}</span></div>
+         <Link className="font-bold text-emerald-800 underline" href={employeeUrl(employee.id)}>Review employee setup</Link>
+       </div>)}
+     </div>:null}
+     {readyEmployees.length===0?<p role="status" className="mt-3 text-sm text-slate-700">There are no employees ready for this run. Use each employee&apos;s actual schedule or complete their payroll profile. No payroll can be previewed or saved until at least one employee is eligible.</p>:null}
+   </div>
   {year!==2026?<p role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-950">This version has not verified CRA calculations for {year}. Drafts are for preparation only.</p>:null}
   <div className="overflow-hidden rounded-xl border border-slate-200">
    <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 p-4">
