@@ -297,7 +297,7 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,co
       <input name="client_id" type="hidden" value={clientId}/><input name="company_id" type="hidden" value={companyId}/>
       <input name="period_start" type="hidden" value={start}/><input name="period_end" type="hidden" value={end}/>
       <input name="pay_date" type="hidden" value={payDate}/><input name="frequency" type="hidden" value={payFrequency}/>
-      <input name="draft_id" type="hidden" value={draftId}/><input name="lines" type="hidden" value={JSON.stringify(serialized)}/>
+      <input name="draft_id" type="hidden" value={payFrequency===frequency&&start===initialPeriodStart&&end===initialPeriodEnd&&payDate===initialPayDate?draftId:""}/><input name="lines" type="hidden" value={JSON.stringify(serialized)}/>
       <button type="submit" disabled={!canSave} className="rounded-lg border border-emerald-700 px-5 py-3 text-sm font-bold text-emerald-800 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50">Save for later</button>
      </form>
      <button type="button" onClick={openCalculatedPreview} disabled={!canSave||year!==2026||previewLoading} className="rounded-lg bg-emerald-700 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-300">Preview for {chosen.length} employees</button>
