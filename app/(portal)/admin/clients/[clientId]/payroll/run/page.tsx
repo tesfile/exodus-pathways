@@ -34,7 +34,7 @@ export default async function RunPayrollPage({ params, searchParams }: Props) {
       .eq("company_id", selected.id).eq("client_id", clientId).maybeSingle(),
     db.from("workers").select("id,worker_name,worker_type,status")
       .eq("client_id", clientId).eq("company_id", selected.id).order("worker_name"),
-    db.from("kal_payroll_employee_profiles").select("worker_id,pay_type,hourly_rate,salary_amount,default_hours_per_day,default_days_per_week,pay_frequency,employment_status,hire_date,termination_date,contract_end_date,auto_include,payment_method,vacation_percent,vacation_policy,overtime_multiplier")
+    db.from("kal_payroll_employee_profiles").select("worker_id,pay_type,hourly_rate,salary_amount,default_hours_per_day,default_days_per_week,pay_frequency,employment_status,birth_date,hire_date,termination_date,contract_end_date,auto_include,payment_method,vacation_percent,vacation_policy,overtime_multiplier")
       .eq("client_id", clientId),
     db.from("kal_payroll_draft_runs")
       .select("id,period_start,period_end,pay_date,frequency,status")
