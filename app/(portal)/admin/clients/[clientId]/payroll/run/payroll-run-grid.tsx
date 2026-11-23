@@ -137,7 +137,9 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,co
   (!employee.contractEndDate||!end||end<=employee.contractEndDate));
  const blockedEmployees=employees.filter(employee=>Boolean(scheduleIssue(employee,payFrequency,start)));
  const employeesOnOtherSchedules=employees.filter(employee=>employee.hasPayrollProfile&&employee.frequency!==companyFrequency&&employee.status==="Active");
- const chosen=rows.filter(r=>selectedIds.includes(r.employee.id));
+ const eligibleIds=new Set(readyEmployees.map(employee=>employee.id));
+ // A change of pay period, payday, or frequency must never carry in an ineligible worker.
+ const chosen=rows.filter(r=>selectedIds.includes(r.employee.id)&&eligibleIds.has(r.employee.id));
  const visible=rows.filter(r=>r.employee.name.toLowerCase().includes(search.toLowerCase())&&(!showOnlySelected||selectedIds.includes(r.employee.id)));
  const gross=chosen.reduce((sum,r)=>sum+(num(r.values.draftGross)?r.values.draftGross:0),0);
  const totalHours=chosen.reduce((sum,r)=>sum+(num(r.values.hours+r.values.overtimeHours)?r.values.hours+r.values.overtimeHours:0),0);
@@ -148,7 +150,7 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,co
   r.values.rate>100000||r.values.vacationPay>1000000||r.values.statHolidayPay>1000000);
  const offContract=chosen.some(r=>Boolean(r.employee.contractEndDate&&end>r.employee.contractEndDate));
  const alreadyPaid=chosen.some(r=>priorPay[r.employee.id]?.date===payDate);
- const canSave=chosen.length>0&&!chosen.some(r=>Boolean(scheduleIssue(r.employee,payFrequency,start)))
+ const canSave=chosen.length>0&&!selectedIds.some(id=>!eligibleIds.has(id))&&!chosen.some(r=>Boolean(scheduleIssue(r.employee,payFrequency,start)))
   &&!invalidDates&&!hasInvalid&&!alreadyPaid&&!offContract;
  const serialized=chosen.map(({employee,values})=>({
    workerId:employee.id,regularHours:values.hours,hourlyRate:values.rate,
@@ -200,6 +202,7 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,co
       const nextStart=proposedStart(end,next);
       setPayFrequency(next);
       setStart(nextStart);
+      setCalculated(null);
       setSelectedIds(employees.filter(employee=>!scheduleIssue(employee,next,nextStart)&&
        priorPay[employee.id]?.date!==payDate&&
        (!employee.contractEndDate||!end||end<=employee.contractEndDate)).map(employee=>employee.id));
@@ -207,9 +210,9 @@ export function PayrollRunGrid({clientId,companyId,year,companyName,frequency,co
      }} className="min-h-11 rounded-lg border border-slate-300 px-3 py-2">
       <option value="weekly">Every week</option><option value="biweekly">Every other week</option><option value="semimonthly">Twice monthly</option><option value="monthly">Every month</option>
     </select></label>
-    <label className="grid gap-2 text-sm font-semibold text-slate-800">Period start<input type="date" value={start} onChange={e=>{setStart(e.target.value);reset();}} className="min-h-11 rounded-lg border border-slate-300 px-3 py-2"/></label>
-    <label className="grid gap-2 text-sm font-semibold text-slate-800">Period end<input type="date" min={start||undefined} value={end} onChange={e=>{setEnd(e.target.value);reset();}} className="min-h-11 rounded-lg border border-slate-300 px-3 py-2"/></label>
-    <label className="grid gap-2 text-sm font-semibold text-slate-800">Pay date<input type="date" min={end||undefined} value={payDate} onChange={e=>setPayDate(e.target.value)} className="min-h-11 rounded-lg border border-slate-300 px-3 py-2"/></label>
+    <label className="grid gap-2 text-sm font-semibold text-slate-800">Period start<input type="date" value={start} onChange={e=>{setStart(e.target.value);setSelectedIds([]);setCalculated(null);reset();}} className="min-h-11 rounded-lg border border-slate-300 px-3 py-2"/></label>
+    <label className="grid gap-2 text-sm font-semibold text-slate-800">Period end<input type="date" min={start||undefined} value={end} onChange={e=>{setEnd(e.target.value);setSelectedIds([]);setCalculated(null);reset();}} className="min-h-11 rounded-lg border border-slate-300 px-3 py-2"/></label>
+    <label className="grid gap-2 text-sm font-semibold text-slate-800">Pay date<input type="date" min={end||undefined} value={payDate} onChange={e=>{setPayDate(e.target.value);setSelectedIds([]);setCalculated(null);}} className="min-h-11 rounded-lg border border-slate-300 px-3 py-2"/></label>
    </div>
    <p className="mt-3 text-xs leading-5 text-slate-500">Only employees matching the selected pay frequency and with complete basic payroll details are preselected. Changing frequency suggests a new period start; verify dates against the actual schedule. Check vacationable earnings, statutory holiday pay, overtime and sick pay before approval.</p>
   </div>
